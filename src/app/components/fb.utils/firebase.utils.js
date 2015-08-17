@@ -1,5 +1,5 @@
 // a simple wrapper on Firebase and AngularFire to simplify deps and keep things DRY
-angular.module('fb')
+angular.module('fb.auth')
     .factory('fbutil', ['$window', 'FBURL', '$q',
         function($window, FBURL, $q) {
             "use strict";
