@@ -35,6 +35,8 @@
     "gulp-useref": "~1.2.0",
     "gulp-util": "~3.0.5",
     "http-proxy-middleware": "~0.0.5",
+    "jasmine-matchers": "^0.2.3",
+    "jasmine-sinon": "^0.4.0",
     "jshint-stylish": "~2.0.0",
     "karma": "~0.12.36",
     "karma-angular-filesort": "~0.1.0",
@@ -49,6 +51,7 @@
     "main-bower-files": "~2.8.0",
     "merge-stream": "~0.1.7",
     "require-dir": "~0.3.0",
+    "sinon": "^1.15.4",
     "uglify-save-license": "~0.4.1",
     "wiredep": "~2.2.2",
     "wrench": "~1.5.8"
