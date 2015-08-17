@@ -2,6 +2,6 @@
   'use strict';
 
   angular
-    .module('fb', ['ngAnimate', 'ngCookies', 'ngSanitize', 'restangular', 'ui.router', 'ui.bootstrap']);
+    .module('fb', ['firebase', 'LocalStorageModule', 'restangular', 'ui.router', ]);
 
-})();
+})(angular);

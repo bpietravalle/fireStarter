@@ -1,6 +1,5 @@
 node_modules/
 coverage/
-gulp/
 bower_components/
 .sass-cache/
 .idea/
