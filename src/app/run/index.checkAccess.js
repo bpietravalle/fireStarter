@@ -12,9 +12,7 @@
     }
     checkAccessOnStateChange.$inject = ['$rootScope', '$state'];
 		
-		// another take via Jurgen Van de Moere
-		// doesn't work - need to add code to account for public pages
-		// seems better to stick with #resolve in the router 
+		// another take via jvandemo
     // function checkAccessOnStateChange($rootScope, $state,  auth) {
 
     //     $rootScope.$on("$stateChangeStart", function(event,

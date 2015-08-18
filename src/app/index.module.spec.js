@@ -21,8 +21,8 @@
             beforeEach(function() {
                 deps = module.value('fb').requires;
             });
-            it("should depend on LocalStorageModule", function() {
-                expect(hasModule('LocalStorageModule')).toBeTruthy();
+            it("should depend on fb.session", function() {
+                expect(hasModule('fb.session')).toBeTruthy();
             });
             it("should depend on ui.router", function() {
                 expect(hasModule('ui.router')).toBeTruthy();
@@ -33,8 +33,8 @@
             it("should depend on fb.auth", function() {
                 expect(hasModule('fb.auth')).toBeTruthy();
             });
-            it("should depend on Firebase", function() {
-                expect(hasModule('firebase')).toBeTruthy();
+            it("should depend on fb.utils", function() {
+                expect(hasModule('fb.utils')).toBeTruthy();
             });
         });
     });

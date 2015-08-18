@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("fb.auth Module:", function() {
+    describe("fb.session Module:", function() {
         beforeEach(function() {
-            module = angular.module("fb.auth");
+            module = angular.module("fb.session");
         });
 
         it("should exist", function() {
@@ -15,15 +15,11 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('fb.auth').requires;
+                deps = module.value('fb.session').requires;
             });
-            it("should depend on Firebase", function() {
-                expect(hasModule('firebase')).toBeTruthy();
-            });
-            it("should depend on fb.utils", function() {
-                expect(hasModule('fb.utils')).toBeTruthy();
+            it("should depend on LocalStorageModule", function() {
+                expect(hasModule('LocalStorageModule')).toBeTruthy();
             });
         });
     });
 })(angular);
-

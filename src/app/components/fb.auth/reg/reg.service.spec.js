@@ -1,10 +1,10 @@
-(function() {
+(function(angular) {
     "use strict";
 
     describe("RegService", function() {
         var reg;
         beforeEach(function() {
-            module("fb");
+            module("fb.auth");
             module("firebase");
         });
 
@@ -25,4 +25,4 @@
         //     expect(typeof reg.twitterLogin).toBe('function');
         // });
     });
-}());
+}(angular));

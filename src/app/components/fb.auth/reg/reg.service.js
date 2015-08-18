@@ -2,9 +2,9 @@
 
     "use strict";
 
-    function RegService($q, Fb, auth, fbutil) {
+    function RegService($q, fbAuth, auth, fbutil) {
 
-        var authObj = Fb;
+        var authObj = fbAuth;
 
         this.passwordAndEmailRegister = function(email, pass) {
             console.log("message received with " + email + " and" + pass);
@@ -66,9 +66,9 @@
         // };
     }
 
-    RegService.$inject = ['$q', 'Fb', 'auth', 'fbutil'];
+    RegService.$inject = ['$q', 'fbAuth', 'auth', 'fbutil'];
 
-    angular.module('fb')
+    angular.module('fb.auth')
         .service('reg', RegService);
 
 

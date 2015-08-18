@@ -1,13 +1,12 @@
-(function() {
+(function(angular) {
     "use strict";
 
     describe("Auth Service", function() {
         var auth;
         beforeEach(function() {
-            module("fb");
+            module("fb.auth");
             module("firebase");
         });
-
 
         beforeEach(inject(function(_auth_) {
             auth =_auth_;
@@ -35,4 +34,4 @@
             expect(typeof auth.twitterLogin).toBe('function');
         });
     });
-}());
+}(angular));

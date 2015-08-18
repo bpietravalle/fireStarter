@@ -1,13 +1,11 @@
-(function() {
+(function(angular) {
     "use strict";
 
     describe("Session Service", function() {
         var session;
         beforeEach(function() {
-            module("fb");
-            module("firebase");
+            module("fb.session");
         });
-
 
         beforeEach(inject(function(_session_) {
             session =_session_;
@@ -29,5 +27,5 @@
             expect(typeof session.destroy).toBe('function');
         });
     });
-}());
+}(angular));
 

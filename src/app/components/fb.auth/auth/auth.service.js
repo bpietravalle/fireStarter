@@ -1,9 +1,9 @@
 (function(angular) {
     "use strict";
 
-    function AuthService($q, Fb, session, fbutil) {
+    function AuthService($q, fbAuth, session, fbutil) {
 
-        var authObj = Fb;
+        var authObj = fbAuth;
 
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
@@ -26,7 +26,7 @@
         };
 
         this.passwordAndEmailRegister = function(email, pass) {
-					console.log("message received with " + email + " and" + pass);
+            console.log("message received with " + email + " and" + pass);
             return authObj
                 .$createUser({
                     email: email,
@@ -34,7 +34,7 @@
                 })
                 .then(function(userData) {
                     console.log("user " + userData.uid + " created");
-										AuthService.passwordAndEmailLogin(email, pass);
+                    AuthService.passwordAndEmailLogin(email, pass);
                     // return authObj
                     //     .$authWithPassword({
                     //         email: email,
@@ -89,9 +89,9 @@
         };
     }
 
-    AuthService.$inject = ['$q', 'Fb', 'session', 'fbutil'];
+    AuthService.$inject = ['$q', 'fbAuth', 'session', 'fbutil'];
 
-    angular.module('fb')
+    angular.module('fb.auth')
         .service('auth', AuthService);
 
 

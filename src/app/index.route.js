@@ -1,4 +1,4 @@
-(function() {
+(function(angular) {
   'use strict';
 
   angular
@@ -18,4 +18,4 @@
     $urlRouterProvider.otherwise('/');
   }
 
-})();
+})(angular);
