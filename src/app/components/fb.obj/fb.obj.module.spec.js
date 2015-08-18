@@ -3,7 +3,7 @@
     var module;
     describe("fb.auth Module:", function() {
         beforeEach(function() {
-            module = angular.module("fb.auth");
+            module = angular.module("fb.obj");
         });
 
         it("should exist", function() {
@@ -15,13 +15,10 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('fb.auth').requires;
+                deps = module.value('fb.obj').requires;
             });
             it("should depend on Firebase", function() {
                 expect(hasModule('firebase')).toBeTruthy();
-            });
-            it("should depend on fb.session", function() {
-                expect(hasModule('fb.session')).toBeTruthy();
             });
             it("should depend on fb.utils", function() {
                 expect(hasModule('fb.utils')).toBeTruthy();
