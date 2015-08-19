@@ -18,7 +18,6 @@ angular.module('fb.utils')
                         });
                     });
                 },
-
                 // abstract the process of creating a future/promise
                 defer: function(fn, context) {
                     var def = $q.defer();

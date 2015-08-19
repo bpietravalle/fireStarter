@@ -1,7 +1,7 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("fb.auth Module:", function() {
+    describe("fb.obj Module:", function() {
         beforeEach(function() {
             module = angular.module("fb.obj");
         });

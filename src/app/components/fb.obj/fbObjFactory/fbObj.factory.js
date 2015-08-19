@@ -1,20 +1,41 @@
 (function(angular) {
     "use strict";
 
-    function fbObjFactory($firebaseObject, fbutil) {
-        var ref = function(path) {
-            if (!path) {
-                throw new Error('We can get back to work, once you choose a path for your firebase');
+    function fbEntService($firebaseObject, $firebaseArray, $firebaseAuth, fbutil) {
+        var ref = "";
+        var entity = "";
+
+        // this.setEntityType = function(type) {
+        //     entity = type;
+        //     return entity;
+        // };
+        this.setRef = function(type) {
+            ref = type;
+            if (ref == null) {
+                return fbutil.ref();
             } else {
-                return $firebaseObject(fbutil.ref(path));
+                return fbutil.ref(ref);
             }
         };
-				return ref;
+        this.setEntity = function(type, path) {
+            entity = this.setRef(path);
+            if (type === 'object') {
+                return $firebaseObject(entity);
+            } else if (type === 'array') {
+                return $firebaseArray(entity);
+            } else if (type === 'auth') {
+                return $firebaseAuth(entity);
+            } else if (entity === null) {
+                throw new Error('you must call setRef first!');
+            } else {
+                throw new Error('type must equal "object", "auth", or "array" ');
+            }
+        };
+
     }
 
-    fbObjFactory.$inject = ['$firebaseObject', 'fbutil'];
+    fbEntService.$inject = ['$firebaseObject', '$firebaseArray', '$firebaseAuth', 'fbutil'];
 
     angular.module('fb.obj')
-        .factory('fbObj', fbObjFactory);
-
+        .service('fbObj', fbEntService);
 })(angular);
