@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("fb.auth Module:", function() {
+    describe("utils.jsApi Module:", function() {
         beforeEach(function() {
-            module = angular.module("fb.auth");
+            module = angular.module("utils.jsApi");
         });
 
         it("should exist", function() {
@@ -15,21 +15,11 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('fb.auth').requires;
+                deps = module.value('utils.jsApi').requires;
             });
             it("should depend on Firebase", function() {
                 expect(hasModule('firebase')).toBeTruthy();
             });
-            it("should depend on fb.session", function() {
-                expect(hasModule('fb.session')).toBeTruthy();
-            });
-            it("should depend on utils.jsApi", function() {
-                expect(hasModule('utils.jsApi')).toBeTruthy();
-            });
-            it("should depend on utils.afApi", function() {
-                expect(hasModule('utils.afApi')).toBeTruthy();
-            });
         });
     });
 })(angular);
-

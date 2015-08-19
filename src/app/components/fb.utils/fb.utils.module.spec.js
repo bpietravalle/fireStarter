@@ -20,7 +20,12 @@
             it("should depend on Firebase", function() {
                 expect(hasModule('firebase')).toBeTruthy();
             });
+            it("should depend on utils.jsApi", function() {
+                expect(hasModule('utils.jsApi')).toBeTruthy();
+            });
+            it("should depend on utils.afApi", function() {
+                expect(hasModule('utils.afApi')).toBeTruthy();
+            });
         });
     });
 })(angular);
-

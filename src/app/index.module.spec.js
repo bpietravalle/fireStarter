@@ -33,8 +33,11 @@
             it("should depend on fb.auth", function() {
                 expect(hasModule('fb.auth')).toBeTruthy();
             });
-            it("should depend on fb.utils", function() {
-                expect(hasModule('fb.utils')).toBeTruthy();
+            it("should depend on fb.afUtils", function() {
+                expect(hasModule('fb.afUtils')).toBeTruthy();
+            });
+            it("should depend on fb.fbUtils", function() {
+                expect(hasModule('fb.fbUtils')).toBeTruthy();
             });
         });
     });

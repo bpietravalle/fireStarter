@@ -2,7 +2,7 @@
   'use strict';
 
   angular
-    .module('fb.utils')
+    .module('utils.jsApi')
     .constant('FBURL','https://your-firebase.firebaseio.com');
 
 })(angular);

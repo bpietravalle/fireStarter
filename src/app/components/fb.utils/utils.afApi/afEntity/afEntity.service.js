@@ -1,23 +1,19 @@
 (function(angular) {
     "use strict";
 
-    function fbEntService($firebaseObject, $firebaseArray, $firebaseAuth, fbutil) {
+    function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbEntity) {
         var ref = "";
         var entity = "";
 
-        // this.setEntityType = function(type) {
-        //     entity = type;
-        //     return entity;
-        // };
         this.setRef = function(type) {
             ref = type;
             if (ref == null) {
-                return fbutil.ref();
+                return fbEntity.ref();
             } else {
-                return fbutil.ref(ref);
+                return fbEntity.ref(ref);
             }
         };
-        this.setEntity = function(type, path) {
+        this.set = function(type, path) {
             entity = this.setRef(path);
             if (type === 'object') {
                 return $firebaseObject(entity);
@@ -34,8 +30,8 @@
 
     }
 
-    fbEntService.$inject = ['$firebaseObject', '$firebaseArray', '$firebaseAuth', 'fbutil'];
+    afEntityService.$inject = ['$firebaseObject', '$firebaseArray', '$firebaseAuth', 'fbEntity'];
 
-    angular.module('fb.obj')
-        .service('fbObj', fbEntService);
+    angular.module('utils.afApi')
+        .service('afEntity', afEntityService);
 })(angular);

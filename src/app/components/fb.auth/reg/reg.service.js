@@ -2,9 +2,9 @@
 
     "use strict";
 
-    function RegService($q, fbAuth, auth, fbutil) {
+    function RegService($q, afEntity, auth, fbEntity) {
 
-        var authObj = fbAuth;
+        var authObj = afEntity.set('auth');
 
         this.passwordAndEmailRegister = function(email, pass) {
             console.log("message received with " + email + " and" + pass);
@@ -23,8 +23,8 @@
                     //     });
                 })
                 .then(function(authData) {
-                        var ref = fbutil.ref('users', authData.uid);
-                        return fbutil.handler(function(cb) {
+                        var ref = fbEntity.ref('users', authData.uid);
+                        return fbEntity.handler(function(cb) {
                             ref.set({
                                 email: email,
                                 name: 'big dawg'
@@ -37,36 +37,36 @@
                 );
         };
 
-        // this.loginOAuth = function(provider) {
-        //     return authObj
-        //         .$authWithOAuthPopup(provider)
-        //         // need to add scope
-        //         .then(function(authData) {
-        //                 session.setAuthData(authData);
-        //                 return authData;
-        //             },
-        //             function(error) {
-        //                 $q.reject(error);
-        //             }
-        //         );
-        // };
+        this.loginOAuth = function(provider) {
+            return authObj
+                .$authWithOAuthPopup(provider)
+                // need to add scope
+                .then(function(authData) {
+                        session.setAuthData(authData);
+                        return authData;
+                    },
+                    function(error) {
+                        $q.reject(error);
+                    }
+                );
+        };
 
-        // this.googleLogin = function() {
-        //     this.loginOAuth("google");
-        // };
-        // this.facebookLogin = function() {
-        //     this.loginOAuth("facebook");
-        // };
-        // this.twitterLogin = function() {
-        //     this.loginOAuth("twitter");
-        // };
-        // this.logOut = function() {
-        //     authObj.$unauth();
-        //     session.destroy();
-        // };
+        this.googleLogin = function() {
+            this.loginOAuth("google");
+        };
+        this.facebookLogin = function() {
+            this.loginOAuth("facebook");
+        };
+        this.twitterLogin = function() {
+            this.loginOAuth("twitter");
+        };
+        this.logOut = function() {
+            authObj.$unauth();
+            session.destroy();
+        };
     }
 
-    RegService.$inject = ['$q', 'fbAuth', 'auth', 'fbutil'];
+    RegService.$inject = ['$q', 'afEntity', 'auth', 'fbEntity'];
 
     angular.module('fb.auth')
         .service('reg', RegService);

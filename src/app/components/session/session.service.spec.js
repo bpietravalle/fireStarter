@@ -1,4 +1,4 @@
-(function(angular) {
+(function() {
     "use strict";
 
     describe("Session Service", function() {

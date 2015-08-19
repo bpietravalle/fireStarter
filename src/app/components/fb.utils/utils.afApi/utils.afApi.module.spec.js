@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("fb.obj Module:", function() {
+    describe("utils.afApi Module:", function() {
         beforeEach(function() {
-            module = angular.module("fb.obj");
+            module = angular.module("utils.afApi");
         });
 
         it("should exist", function() {
@@ -15,13 +15,13 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('fb.obj').requires;
+                deps = module.value('utils.afApi').requires;
             });
             it("should depend on Firebase", function() {
                 expect(hasModule('firebase')).toBeTruthy();
             });
-            it("should depend on fb.utils", function() {
-                expect(hasModule('fb.utils')).toBeTruthy();
+            it("should depend on utils.jsApi", function() {
+                expect(hasModule('utils.jsApi')).toBeTruthy();
             });
         });
     });

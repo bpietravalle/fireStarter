@@ -1,7 +1,7 @@
 // code from firebase/angularfire-seed repo
 
-angular.module('fb.utils')
-    .factory('fbutil', ['$window', 'FBURL', '$q',
+angular.module('utils.jsApi')
+    .factory('fbEntity', ['$window', 'FBURL', '$q',
         function($window, FBURL, $q) {
             "use strict";
 

@@ -1,9 +1,9 @@
 (function(angular) {
     "use strict";
 
-    function AuthService($q, fbAuth, session, fbutil) {
+    function AuthService($q, afEntity, session, fbEntity) {
 
-        var authObj = fbAuth;
+        var authObj = afEntity.set('auth');
 
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
@@ -42,8 +42,8 @@
                     //     });
                 })
                 .then(function(userData) {
-                        var ref = fbutil.ref('users', userData.uid);
-                        return fbutil.handler(function(cb) {
+                        var ref = fbEntity.ref('users', userData.uid);
+                        return fbEntity.handler(function(cb) {
                             ref.set({
                                 email: email,
                                 name: 'big dawg'
@@ -89,7 +89,7 @@
         };
     }
 
-    AuthService.$inject = ['$q', 'fbAuth', 'session', 'fbutil'];
+    AuthService.$inject = ['$q', 'afEntity', 'session', 'fbEntity'];
 
     angular.module('fb.auth')
         .service('auth', AuthService);
