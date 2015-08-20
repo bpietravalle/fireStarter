@@ -4,10 +4,6 @@
     describe("fb Module:", function() {
         beforeEach(function() {
             module = angular.module("fb");
-            // module('ui.router');
-            // module('restangular');
-            // module('LocalStorageModule');
-            // module('firebase');
         });
 
         it("should exist", function() {
@@ -21,8 +17,8 @@
             beforeEach(function() {
                 deps = module.value('fb').requires;
             });
-            it("should depend on fb.session", function() {
-                expect(hasModule('fb.session')).toBeTruthy();
+            it("should depend on fb.services", function() {
+                expect(hasModule('fb.services')).toBeTruthy();
             });
             it("should depend on ui.router", function() {
                 expect(hasModule('ui.router')).toBeTruthy();
@@ -30,14 +26,8 @@
             it("should depend on restangular", function() {
                 expect(hasModule('restangular')).toBeTruthy();
             });
-            it("should depend on fb.auth", function() {
-                expect(hasModule('fb.auth')).toBeTruthy();
-            });
-            it("should depend on fb.afUtils", function() {
-                expect(hasModule('fb.afUtils')).toBeTruthy();
-            });
-            it("should depend on fb.fbUtils", function() {
-                expect(hasModule('fb.fbUtils')).toBeTruthy();
+            it("should depend on fb.utils", function() {
+                expect(hasModule('fb.utils')).toBeTruthy();
             });
         });
     });

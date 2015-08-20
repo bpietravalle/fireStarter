@@ -4,7 +4,7 @@
     describe("Session Service", function() {
         var session;
         beforeEach(function() {
-            module("fb.session");
+            module("srvc.session");
         });
 
         beforeEach(inject(function(_session_) {

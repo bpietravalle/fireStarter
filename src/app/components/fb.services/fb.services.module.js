@@ -2,7 +2,7 @@
     "use strict";
 
 
-    angular.module("fb.services", ['fb.auth', 'fb.session']);
+    angular.module("fb.services", ['srvc.auth', 'srvc.session']);
 
 
 })(angular);

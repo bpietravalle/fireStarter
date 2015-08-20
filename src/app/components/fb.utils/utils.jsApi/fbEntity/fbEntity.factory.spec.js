@@ -1,10 +1,10 @@
-(function(angular) {
+(function() {
     "use strict";
 
     describe('fbEntity', function() {
         var fbEntity;
         beforeEach(function() {
-            module('mock.firebase');
+            MockFirebase.override();
             module('utils.jsApi');
         });
         beforeEach(inject(function(_fbEntity_) {

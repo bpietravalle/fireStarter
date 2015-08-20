@@ -6,7 +6,6 @@ angular.module('utils.jsApi')
             "use strict";
 
             var utils = {
-                // convert a node or Firebase style callback to a future
                 handler: function(fn, context) {
                     return utils.defer(function(def) {
                         fn.call(context, function(err, result) {
@@ -18,7 +17,6 @@ angular.module('utils.jsApi')
                         });
                     });
                 },
-                // abstract the process of creating a future/promise
                 defer: function(fn, context) {
                     var def = $q.defer();
                     fn.call(context, def);
@@ -29,6 +27,8 @@ angular.module('utils.jsApi')
             };
 
             return utils;
+						//TODO: move firebaseRef and pathRef up into fb.utils module
+						//shouldn't be specific to jsApi
 
             function pathRef(args) {
                 for (var i = 0; i < args.length; i++) {

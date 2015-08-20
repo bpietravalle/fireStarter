@@ -1,6 +1,8 @@
 {
   "name": "fb",
   "version": "0.0.0",
+  "license": "MIT",
+  "description": "angular services for Firebase",
   "dependencies": {
     "angular-animate": "~1.4.0",
     "angular-cookies": "~1.4.0",
@@ -13,13 +15,17 @@
     "angular": "~1.4.0",
     "firebase": "~2.2.9",
     "angularfire": "~1.1.2",
-    "mockfirebase": "~0.11.0",
     "angular-local-storage": "~0.2.2"
   },
   "devDependencies": {
+    "mockfirebase": "~0.11.0",
     "angular-mocks": "~1.4.0"
   },
   "resolutions": {
     "angular": "~1.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bpietravalle/fb.git"
   }
 }

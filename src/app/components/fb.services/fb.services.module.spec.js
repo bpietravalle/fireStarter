@@ -17,11 +17,11 @@
             beforeEach(function() {
                 deps = module.value('fb.services').requires;
             });
-            it("should depend on fb.auth", function() {
-                expect(hasModule('fb.auth')).toBeTruthy();
+            it("should depend on srvc.auth", function() {
+                expect(hasModule('srvc.auth')).toBeTruthy();
             });
-            it("should depend on fb.session", function() {
-                expect(hasModule('fb.session')).toBeTruthy();
+            it("should depend on srvc.session", function() {
+                expect(hasModule('srvc.session')).toBeTruthy();
             });
         });
     });

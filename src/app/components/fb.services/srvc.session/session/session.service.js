@@ -31,7 +31,7 @@
 
     sessionService.$inject = ['$log', 'localStorageService'];
 
-    angular.module("fb.session")
+    angular.module("srvc.session")
         .service("session", sessionService);
 
 

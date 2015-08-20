@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("fb.session Module:", function() {
+    describe("srvc.auth Module:", function() {
         beforeEach(function() {
-            module = angular.module("fb.session");
+            module = angular.module("srvc.auth");
         });
 
         it("should exist", function() {
@@ -15,11 +15,15 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('fb.session').requires;
+                deps = module.value('srvc.auth').requires;
             });
-            it("should depend on LocalStorageModule", function() {
-                expect(hasModule('LocalStorageModule')).toBeTruthy();
+            it("should depend on srvc.session", function() {
+                expect(hasModule('srvc.session')).toBeTruthy();
+            });
+            it("should depend on fb.utils", function() {
+                expect(hasModule('fb.utils')).toBeTruthy();
             });
         });
     });
 })(angular);
+

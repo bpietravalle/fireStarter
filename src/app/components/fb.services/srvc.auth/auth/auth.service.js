@@ -1,10 +1,29 @@
 (function(angular) {
-
     "use strict";
 
-    function RegService($q, afEntity, auth, fbEntity) {
+    function AuthService($q, afEntity, session, fbEntity) {
 
         var authObj = afEntity.set('auth');
+
+        this.isLoggedIn = function() {
+            return session.getAuthData() !== null;
+        };
+
+        this.passwordAndEmailLogin = function(email, pass) {
+            return authObj
+                .$authWithPassword({
+                    email: email,
+                    password: pass
+                })
+                .then(function(authData) {
+                        session.setAuthData(authData);
+                        return authData;
+                    },
+                    function(error) {
+                        $q.reject(error);
+                    }
+                );
+        };
 
         this.passwordAndEmailRegister = function(email, pass) {
             console.log("message received with " + email + " and" + pass);
@@ -15,15 +34,15 @@
                 })
                 .then(function(userData) {
                     console.log("user " + userData.uid + " created");
-                        auth.passwordAndEmailLogin(email, pass);
+                    AuthService.passwordAndEmailLogin(email, pass);
                     // return authObj
                     //     .$authWithPassword({
                     //         email: email,
                     //         password: pass
                     //     });
                 })
-                .then(function(authData) {
-                        var ref = fbEntity.ref('users', authData.uid);
+                .then(function(userData) {
+                        var ref = fbEntity.ref('users', userData.uid);
                         return fbEntity.handler(function(cb) {
                             ref.set({
                                 email: email,
@@ -31,6 +50,10 @@
                             }, cb);
                         });
                     },
+
+                    // console.log("User " + userData.uid + " created successfully");
+                    // this.passwordAndEmailLogin(email, pass);
+                    // console.log("authdata = " + authData ", and session =" + session);
                     function(error) {
                         $q.reject(error);
                     }
@@ -66,10 +89,10 @@
         };
     }
 
-    RegService.$inject = ['$q', 'afEntity', 'auth', 'fbEntity'];
+    AuthService.$inject = ['$q', 'afEntity', 'session', 'fbEntity'];
 
-    angular.module('fb.auth')
-        .service('reg', RegService);
+    angular.module('srvc.auth')
+        .service('auth', AuthService);
 
 
 })(angular);

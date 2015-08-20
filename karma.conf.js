@@ -33,7 +33,7 @@ module.exports = function(config) {
 
         colors: true,
 
-        frameworks: ['jasmine', 'angular-filesort'],
+        frameworks: ['jasmine', 'jasmine-matchers', 'angular-filesort'],
 
         angularFilesort: {
             whitelist: [path.join(conf.paths.src, '/**/!(*.html|*.spec|*.mock).js')]
@@ -52,8 +52,10 @@ module.exports = function(config) {
             'karma-phantomjs-launcher',
             'karma-angular-filesort',
             'karma-spec-reporter',
+            'karma-coverage',
             'karma-verbose-reporter',
             'karma-notify-reporter',
+            'karma-jasmine-matchers',
             'karma-jasmine',
             'karma-ng-html2js-preprocessor'
         ],

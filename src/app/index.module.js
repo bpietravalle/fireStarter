@@ -2,7 +2,7 @@
     'use strict';
 
     angular
-        .module('fb', ['fb.auth', 'fb.session', 'fb.fbUtils', 'fb.afUtils',
+        .module('fb', ['fb.services','fb.utils',
             'restangular', 'ui.router'
         ]);
 

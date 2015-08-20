@@ -4,8 +4,7 @@
     describe("Auth Service", function() {
         var auth;
         beforeEach(function() {
-            module("fb.auth");
-            module("firebase");
+            module("srvc.auth");
         });
 
         beforeEach(inject(function(_auth_) {

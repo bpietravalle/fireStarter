@@ -1,11 +1,10 @@
-(function(angular) {
+(function() {
     "use strict";
 
     describe("RegService", function() {
         var reg;
         beforeEach(function() {
-            module("fb.auth");
-            module("firebase");
+            module("srvc.auth");
         });
 
         beforeEach(inject(function(_reg_) {
