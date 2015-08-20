@@ -2,7 +2,7 @@
     "use strict";
 
 
-    angular.module("fb.services", ['fb.utils']);
+    angular.module("fb.services", ['fb.auth', 'fb.session']);
 
 
 })(angular);
