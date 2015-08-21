@@ -1,22 +1,30 @@
 (function() {
     "use strict";
     describe('afUtils Service', function() {
-        var afEntity;
-        var fbEntity;
-        var $firebaseAuth;
-        var $firebaseArray;
-        var $firebaseObject;
+        var afEntity, $firebaseObject, $firebaseArray, $firebaseAuth, $timeout, obj;
+
+        var DEFAULT_ID = 'ID1';
+        var TEST_DATA = {
+            aString: 'a string',
+            aNumber: 1,
+            aBoolean: false,
+            anObject: {
+                bString: 'another one'
+            }
+        };
 
         beforeEach(function() {
             MockFirebase.override();
+            // module('mock.firebase');
             module('utils.afApi');
         });
-        beforeEach(inject(function(_afEntity_, _$firebaseObject_, _$firebaseArray_, _$firebaseAuth_, _fbEntity_) {
+        beforeEach(inject(function(_afEntity_, _$firebaseObject_, _$firebaseArray_, _$firebaseAuth_, _$timeout_) {
             $firebaseAuth = _$firebaseAuth_;
             $firebaseArray = _$firebaseArray_;
             $firebaseObject = _$firebaseObject_;
             afEntity = _afEntity_;
-            fbEntity = _fbEntity_;
+            $timeout = _$timeout_;
+            obj = makeObject(TEST_DATA);
         }));
         it("setRef = 'obj'", function() {
             var ref = new MockFirebase();
@@ -37,11 +45,6 @@
             var testInst = $firebaseAuth(ref);
             expect(afEntity.set("auth").prototype === testInst.prototype).toBeTruthy();
         });
-        it("set(auth).path = firebase parentRef", function() {
-            var ref = new MockFirebase();
-            var testInst = $firebaseAuth(ref);
-            expect(afEntity.set("auth").path).toEqual(testInst.path);
-        });
         it("set = 'object'", function() {
             var ref = new MockFirebase();
             var testInst = $firebaseObject(ref);
@@ -53,10 +56,20 @@
             expect(afEntity.set("array", ["users", "phones", "1"]).prototype === testInst.prototype).toBeTruthy();
         });
 
+        // can't get the matcher to work
+        // it("set with undefined type", function() {
+        // 	expect(test).toThrowError('type must equal "object", "auth", or "array"');
+        // 	var test = afEntity.set("objasdlect");
+        // });
+        // it("set with undefined entity", function() {
+        // 	expect(afEntity.set("objasdlect")).toThrowError('you must call setRef first!');
+        // });
+        //
+        // DRY up the following three macros - test_object_methods need to pass in "object,"array",etc
         describe("accessible $firebaseObject methods", function() {
-					//cant test $value via this macro
-            var obj, val, meth;
-            var methods = [
+            //cant test $value via this macro
+            var entity, val, meth;
+            var methodsForObj = [
                 ['$id', 'string'],
                 ['$priority', 'object'],
                 ['$ref', 'function'],
@@ -69,18 +82,18 @@
                 ['$remove', 'function']
             ];
 
-            function test_object_methods(y) {
+            function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    obj = afEntity.set("object", "users");
+                    entity = afEntity.set("object", "users");
                     val = y[1];
                     meth = y[0];
-                    expect(typeof obj[meth]).toEqual(val);
+                    expect(typeof entity[meth]).toEqual(val);
                 });
             }
-            methods.forEach(test_object_methods);
+            methodsForObj.forEach(test_entity_methods);
         });
         describe("accessible $firebaseArray methods", function() {
-            var obj, val, meth;
+            var entity, val, meth;
             var methods = [
                 ['$add', 'function'],
                 ['$remove', 'function'],
@@ -94,19 +107,19 @@
                 ['$destroy', 'function']
             ];
 
-            function test_object_methods(y) {
+            function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    obj = afEntity.set("array", "users");
+                    entity = afEntity.set("array", "users");
                     val = y[1];
                     meth = y[0];
-                    expect(typeof obj[meth]).toEqual(val);
+                    expect(typeof entity[meth]).toEqual(val);
                 });
             }
-            methods.forEach(test_object_methods);
+            methods.forEach(test_entity_methods);
         });
         describe("accessible $firebaseAuth methods", function() {
-					// can't test $unAuth via this macro
-            var obj, val, meth;
+            // can't test $unAuth via this macro
+            var entity, val, meth;
             var methods = [
                 ['$authWithCustomToken', 'function'],
                 ['$authAnonymously', 'function'],
@@ -124,23 +137,67 @@
                 ['$resetPassword', 'function']
             ];
 
-            function test_object_methods(y) {
+            function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    obj = afEntity.set("auth");
+                    entity = afEntity.set("auth");
                     val = y[1];
                     meth = y[0];
-                    expect(typeof obj[meth]).toEqual(val);
+                    expect(typeof entity[meth]).toEqual(val);
                 });
             }
-            methods.forEach(test_object_methods);
+            methods.forEach(test_entity_methods);
         });
-        // can't get the matcher to work
-        // it("set with undefined type", function() {
-        // 	expect(test).toThrowError('type must equal "object", "auth", or "array"');
-        // 	var test = afEntity.set("objasdlect");
-        // });
-        // it("set with undefined entity", function() {
-        // 	expect(afEntity.set("objasdlect")).toThrowError('you must call setRef first!');
-        // });
+        describe('$firebaseObject methods', function() {
+					//until fix helper methods - this suite isn't testing afEntity
+
+            describe('$id', function() {
+                it('should set the record id', function() {
+                    expect(obj.$id).toEqual(obj.$ref().key());
+                });
+            });
+            describe('$save', function() {
+                it('should call $firebase.$set', function() {
+                    spyOn(obj.$ref(), 'set');
+                    obj.foo = 'bar';
+                    obj.$save();
+                    expect(obj.$ref().set).toHaveBeenCalled();
+                });
+								it('should return a promise', function() {
+									expect(obj.$save()).toBeAPromise();
+								});
+            });
+
+
+        });
+        //helpers from firebase/angularfire specs
+        //TODO- change so stubing afEntity - 
+
+				//how makeEntity(type, data, ref){
+				//return afEntity(type, data);
+				//});
+				//makeObject(data, ref) {
+				//makeEntity('object', data, ref){
+				//---omitted
+				//}
+				//});
+        function stubRef() {
+            return new MockFirebase('Mock:://').child('data').child(DEFAULT_ID);
+        }
+
+        function makeObject(data, ref) {
+            if (!ref) {
+
+                ref = stubRef();
+            }
+            var obj = $firebaseObject(ref);
+            if (angular.isDefined(data)) {
+                ref.ref().set(data);
+                ref.flush();
+                $timeout.flush();
+            }
+            return obj;
+        }
+
+
     });
 })(angular);

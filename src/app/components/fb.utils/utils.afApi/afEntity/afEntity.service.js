@@ -4,7 +4,7 @@
     function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbEntity) {
         var ref = "";
         var entity = "";
-
+        //TODO: make setRef private
         this.setRef = function(type) {
             ref = type;
             if (ref == null) {

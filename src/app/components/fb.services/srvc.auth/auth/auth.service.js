@@ -1,7 +1,7 @@
 (function(angular) {
     "use strict";
 
-    function AuthService($q, afEntity, session, fbEntity) {
+    function AuthService($q, afEntity, session) {
 
         var authObj = afEntity.set('auth');
 
@@ -19,41 +19,6 @@
                         session.setAuthData(authData);
                         return authData;
                     },
-                    function(error) {
-                        $q.reject(error);
-                    }
-                );
-        };
-
-        this.passwordAndEmailRegister = function(email, pass) {
-            console.log("message received with " + email + " and" + pass);
-            return authObj
-                .$createUser({
-                    email: email,
-                    password: pass
-                })
-                .then(function(userData) {
-                    console.log("user " + userData.uid + " created");
-                    AuthService.passwordAndEmailLogin(email, pass);
-                    // return authObj
-                    //     .$authWithPassword({
-                    //         email: email,
-                    //         password: pass
-                    //     });
-                })
-                .then(function(userData) {
-                        var ref = fbEntity.ref('users', userData.uid);
-                        return fbEntity.handler(function(cb) {
-                            ref.set({
-                                email: email,
-                                name: 'big dawg'
-                            }, cb);
-                        });
-                    },
-
-                    // console.log("User " + userData.uid + " created successfully");
-                    // this.passwordAndEmailLogin(email, pass);
-                    // console.log("authdata = " + authData ", and session =" + session);
                     function(error) {
                         $q.reject(error);
                     }
@@ -89,7 +54,7 @@
         };
     }
 
-    AuthService.$inject = ['$q', 'afEntity', 'session', 'fbEntity'];
+    AuthService.$inject = ['$q', 'afEntity', 'session'];
 
     angular.module('srvc.auth')
         .service('auth', AuthService);
