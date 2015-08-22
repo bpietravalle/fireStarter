@@ -2,6 +2,9 @@
     "use strict";
 
     function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
+			// var e = {
+			// }
+			// return entity;
         var ref = "";
         var entity = "";
         function setRef(path) {
