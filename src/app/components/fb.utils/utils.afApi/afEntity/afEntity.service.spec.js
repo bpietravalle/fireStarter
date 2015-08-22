@@ -2,7 +2,6 @@
     "use strict";
     describe('afUtils Service', function() {
         var afEntity, $firebaseObject, $firebaseArray, $firebaseAuth, $timeout, obj;
-
         var DEFAULT_ID = 'ID1';
         var TEST_DATA = {
             aString: 'a string',
@@ -34,11 +33,11 @@
         it("setRef = 'array'", function() {
             var ref = new MockFirebase();
             var testInst = $firebaseArray(ref);
-            expect(afEntity.setRef("users", "phones", "1").prototype === testInst.prototype).toBeTruthy();
+            expect(afEntity.setRef(["users", "phones", "1"]).prototype === testInst.prototype).toBeTruthy();
         });
-        it("setRef(null) = firebase parentRef", function() {
+        it("setRef() = firebase parentRef", function() {
             var testPath = "https://your-firebase.firebaseio.com";
-            expect(afEntity.setRef(null).path).toEqual(testPath);
+            expect(afEntity.setRef().path).toEqual(testPath);
         });
         it("set = 'auth'", function() {
             var ref = new MockFirebase();
@@ -148,8 +147,6 @@
             methods.forEach(test_entity_methods);
         });
         describe('$firebaseObject methods', function() {
-					//until fix helper methods - this suite isn't testing afEntity
-
             describe('$id', function() {
                 it('should set the record id', function() {
                     expect(obj.$id).toEqual(obj.$ref().key());
@@ -162,34 +159,23 @@
                     obj.$save();
                     expect(obj.$ref().set).toHaveBeenCalled();
                 });
-								it('should return a promise', function() {
-									expect(obj.$save()).toBeAPromise();
-								});
+                it('should return a promise', function() {
+                    expect(obj.$save()).toBeAPromise();
+                });
             });
-
 
         });
         //helpers from firebase/angularfire specs
-        //TODO- change so stubing afEntity - 
-
-				//how makeEntity(type, data, ref){
-				//return afEntity(type, data);
-				//});
-				//makeObject(data, ref) {
-				//makeEntity('object', data, ref){
-				//---omitted
-				//}
-				//});
         function stubRef() {
             return new MockFirebase('Mock:://').child('data').child(DEFAULT_ID);
         }
 
         function makeObject(data, ref) {
             if (!ref) {
-
                 ref = stubRef();
             }
-            var obj = $firebaseObject(ref);
+						//changed so testing afEntity
+            var obj = afEntity.set("object", ref);
             if (angular.isDefined(data)) {
                 ref.ref().set(data);
                 ref.flush();
@@ -197,7 +183,6 @@
             }
             return obj;
         }
-
 
     });
 })(angular);

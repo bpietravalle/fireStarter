@@ -35,7 +35,7 @@ angular.module('utils.jsApi')
                     if (angular.isArray(args[i])) {
                         args[i] = pathRef(args[i]);
                     } else if (typeof args[i] !== 'string') {
-                        throw new Error('Argument ' + i + ' to firebaseRef is not a string: ' + args[i]);
+                        throw new Error('Argument ' + i + ' to firebaseRef is not a string: ' + args[i] + "and the rest" + args);
                     }
                 }
                 return args.join('/');
