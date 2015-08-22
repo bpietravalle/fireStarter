@@ -25,24 +25,10 @@
             $timeout = _$timeout_;
             obj = makeObject(TEST_DATA);
         }));
-        it("setRef = 'obj'", function() {
-            var ref = new MockFirebase();
-            var testInst = $firebaseObject(ref);
-            expect(afEntity.setRef("users").prototype === testInst.prototype).toBeTruthy();
-        });
-        it("setRef = 'array'", function() {
-            var ref = new MockFirebase();
-            var testInst = $firebaseArray(ref);
-            expect(afEntity.setRef(["users", "phones", "1"]).prototype === testInst.prototype).toBeTruthy();
-        });
-        it("setRef() = firebase parentRef", function() {
-            var testPath = "https://your-firebase.firebaseio.com";
-            expect(afEntity.setRef().path).toEqual(testPath);
-        });
         it("set = 'auth'", function() {
             var ref = new MockFirebase();
             var testInst = $firebaseAuth(ref);
-            expect(afEntity.set("auth").prototype === testInst.prototype).toBeTruthy();
+            expect(afEntity.set().prototype === testInst.prototype).toBeTruthy();
         });
         it("set = 'object'", function() {
             var ref = new MockFirebase();
@@ -138,7 +124,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = afEntity.set("auth");
+                    entity = afEntity.set();
                     val = y[1];
                     meth = y[0];
                     expect(typeof entity[meth]).toEqual(val);

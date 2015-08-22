@@ -4,22 +4,19 @@
     function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
         var ref = "";
         var entity = "";
-        //move this to fbRef
-        this.setRef = function(path) {
+        function setRef(path) {
             ref = path;
-            if (typeof ref === 'object') {
-                return ref;
-            } else if (ref == null) {
-                return fbRef.ref();
-            } else {
+            if (typeof ref === 'string' || Array.isArray(ref)) {
                 return fbRef.ref(ref);
+            } else {
+                return ref;
             }
         };
         this.set = function(type, path) {
             if (arguments.length === 0) {
                 return afWrap('auth', fbRef.root());
             } else {
-                entity = this.setRef(path);
+                entity = setRef(path);
                 return afWrap(type, entity);
             }
         };

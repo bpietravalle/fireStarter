@@ -4,7 +4,7 @@
 
     function RegService($q, afEntity, auth, fbEntity) {
 
-        var authObj = afEntity.set('auth');
+        var authObj = afEntity.set();
 
         this.passwordAndEmailRegister = function(email, pass) {
             console.log("message received with " + email + " and" + pass);

@@ -3,7 +3,7 @@
 
     function AuthService($q, afEntity, session) {
 
-        var authObj = afEntity.set('auth');
+        var authObj = afEntity.set();
 
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
