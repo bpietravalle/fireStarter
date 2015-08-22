@@ -1,9 +1,11 @@
-// code from firebase/angularfire-seed repo
+// code (almostly entirely) from firebase/angularfire-seed repo
 (function(angular) {
+    "use strict";
+
     function fbRefFactory($window, FBURL) {
-        "use strict";
         var utils = {
             path: pathRef,
+            root: setRoot,
             ref: firebaseRef
         };
 
@@ -20,8 +22,12 @@
             return args.join('/');
         }
 
+        function setRoot() {
+            return new $window.Firebase(FBURL);
+        };
+
         function firebaseRef(path) {
-            var ref = new $window.Firebase(FBURL);
+            var ref = setRoot();
             var args = Array.prototype.slice.call(arguments);
             if (args.length) {
                 ref = ref.child(pathRef(args));
@@ -31,7 +37,7 @@
     }
     fbRefFactory.$inject = ['$window', 'FBURL'];
 
-    angular.module('fb.utils')
+    angular.module('utils.jsApi')
         .factory('fbRef', fbRefFactory);
 })(angular);
 // if args, then pathRef

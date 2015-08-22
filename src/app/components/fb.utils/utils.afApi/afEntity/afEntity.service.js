@@ -1,42 +1,41 @@
 (function(angular) {
     "use strict";
 
-    function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbEntity) {
+    function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
         var ref = "";
         var entity = "";
-        //TODO: make setRef private
         //move this to fbRef
         this.setRef = function(path) {
             ref = path;
             if (typeof ref === 'object') {
                 return ref;
             } else if (ref == null) {
-                return fbEntity.ref();
+                return fbRef.ref();
             } else {
-                return fbEntity.ref(ref);
+                return fbRef.ref(ref);
             }
         };
-        //TODO: args = (type, obj) --> would rather not have to build
-        //ref in the controllers or app level services but easier to test
-        //and more explicit;
         this.set = function(type, path) {
-            entity = this.setRef(path);
+            if (arguments.length === 0) {
+                return afWrap('auth', fbRef.root());
+            } else {
+                entity = this.setRef(path);
+                return afWrap(type, entity);
+            }
+        };
+
+        function afWrap(type, entity) {
             if (type === 'object') {
                 return $firebaseObject(entity);
             } else if (type === 'array') {
                 return $firebaseArray(entity);
             } else if (type === 'auth') {
                 return $firebaseAuth(entity);
-            } else if (entity === null) {
-                throw new Error('you must call setRef first!');
-            } else {
-                throw new Error('type must equal "object", "auth", or "array" ');
             }
-        };
-
+        }
     }
 
-    afEntityService.$inject = ['$firebaseObject', '$firebaseArray', '$firebaseAuth', 'fbEntity'];
+    afEntityService.$inject = ['$firebaseObject', '$firebaseArray', '$firebaseAuth', 'fbRef'];
 
     angular.module('utils.afApi')
         .service('afEntity', afEntityService);

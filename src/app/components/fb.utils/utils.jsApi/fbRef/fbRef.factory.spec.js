@@ -5,7 +5,7 @@
         var fbRef, FBURL;
         beforeEach(function() {
             MockFirebase.override();
-            module('fb.utils');
+            module('utils.jsApi');
         });
         beforeEach(inject(function(_fbRef_, _FBURL_) {
             fbRef = _fbRef_;
@@ -24,6 +24,11 @@
 						// it("throws an error if args !== array", function(){
 						// });
         });
+				describe('root', function() {
+					it("returns a firebase with path = parentRef", function() {
+						expect(fbRef.root().path).toEqual(FBURL);
+					});
+				});
         describe('ref', function() {
             it("fbRef.ref is a function", function() {
                 expect(typeof fbRef.ref).toBe('function');
