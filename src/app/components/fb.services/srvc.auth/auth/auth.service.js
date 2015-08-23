@@ -8,12 +8,21 @@
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
         };
+        var creds = {
+            email: null,
+            pass: null
+        };
+        var options = {
+            remember: null
+        };
 
-        this.passwordAndEmailLogin = function(email, pass) {
+        this.passwordAndEmailLogin = function(creds, options) {
             return authObj
                 .$authWithPassword({
-                    email: email,
-                    password: pass
+                    email: creds.email,
+                    password: creds.pass
+                }, {
+                    remember: options.remember
                 })
                 .then(function(authData) {
                         session.setAuthData(authData);
