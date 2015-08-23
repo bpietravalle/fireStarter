@@ -105,7 +105,7 @@ describe("afEntity Service=>FB Tests", function() {
                         return data;
                     });
                 }
-                arr = stubArray(null, $firebaseArray.$extend({
+                arr = extendArray(null, $firebaseArray.$extend({
                     $$added: addPromise
                 }));
                 expect(arr.length).toBe(0);
@@ -136,7 +136,7 @@ describe("afEntity Service=>FB Tests", function() {
                 }
                 var called = false;
 								var ref = stubRef();
-                arr = stubArray(null, $firebaseArray.$extend({
+                arr = extendArray(null, $firebaseArray.$extend({
                     $$added: addPromise
                 }),ref);
                 arr.$loaded().then(function() {
@@ -218,7 +218,7 @@ describe("afEntity Service=>FB Tests", function() {
             it('should work on a query', function() {
                 var ref = stubRef();
                 var query = ref.limit(2);
-                var arr = $firebaseArray(query);
+                var arr = afEntity.set("array", query);
                 addAndProcess(arr, testutils.snap('one', 'b', 1), null);
                 expect(arr.length).toBe(1);
             });
@@ -328,7 +328,7 @@ describe("afEntity Service=>FB Tests", function() {
                 ref.set(STUB_DATA);
                 ref.flush();
                 var query = ref.limit(5);
-                var arr = $firebaseArray(query);
+                var arr = afEntity.set("array",query);
                 flushAll(arr.$ref());
                 var key = arr.$keyAt(1);
                 arr[1].foo = 'watchtest';
@@ -405,7 +405,7 @@ describe("afEntity Service=>FB Tests", function() {
                     console.error(e);
                 });
                 var query = ref.limit(5); //todo-mock MockFirebase does not support 2.x queries yet
-                var arr = $firebaseArray(query);
+                var arr = afEntity.set("array",query);
                 flushAll(arr.$ref());
                 var key = arr.$keyAt(1);
                 arr.$remove(1).then(whiteSpy, blackSpy);
@@ -498,7 +498,7 @@ describe("afEntity Service=>FB Tests", function() {
                 var err = new Error('test_fail');
                 var ref = stubRef();
                 ref.failNext('on', err);
-                var arr = $firebaseArray(ref);
+                var arr = afEntity.set("array",ref);
                 arr.$loaded().then(whiteSpy, blackSpy);
                 flushAll(ref);
                 expect(whiteSpy).not.toHaveBeenCalled();
@@ -518,7 +518,7 @@ describe("afEntity Service=>FB Tests", function() {
                 var ref = stubRef();
                 var err = new Error('test_fail');
                 ref.failNext('once', err);
-                var arr = $firebaseArray(ref);
+                var arr = afEntity.set("array",ref);
                 arr.$loaded(whiteSpy, blackSpy);
                 flushAll(ref);
                 expect(whiteSpy).not.toHaveBeenCalled();
@@ -529,7 +529,7 @@ describe("afEntity Service=>FB Tests", function() {
         describe('$ref', function() {
             it('should return Firebase instance it was created with', function() {
                 var ref = stubRef();
-                var arr = $firebaseArray(ref);
+                var arr = afEntity.set("array",ref);
                 expect(arr.$ref()).toBe(ref);
             });
         });
@@ -618,7 +618,7 @@ describe("afEntity Service=>FB Tests", function() {
             });
 
             it('should apply $$defaults if they exist', function() {
-                var arr = stubArray(null, $firebaseArray.$extend({
+                var arr = extendArray(null, $firebaseArray.$extend({
                     $$defaults: {
                         aString: 'not_applied',
                         foo: 'foo'
@@ -681,7 +681,7 @@ describe("afEntity Service=>FB Tests", function() {
             });
 
             it('should apply $$defaults if they exist', function() {
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $$defaults: {
                         aString: 'not_applied',
                         foo: 'foo'
@@ -732,7 +732,7 @@ describe("afEntity Service=>FB Tests", function() {
         describe('$$error', function() {
             it('should call $destroy', function() {
                 var spy = jasmine.createSpy('$destroy');
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $destroy: spy
                 }));
                 spy.calls.reset();
@@ -805,7 +805,7 @@ describe("afEntity Service=>FB Tests", function() {
 
             it('should invoke $$notify with "child_added" event', function() {
                 var spy = jasmine.createSpy('$$notify');
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $$notify: spy
                 }));
                 spy.calls.reset();
@@ -832,7 +832,7 @@ describe("afEntity Service=>FB Tests", function() {
 
             it('should invoke $$notify with "child_changed" event', function() {
                 var spy = jasmine.createSpy('$$notify');
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $$notify: spy
                 }));
                 spy.calls.reset();
@@ -871,7 +871,7 @@ describe("afEntity Service=>FB Tests", function() {
 
             it('should invoke $$notify with "child_moved" event', function() {
                 var spy = jasmine.createSpy('$$notify');
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $$notify: spy
                 }));
                 spy.calls.reset();
@@ -904,7 +904,7 @@ describe("afEntity Service=>FB Tests", function() {
 
             it('should trigger $$notify with "child_removed" event', function() {
                 var spy = jasmine.createSpy('$$notify');
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $$notify: spy
                 }));
                 spy.calls.reset();
@@ -1009,7 +1009,23 @@ describe("afEntity Service=>FB Tests", function() {
             return new MockFirebase('Mock://').child('data/REC1');
         }
 
-        function stubArray(initialData, Factory, ref) {
+        function stubArray(initialData, factory, ref) {
+					var factory;
+            if (!factory) {
+                factory = $firebaseArray;
+            }
+            if (!ref) {
+                ref = stubRef();
+            }
+            var arr = afEntity.set("array",ref);
+            if (initialData) {
+                ref.set(initialData);
+                ref.flush();
+                flushAll();
+            }
+            return arr;
+        }
+        function extendArray(initialData, Factory, ref) {
             if (!Factory) {
                 Factory = $firebaseArray;
             }
@@ -1024,6 +1040,7 @@ describe("afEntity Service=>FB Tests", function() {
             }
             return arr;
         }
+
 
         function addAndProcess(arr, snap, prevChild) {
             arr.$$process('child_added', arr.$$added(snap, prevChild), prevChild);
