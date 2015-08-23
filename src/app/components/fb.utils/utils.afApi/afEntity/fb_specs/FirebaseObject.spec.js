@@ -1,7 +1,7 @@
 'use strict';
 describe("afEntity Service=>FB Tests", function() {
     describe('$firebaseObject', function() {
-        var $firebaseObject, $utils, $rootScope, $timeout, obj, testutils, $interval, log, afEntity;
+        var $firebaseObject, $utils, $rootScope, $timeout, obj, testutils, $interval, log, mockObj;
 
         var DEFAULT_ID = 'REC1';
         var FIXTURE_DATA = {
@@ -19,6 +19,7 @@ describe("afEntity Service=>FB Tests", function() {
             };
 
             module('utils.afApi');
+            module('fbMocks');
             module('testutils', function($provide) {
                 $provide.value('$log', {
                     error: function() {
@@ -26,14 +27,14 @@ describe("afEntity Service=>FB Tests", function() {
                     }
                 })
             });
-            inject(function(_$interval_, _$firebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_, _afEntity_) {
+            inject(function(_$interval_, _$firebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_, _mockObj_) {
                 $firebaseObject = _$firebaseObject_;
                 $timeout = _$timeout_;
                 $interval = _$interval_;
                 $utils = $firebaseUtils;
                 $rootScope = _$rootScope_;
                 testutils = _testutils_;
-								afEntity = _afEntity_;
+								mockObj = _mockObj_;
 
                 // start using the direct methods here until we can refactor `obj`
                 obj = makeObject(FIXTURE_DATA);
@@ -785,20 +786,11 @@ describe("afEntity Service=>FB Tests", function() {
         }
 
         function stubRef() {
-            return new MockFirebase('Mock://').child('data').child(DEFAULT_ID);
+            return mockObj.stubRef();
         }
 
         function makeObject(initialData, ref) {
-            if (!ref) {
-                ref = stubRef();
-            }
-            var obj = afEntity.set("object", ref); 
-            if (angular.isDefined(initialData)) {
-                ref.ref().set(initialData);
-                ref.flush();
-                $timeout.flush();
-            }
-            return obj;
+					return mockObj.makeObject(initialData, ref);
         }
 
         function spyOnWatch($scope) {

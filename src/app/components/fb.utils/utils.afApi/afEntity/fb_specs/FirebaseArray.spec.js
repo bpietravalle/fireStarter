@@ -30,16 +30,17 @@ describe("afEntity Service=>FB Tests", function() {
             }
         };
 
-        var arr, $firebaseArray, $utils, $timeout, testutils, afEntity;
+        var arr, $firebaseArray, $utils, $timeout, testutils, mockArr;
         beforeEach(function() {
             module('utils.afApi');
+            module('fbMocks');
             module('testutils');
-            inject(function(_$firebaseArray_, $firebaseUtils, _$timeout_, _testutils_, _afEntity_){
+            inject(function(_$firebaseArray_, $firebaseUtils, _$timeout_, _testutils_, _mockArr_){
                 testutils = _testutils_;
                 $timeout = _$timeout_;
                 $firebaseArray = _$firebaseArray_;
                 $utils = $firebaseUtils;
-								afEntity = _afEntity_;
+								mockArr = _mockArr_;
                 arr = stubArray(STUB_DATA);
             });
         });
@@ -218,7 +219,7 @@ describe("afEntity Service=>FB Tests", function() {
             it('should work on a query', function() {
                 var ref = stubRef();
                 var query = ref.limit(2);
-                var arr = afEntity.set("array", query);
+                var arr = stubArray(); // stubArray(null, query);
                 addAndProcess(arr, testutils.snap('one', 'b', 1), null);
                 expect(arr.length).toBe(1);
             });
@@ -328,7 +329,7 @@ describe("afEntity Service=>FB Tests", function() {
                 ref.set(STUB_DATA);
                 ref.flush();
                 var query = ref.limit(5);
-                var arr = afEntity.set("array",query);
+                var arr = stubArray(null,query);
                 flushAll(arr.$ref());
                 var key = arr.$keyAt(1);
                 arr[1].foo = 'watchtest';
@@ -405,7 +406,7 @@ describe("afEntity Service=>FB Tests", function() {
                     console.error(e);
                 });
                 var query = ref.limit(5); //todo-mock MockFirebase does not support 2.x queries yet
-                var arr = afEntity.set("array",query);
+                var arr = stubArray(null,query);
                 flushAll(arr.$ref());
                 var key = arr.$keyAt(1);
                 arr.$remove(1).then(whiteSpy, blackSpy);
@@ -498,7 +499,7 @@ describe("afEntity Service=>FB Tests", function() {
                 var err = new Error('test_fail');
                 var ref = stubRef();
                 ref.failNext('on', err);
-                var arr = afEntity.set("array",ref);
+                var arr = stubArray(null,ref);
                 arr.$loaded().then(whiteSpy, blackSpy);
                 flushAll(ref);
                 expect(whiteSpy).not.toHaveBeenCalled();
@@ -518,7 +519,7 @@ describe("afEntity Service=>FB Tests", function() {
                 var ref = stubRef();
                 var err = new Error('test_fail');
                 ref.failNext('once', err);
-                var arr = afEntity.set("array",ref);
+                var arr = stubArray(null,ref);
                 arr.$loaded(whiteSpy, blackSpy);
                 flushAll(ref);
                 expect(whiteSpy).not.toHaveBeenCalled();
@@ -529,7 +530,7 @@ describe("afEntity Service=>FB Tests", function() {
         describe('$ref', function() {
             it('should return Firebase instance it was created with', function() {
                 var ref = stubRef();
-                var arr = afEntity.set("array",ref);
+                var arr = stubArray(null,ref);
                 expect(arr.$ref()).toBe(ref);
             });
         });
@@ -818,7 +819,7 @@ describe("afEntity Service=>FB Tests", function() {
 
             it('"child_added" should not invoke $$notify if it already exists after prevChild', function() {
                 var spy = jasmine.createSpy('$$notify');
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $$notify: spy
                 }));
                 var index = arr.$indexFor('e');
@@ -882,7 +883,7 @@ describe("afEntity Service=>FB Tests", function() {
 
             it('"child_moved" should not trigger $$notify if prevChild is already the previous element', function() {
                 var spy = jasmine.createSpy('$$notify');
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $$notify: spy
                 }));
                 var index = arr.$indexFor('e');
@@ -915,7 +916,7 @@ describe("afEntity Service=>FB Tests", function() {
 
             it('"child_removed" should not trigger $$notify if the record is not in the array', function() {
                 var spy = jasmine.createSpy('$$notify');
-                var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
+                var arr = extendArray(STUB_DATA, $firebaseArray.$extend({
                     $$notify: spy
                 }));
                 spy.calls.reset();
@@ -993,7 +994,8 @@ describe("afEntity Service=>FB Tests", function() {
             });
         });
 
-        var flushAll = (function() {
+        var flushAll = 
+				(function() {
             return function flushAll() {
                 // the order of these flush events is significant
                 Array.prototype.slice.call(arguments, 0).forEach(function(o) {
@@ -1006,39 +1008,14 @@ describe("afEntity Service=>FB Tests", function() {
         })();
 
         function stubRef() {
-            return new MockFirebase('Mock://').child('data/REC1');
+					return mockArr.stubRef();
         }
 
         function stubArray(initialData, factory, ref) {
-					var factory;
-            if (!factory) {
-                factory = $firebaseArray;
-            }
-            if (!ref) {
-                ref = stubRef();
-            }
-            var arr = afEntity.set("array",ref);
-            if (initialData) {
-                ref.set(initialData);
-                ref.flush();
-                flushAll();
-            }
-            return arr;
+					return mockArr.stubArray(initialData, factory, ref);
         }
         function extendArray(initialData, Factory, ref) {
-            if (!Factory) {
-                Factory = $firebaseArray;
-            }
-            if (!ref) {
-                ref = stubRef();
-            }
-            var arr = new Factory(ref);
-            if (initialData) {
-                ref.set(initialData);
-                ref.flush();
-                flushAll();
-            }
-            return arr;
+					return mockArr.extendArray(initialData, Factory, ref);
         }
 
 

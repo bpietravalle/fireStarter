@@ -2,7 +2,7 @@
 
     "use strict";
 
-    function RegService($q, afEntity, auth, fbEntity) {
+    function RegService($q, afEntity, auth, fbHandler) {
 
         var authObj = afEntity.set();
 
@@ -23,8 +23,8 @@
                     //     });
                 })
                 .then(function(authData) {
-                        var ref = fbEntity.ref('users', authData.uid);
-                        return fbEntity.handler(function(cb) {
+                        var ref = fbHandler.ref('users', authData.uid);
+                        return fbHandler.handler(function(cb) {
                             ref.set({
                                 email: email,
                                 name: 'big dawg'
@@ -66,7 +66,7 @@
         };
     }
 
-    RegService.$inject = ['$q', 'afEntity', 'auth', 'fbEntity'];
+    RegService.$inject = ['$q', 'afEntity', 'auth', 'fbHandler'];
 
     angular.module('srvc.auth')
         .service('reg', RegService);

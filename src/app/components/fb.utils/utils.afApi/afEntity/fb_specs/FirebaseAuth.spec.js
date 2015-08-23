@@ -2,7 +2,7 @@
 describe("afEntity Service=>FB Tests", function() {
     describe('FirebaseAuth', function() {
 
-        var $firebaseAuth, ref, auth, result, failure, status, $timeout, log, afEntity;
+        var $firebaseAuth, ref, auth, result, failure, status, $timeout, log, mockAuth;
 
         beforeEach(function() {
 
@@ -18,32 +18,24 @@ describe("afEntity Service=>FB Tests", function() {
                 })
             });
             module('testutils');
-						module('utils.afApi');
+            module('fbMocks');
+            module('utils.afApi');
 
             result = undefined;
             failure = undefined;
             status = null;
 
-            ref = jasmine.createSpyObj('ref', ['authWithCustomToken', 'authAnonymously', 'authWithPassword',
-                'authWithOAuthPopup', 'authWithOAuthRedirect', 'authWithOAuthToken',
-                'unauth', 'getAuth', 'onAuth', 'offAuth',
-                'createUser', 'changePassword', 'changeEmail', 'removeUser', 'resetPassword'
-            ]);
-
-            inject(function(_$firebaseAuth_, _$timeout_, _afEntity_) {
+            inject(function(_$firebaseAuth_, _$timeout_, _mockAuth_) {
                 $firebaseAuth = _$firebaseAuth_;
-								afEntity = _afEntity_;
                 $timeout = _$timeout_;
-                auth = makeAuth(ref);
+                mockAuth = _mockAuth_;
             });
+            ref = mockAuth.ref();
+            auth = mockAuth.makeAuth(ref);
 
         });
 
-				function makeAuth(ref){
-					var auth = afEntity.set("auth", ref);
-					return auth;
-				}
-				
+
         function getArgIndex(callbackName) {
             //In the firebase API, the completion callback is the second argument for all but a few functions.
             switch (callbackName) {
