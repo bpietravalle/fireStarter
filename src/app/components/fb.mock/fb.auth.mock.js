@@ -13,6 +13,10 @@
             return ref;
         };
 
+				this.authData = function() {
+					var data = jasmine.createSpyObj('authData',['uid','provider','token']);
+					return data;
+				};
         this.makeAuth = function(ref) {
             if (!ref) {
                 var ref = this.ref();

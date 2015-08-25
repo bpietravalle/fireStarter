@@ -3,21 +3,14 @@
 
     function AuthService($q, afEntity, session) {
 
+        this.authObj = afEntity.set();
 
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
         };
-        var creds = {
-            email: "",
-            pass: ""
-        };
-        var options = {
-            remember: ""
-        };
 
         this.passwordAndEmailLogin = function(creds, options) {
-            var authObj = afEntity.set();
-            return authObj
+            return this.authObj
                 .$authWithPassword({
                     email: creds.email,
                     password: creds.pass
