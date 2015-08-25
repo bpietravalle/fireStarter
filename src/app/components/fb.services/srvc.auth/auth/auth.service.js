@@ -3,20 +3,20 @@
 
     function AuthService($q, afEntity, session) {
 
-        var authObj = afEntity.set();
 
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
         };
         var creds = {
-            email: null,
-            pass: null
+            email: "",
+            pass: ""
         };
         var options = {
-            remember: null
+            remember: ""
         };
 
         this.passwordAndEmailLogin = function(creds, options) {
+            var authObj = afEntity.set();
             return authObj
                 .$authWithPassword({
                     email: creds.email,
@@ -35,6 +35,7 @@
         };
 
         this.loginOAuth = function(provider) {
+            var authObj = afEntity.set();
             return authObj
                 .$authWithOAuthPopup(provider)
                 // need to add scope

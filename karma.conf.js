@@ -34,13 +34,13 @@ module.exports = function(config) {
 
         colors: true,
 
-        frameworks: ['jasmine', 'jasmine-matchers', 'angular-filesort'],
+        frameworks: ['jasmine', 'jasmine-matchers', 'sinon', 'angular-filesort'],
 
         angularFilesort: {
             whitelist: [path.join(conf.paths.src, '/**/!(*.html|*.spec|*.mock).js')]
         },
 
-        reporters: ['coverage', 'spec', 'progress', 'notify', 'verbose'],
+        reporters: ['coverage', 'spec', 'progress', 'notify', 'nested'],
 
         ngHtml2JsPreprocessor: {
             stripPrefix: 'src/',
@@ -54,9 +54,11 @@ module.exports = function(config) {
             'karma-angular-filesort',
             'karma-spec-reporter',
             'karma-coverage',
-            'karma-verbose-reporter',
+            // 'karma-verbose-reporter',
+            'karma-nested-reporter',
             'karma-notify-reporter',
             'karma-jasmine-matchers',
+						'karma-sinon',
             'karma-jasmine',
             'karma-ng-html2js-preprocessor'
         ],

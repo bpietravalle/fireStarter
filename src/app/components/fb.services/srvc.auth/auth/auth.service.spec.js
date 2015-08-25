@@ -2,19 +2,26 @@
     "use strict";
 
     describe("Auth Service", function() {
-        var auth, mock, ref, session, mockAuth, result, failure, status, $timeout;
+        var auth, $q, mock, ref, session, deferred, $rootScope, authObj, mockAuth, result, failure, status, $timeout, afEntity;
 
         beforeEach(function() {
-            MockFirebase.override();
+            // MockFirebase.override();
             module("srvc.auth");
+            module("utils.afApi");
             module("fbMocks");
-            inject(function(_$timeout_, _auth_, _session_, _mockAuth_) {
+            inject(function(_$timeout_, _auth_, _$q_, _$rootScope_, _session_, _afEntity_, _mockAuth_) {
                 $timeout = _$timeout_;
+								$rootScope = _$rootScope_;
+								$q = _$q_;
+								deferred = $q.defer();
                 auth = _auth_;
                 session = _session_; //mock this
+                afEntity = _afEntity_;
+                authObj = afEntity.set();
                 mockAuth = _mockAuth_;
                 ref = mockAuth.ref();
                 mock = mockAuth.makeAuth(ref);
+
             });
             result = undefined;
             failure = undefined;
@@ -22,25 +29,19 @@
         });
 
         describe("passwordAndEmailLogin", function() {
-            it('passes options and credentials object to underlying method', function() {
-							var options = {};
-                // var options = {
-                //     someOption: 'a'
-                // };
+            it('returns a promise when passed valid credentials', function() {
+                var options = {
+                    someOption: 'a'
+                };
                 var credentials = {
                     email: 'myname',
                     password: 'password'
                 };
-                auth.passwordAndEmailLogin(credentials, options);
-                // mock.$authWithPassword(credentials, options);
-                expect(mock.authWithPassword).toHaveBeenCalledWith({
-                        email: 'myname',
-                        password: 'password'
-                    },
-                    jasmine.any(Function), {
-                        someOption: 'a'
-                    }
-                );
+                var test = auth.passwordAndEmailLogin(credentials, options);
+								test.then(function(_result_){ result: _result_;});
+								deferred.resolve("boom");
+								$rootScope.$apply();
+                expect(_result_).toEqual("boom")
             });
 
             it('will revoke the promise if authentication fails', function() {
@@ -56,39 +57,21 @@
                 $timeout.flush();
                 expect(result).toEqual('myResult');
             });
+            it('will set session data with authData obj if authentication is successful', function() {
+                // var session = jasmine.createSpy('session');
+                // var options = {
+                //     someOption: 'a'
+                // };
+                // var credentials = {
+                //     email: 'myname',
+                //     password: 'password'
+                // };
+                // var test = auth.passwordAndEmailLogin(credentials, options);
+                // expect(result).toEqual('myResult');
 
+
+            });
         });
-
-
-
-
-
-
-
-
-        it("should exist", function() {
-            expect(auth).toBeDefined();
-        });
-        it("auth.loginOAuth is a function", function() {
-            expect(typeof auth.loginOAuth).toBe('function');
-        });
-        it("auth.logOut is a function", function() {
-            expect(typeof auth.logOut).toBe('function');
-        });
-        it("auth.isLoggedIn is a function", function() {
-            expect(typeof auth.isLoggedIn).toBe('function');
-        });
-        // it("auth.googleLogin is a function", function() {
-        //     expect(typeof auth.googleLogin).toBe('function');
-        // });
-        // it("auth.facebookLogin is a function", function() {
-        //     expect(typeof auth.facebookLogin).toBe('function');
-        // });
-        // it("auth.twitterLogin is a function", function() {
-        //     expect(typeof auth.twitterLogin).toBe('function');
-        // });
-
-
 
         //helper methods from fb/angularfire specs
         function wrapPromise(promise) {
