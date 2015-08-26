@@ -1,75 +1,100 @@
 (function(angular) {
+        "use strict";
 
-    "use strict";
+        function RegService($q, afEntity, auth) {
 
-    function RegService($q, afEntity, auth, fbHandler) {
+            var authObj = afEntity.set();
 
-        var authObj = afEntity.set();
+            this.passwordAndEmailRegister = function(email, pass) {
+                return authObj
+                    .$createUser({
+                        email: email,
+                        password: pass
+                    })
+                    .then(function(userData) {
+                        return auth.passwordAndEmailLogin(email, pass);
+                    })
+                    .then(function(authData) {
+                        getUser(authData);
+                    })
+                    .then(saveAuthData(authData),
 
-        this.passwordAndEmailRegister = function(email, pass) {
-            console.log("message received with " + email + " and" + pass);
-            return authObj
-                .$createUser({
-                    email: email,
-                    password: pass
-                })
-                .then(function(userData) {
-                    console.log("user " + userData.uid + " created");
-                        auth.passwordAndEmailLogin(email, pass);
-                    // return authObj
-                    //     .$authWithPassword({
-                    //         email: email,
-                    //         password: pass
-                    //     });
-                })
-                .then(function(authData) {
-                        var ref = fbHandler.ref('users', authData.uid);
-                        return fbHandler.handler(function(cb) {
-                            ref.set({
-                                email: email,
-                                name: 'big dawg'
-                            }, cb);
+                        function(error) {
+                            $q.reject(error);
                         });
-                    },
-                    function(error) {
-                        $q.reject(error);
-                    }
-                );
-        };
+            }
 
-        this.loginOAuth = function(provider) {
-            return authObj
-                .$authWithOAuthPopup(provider)
-                // need to add scope
-                .then(function(authData) {
-                        session.setAuthData(authData);
-                        return authData;
-                    },
-                    function(error) {
-                        $q.reject(error);
-                    }
-                );
-        };
 
-        this.googleLogin = function() {
-            this.loginOAuth("google");
+            this.registerOAuth = function(provider) {
+                return authObj
+                    .$authWithOAuthPopup(provider)
+                    // need to add scope
+                    .then(function(authData) {
+                            session.setAuthData(authData);
+                            return authData;
+                        },
+                        function(error) {
+                            $q.reject(error);
+                        }
+                    );
+            };
+
+            function getUser(authData) {
+                if (authData) {
+                    var user = afEntity.set('users', authData.uid);
+                    return user.$loaded()
+                } else {
+                    console.log("no authentication data available");
+                }
+            }
+
+
+
+            function saveAuthData(authData) {
+                if (authData.provider === "password") {
+                    //save data
+                } else {
+                    saveOAuthData(authData);
+                };
+            }
+        }
+
+        //send this to a service to set data...
+        //method to save OAuth data
+        function saveOAuthData(authData) {
+            if (authData) {
+                var newUser = {
+                    name: "",
+                    email: "",
+                };
+                if (authData.google) {
+                    newUser.name = authData.google.displayName;
+                }
+                user.$ref().set(newUser);
+            } else {
+                console.log("User is logged out");
+            }
+        }
+
+        this.googleRegister = function() {
+            this.registerOAuth("google");
         };
-        this.facebookLogin = function() {
-            this.loginOAuth("facebook");
+        this.facebookRegister = function() {
+            this.registerOAuth("facebook");
         };
-        this.twitterLogin = function() {
-            this.loginOAuth("twitter");
+        this.twitterRegister = function() {
+            this.registerOAuth("twitter");
         };
-        this.logOut = function() {
+        this.cancelAccount = function() {
             authObj.$unauth();
             session.destroy();
         };
     }
 
-    RegService.$inject = ['$q', 'afEntity', 'auth', 'fbHandler'];
+    RegService.$inject = ['$q', 'afEntity', 'auth'];
 
     angular.module('srvc.auth')
-        .service('reg', RegService);
+    .service('reg', RegService);
 
 
 })(angular);

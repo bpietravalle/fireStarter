@@ -17,6 +17,10 @@
 					var data = jasmine.createSpyObj('authData',['uid','provider','token']);
 					return data;
 				};
+				this.userData = function(){
+					var data = jasmine.createSpyObj('userData',['uid']);
+					return data;
+				};
         this.makeAuth = function(ref) {
             if (!ref) {
                 var ref = this.ref();
