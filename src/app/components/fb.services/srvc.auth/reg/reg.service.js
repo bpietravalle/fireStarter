@@ -12,13 +12,18 @@
                     password: pass
                 })
                 .then(function(userData) {
-									
-                    return auth.passwordAndEmailLogin(email, pass);
+                    var creds = {
+                        email: email,
+                        pass: pass
+                    }
+                    return auth.passwordAndEmailLogin(creds);
                 })
                 .then(function(authData) {
-                    getUser(authData);
+                    this.getUser(authData);
                 })
-                .then(saveAuthData(authData),
+                .then(function(authData) {
+                        this.saveAuthData(authData);
+                    },
 
                     function(error) {
 
@@ -40,7 +45,7 @@
                 );
         };
 
-        function getUser(authData) {
+        this.getUser = function(authData) {
             if (authData) {
                 var user = afEntity.set('users', authData.uid);
                 return user.$loaded()
@@ -50,8 +55,7 @@
         }
 
 
-
-        function saveAuthData(authData) {
+        this.saveAuthData = function(authData) {
             if (authData.provider === "password") {
                 //save data
             } else {

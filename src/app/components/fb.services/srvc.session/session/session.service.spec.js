@@ -2,30 +2,39 @@
     "use strict";
 
     describe("Session Service", function() {
-        var session;
+        var session, $log, localStorageService;
         beforeEach(function() {
             module("srvc.session");
         });
 
-        beforeEach(inject(function(_session_) {
-            session =_session_;
+        beforeEach(inject(function(_session_, _$log_, _localStorageService_) {
+            session = _session_;
+            $log = _$log_;
+            localStorageService = _localStorageService_;
         }));
+				afterEach(function(){
+					session = null;
+					$log = null;
+					localStorageService = null;
+				});
 
         it("should exist", function() {
             expect(session).toBeDefined();
         });
-        it("#getAuthData is a function", function() {
-            expect(typeof session.getAuthData).toBe('function');
+        it("setAuthData returns correct string", function() {
+            session.setAuthData("stuff");
+            expect(session._authData).toEqual("stuff");
+				});
+        it("getAuthData returns correct string", function() {
+            session.setAuthData("stuff");
+            expect(session.getAuthData()).toEqual("stuff");
+				});
+        it("destroy resets authData", function() { 
+            session.setAuthData("stuff");
+            expect(session._authData).toEqual("stuff");
+						session.destroy();
+            expect(session._authData).toEqual(null);
         });
-        it("#setAuthData is a function", function() {
-            expect(typeof session.setAuthData).toBe('function');
-        });
-        it("#getGoogleAccessToken is a function", function() {
-            expect(typeof session.getGoogleAccessToken).toBe('function');
-        });
-        it("#destroy is a function", function() {
-            expect(typeof session.destroy).toBe('function');
-        });
+				//TODO: tests for OAuth access tokens
     });
 }(angular));
-

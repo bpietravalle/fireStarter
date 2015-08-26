@@ -136,11 +136,6 @@
                 });
             });
         });
-				describe("private functions", function() {
-					it("works", function(){
-						expect(reg).toEqual("boom");
-					});
-				});
         // describe("#cancelAccount", function() {
         //     beforeEach(inject(function() {
         //         regObj = jasmine.createSpy('regObj');
