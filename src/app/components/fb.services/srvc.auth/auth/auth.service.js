@@ -3,14 +3,14 @@
 
     function AuthService($q, afEntity, session) {
 
-        this.authObj = afEntity.set();
+        var authObj = afEntity.set();
 
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
         };
 
         this.passwordAndEmailLogin = function(creds, options) {
-            return this.authObj
+            return authObj
                 .$authWithPassword({
                     email: creds.email,
                     password: creds.pass
@@ -28,7 +28,6 @@
         };
 
         this.loginOAuth = function(provider) {
-            var authObj = afEntity.set();
             return authObj
                 .$authWithOAuthPopup(provider)
                 // need to add scope
@@ -52,8 +51,12 @@
             this.loginOAuth("twitter");
         };
         this.logOut = function() {
-            authObj.$unauth();
-            session.destroy();
+            if (this.isLoggedIn()) {
+                authObj.$unauth();
+                session.destroy();
+            } else {
+                throw new Error("no login data found");
+            }
         };
     }
 
