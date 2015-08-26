@@ -142,40 +142,40 @@ describe("afEntity Service=>FB Tests", function() {
         });
 
         describe('$loaded', function() {
-            it('should return a promise', function() {
-                expect(obj.$loaded()).toBeAPromise();
-            });
+            // it('should return a promise', function() {
+            //     expect(obj.$loaded()).toBeAPromise();
+            // });
 
-            it('should resolve when all server data is downloaded', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var obj = makeObject();
-                obj.$loaded().then(whiteSpy, blackSpy);
-                obj.$ref().flush();
-                flushAll();
-                expect(whiteSpy).toHaveBeenCalledWith(obj);
-                expect(blackSpy).not.toHaveBeenCalled();
-            });
+            // it('should resolve when all server data is downloaded', function() {
+            //     var whiteSpy = jasmine.createSpy('resolve');
+            //     var blackSpy = jasmine.createSpy('reject');
+            //     var obj = makeObject();
+            //     obj.$loaded().then(whiteSpy, blackSpy);
+            //     obj.$ref().flush();
+            //     flushAll();
+            //     expect(whiteSpy).toHaveBeenCalledWith(obj);
+            //     expect(blackSpy).not.toHaveBeenCalled();
+            // });
 
-            it('should reject if the ready promise is rejected', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var ref = stubRef();
-                var err = new Error('test_fail');
-                ref.failNext('once', err);
-                var obj = makeObject(null, ref);
-                obj.$loaded().then(whiteSpy, blackSpy);
-                flushAll();
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy).toHaveBeenCalledWith(err);
-            });
+            // it('should reject if the ready promise is rejected', function() {
+            //     var whiteSpy = jasmine.createSpy('resolve');
+            //     var blackSpy = jasmine.createSpy('reject');
+            //     var ref = stubRef();
+            //     var err = new Error('test_fail');
+            //     ref.failNext('once', err);
+            //     var obj = makeObject(null, ref);
+            //     obj.$loaded().then(whiteSpy, blackSpy);
+            //     flushAll();
+            //     expect(whiteSpy).not.toHaveBeenCalled();
+            //     expect(blackSpy).toHaveBeenCalledWith(err);
+            // });
 
-            it('should resolve to the FirebaseObject instance', function() {
-                var spy = jasmine.createSpy('loaded');
-                obj.$loaded().then(spy);
-                flushAll();
-                expect(spy).toHaveBeenCalledWith(obj);
-            });
+            // it('should resolve to the FirebaseObject instance', function() {
+            //     var spy = jasmine.createSpy('loaded');
+            //     obj.$loaded().then(spy);
+            //     flushAll();
+            //     expect(spy).toHaveBeenCalledWith(obj);
+            // });
 
             it('should contain all data at the time $loaded is called', function() {
                 var obj = makeObject();
