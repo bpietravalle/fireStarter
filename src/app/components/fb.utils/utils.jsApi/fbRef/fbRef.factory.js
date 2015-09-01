@@ -5,10 +5,10 @@
     function fbRefFactory($window, FBURL) {
         var utils = {
             path: setPath,
-            root: setRoot, 
+            root: setRoot,
             ref: setRef
 
-        };
+        }
 
         return utils;
 
@@ -22,7 +22,12 @@
                 if (angular.isArray(args[i])) {
                     args[i] = setPath(args[i]);
                 } else if (typeof args[i] !== 'string') {
-                    throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
+									//TODO: write test for block below
+                    try {
+                        return args[i].toString();
+                    } catch(err) {
+                        throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
+                    }
                 }
             }
             return args.join('/');

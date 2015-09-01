@@ -24,6 +24,7 @@
             ref = null;
             reg = null;
             mockAuth = null;
+            data = null;
         });
 
         describe("passwordAndEmailRegister", function() {
@@ -135,6 +136,21 @@
                     expect(reg.registerOAuth).toHaveBeenCalledWith("twitter");
                 });
             });
+        });
+        describe("getUser", function() {
+
+            it("returns a promise if authData is present", function() {
+                var user = {
+                    uid: 1,
+                    name: "bob"
+                }
+                var test = reg.getUser(user);
+                expect(test).toBeAPromise();
+            });
+            it("doesn't return a promise if no authData is passed as argument", function() {
+                var test = reg.getUser();
+                expect(test).not.toBeAPromise();
+						});
         });
         // describe("#cancelAccount", function() {
         //     beforeEach(inject(function() {

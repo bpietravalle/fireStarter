@@ -26,6 +26,7 @@
                     },
 
                     function(error) {
+											$q.reject(error);
 
                     });
         };
@@ -44,10 +45,10 @@
                     }
                 );
         };
-
+        //TODO: write user factory
         this.getUser = function(authData) {
             if (authData) {
-                var user = afEntity.set('users', authData.uid);
+                var user = afEntity.set('object', ['users', authData.uid]);
                 return user.$loaded()
             } else {
                 console.log("no authentication data available");
@@ -89,9 +90,22 @@
         this.twitterRegister = function() {
             this.registerOAuth("twitter");
         };
-        this.cancelAccount = function() {
-            authObj.$unauth();
-            session.destroy();
+        this.cancelAccount = function(email, pass) {
+            //TODO: deactivate rather than destroy account
+            if (auth.isLoggedIn()) {
+                authObj.$removeUser({
+                    email: email,
+                    password: pass
+                }).then(function() {
+                    session.destroy();
+                    console.log("User has been destroyed");
+                }, function(error) {
+                    $q.reject(error);
+                    console.error("Error", error);
+                });
+            } else {
+                throw new Error("no login data found");
+            }
         };
     }
 
