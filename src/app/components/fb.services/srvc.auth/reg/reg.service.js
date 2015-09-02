@@ -2,44 +2,69 @@
     "use strict";
 
     function RegService($q, afEntity, auth) {
+        var registration = {
+            email: "",
+            pass: "",
+            confirm: ""
+        };
 
         var authObj = afEntity.set();
 
-        this.passwordAndEmailRegister = function(email, pass) {
-            return authObj
-                .$createUser({
-                    email: email,
-                    password: pass
-                })
-                .then(function(userData) {
-                    var creds = {
-                        email: email,
-                        pass: pass
-                    }
-                    return auth.passwordAndEmailLogin(creds);
-                })
-                .then(function(authData) {
-                    this.getUser(authData);
-                })
-                .then(function(authData) {
-                        this.saveAuthData(authData);
-                    },
+        this.passwordAndEmailRegister = function(registration) {
+            if (validParams(registration)) {
+                var newUser = {
+                    email: registration.email,
+                    name: ""
+                };
+                return authObj
+                    .$createUser({
+                        email: registration.email,
+                        password: registration.pass
+                    })
+                    .then(function(userData) {
+                        var creds = {
+                            email: registration.email,
+                            pass: registration.pass
+                        };
+                        return auth.passwordAndEmailLogin(creds);
+                    })
+                    .then(function(authData) {
+                        this.getUser(authData);
+                    })
+                    .then(function(user) {
+                            user.$ref().set(newUser);
 
-                    function(error) {
-											$q.reject(error);
+                        },
 
-                    });
+                        function(error) {
+                            $q.reject(error);
+
+                        });
+            } else {
+                throw new Error("Please try again - invalid params");
+            }
+        };
+
+
+        function validParams(registration) {
+            if (!registration.email) {
+                console.log("no email");
+            } else if (registration.pass !== registration.confirm) {
+                console.log("password and email don't match")
+            } else if (!registration.pass || !registration.confirm) {
+                console.log("please entire a password")
+            } else {
+                return true;
+            }
         };
 
 
         this.registerOAuth = function(provider) {
-            return authObj
-                .$authWithOAuthPopup(provider)
+            return auth
+                .loginOAuth(provider)
                 // need to add scope
-                .then(function(authData) {
-                        session.setAuthData(authData);
-                        return authData;
-                    },
+                .then(saveOAuthData(authData),
+
                     function(error) {
                         $q.reject(error);
                     }
@@ -49,23 +74,13 @@
         this.getUser = function(authData) {
             if (authData) {
                 var user = afEntity.set('object', ['users', authData.uid]);
-                return user.$loaded()
+                return user.$loaded();
             } else {
                 console.log("no authentication data available");
             }
-        }
+        };
 
 
-        this.saveAuthData = function(authData) {
-            if (authData.provider === "password") {
-                //save data
-            } else {
-                saveOAuthData(authData);
-            };
-        }
-
-        //send this to a service to set data...
-        //method to save OAuth data
         function saveOAuthData(authData) {
             if (authData) {
                 var newUser = {
@@ -73,6 +88,7 @@
                     email: "",
                 };
                 if (authData.google) {
+                    newUser.email = authData.google.email;
                     newUser.name = authData.google.displayName;
                 }
                 user.$ref().set(newUser);

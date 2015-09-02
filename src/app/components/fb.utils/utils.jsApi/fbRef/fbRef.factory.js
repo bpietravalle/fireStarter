@@ -8,13 +8,13 @@
             root: setRoot,
             ref: setRef
 
-        }
+        };
 
         return utils;
 
         function setRoot() {
             return new $window.Firebase(FBURL);
-        };
+        }
 
 
         function setPath(args) {

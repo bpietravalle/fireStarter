@@ -154,7 +154,7 @@
                 beforeEach(function() {
                     spyOn(auth, "isLoggedIn").and.returnValue(true);
                 });
-								// not passing and not sure why
+                // not passing and not sure why
                 // it("calls authObj#$unauth", function() {
                 //     auth.logOut();
                 //     expect(authObj.calls.count()).toEqual(1);
@@ -175,6 +175,118 @@
                 });
             });
 
+        });
+        describe("changeEmail", function() {
+            beforeEach(inject(function() {
+                spyOn(auth, 'changeEmail').and.callFake(function() {
+                    deferred = $q.defer();
+                    return deferred.promise;
+                });
+
+                this.credentials = {
+                    oldEmail: 'oldone@email.com',
+                    newEmail: 'newone@email.com',
+                    password: 'password'
+                };
+            }));
+            it('resolves promise if correct', function() {
+                var handler = jasmine.createSpy('handler');
+                var test = auth.changeEmail(this.credentials);
+                test.then(handler);
+                deferred.resolve();
+                $rootScope.$digest();
+                expect(handler).toHaveBeenCalled();
+            });
+            it('doesnt pass authData if promise is rejected', function() {
+                var handler = jasmine.createSpy('handler');
+                var test = auth.changeEmail(this.credentials);
+                test.then(handler);
+                deferred.reject("error");
+                $rootScope.$digest();
+                expect(handler).not.toHaveBeenCalled();
+            });
+            it('passes error message if promise is rejected', function() {
+                var error = jasmine.createSpy('handler');
+                var test = auth.changeEmail(this.credentials);
+                test.then(null, error);
+                deferred.reject("error");
+                $rootScope.$digest();
+                expect(error).toHaveBeenCalledWith("error");
+            });
+        });
+        describe("changePassword", function() {
+            beforeEach(inject(function() {
+                spyOn(auth, 'changePassword').and.callFake(function() {
+                    deferred = $q.defer();
+                    return deferred.promise;
+                });
+
+                this.credentials = {
+                    email: 'oldone@email.com',
+                    oldPassword: 'password',
+                    newPassword: 'passWORD'
+                };
+            }));
+            it('resolves promise if correct', function() {
+                var handler = jasmine.createSpy('handler');
+                var test = auth.changePassword(this.credentials);
+                test.then(handler);
+                deferred.resolve();
+                $rootScope.$digest();
+                expect(handler).toHaveBeenCalled();
+            });
+            it('doesnt resolve promise if incorrect', function() {
+                var handler = jasmine.createSpy('handler');
+                var test = auth.changePassword(this.credentials);
+                test.then(handler);
+                deferred.reject("error");
+                $rootScope.$digest();
+                expect(handler).not.toHaveBeenCalled();
+            });
+            it('passes error message if promise is rejected', function() {
+                var error = jasmine.createSpy('handler');
+                var test = auth.changePassword(this.credentials);
+                test.then(null, error);
+                deferred.reject("error");
+                $rootScope.$digest();
+                expect(error).toHaveBeenCalledWith("error");
+            });
+        });
+        describe("resetPassword", function() {
+            beforeEach(inject(function() {
+                spyOn(auth, 'resetPassword').and.callFake(function() {
+                    deferred = $q.defer();
+                    return deferred.promise;
+                });
+
+                this.credentials = {
+                    email: 'oldone@email.com'
+                };
+            }));
+            it('passes authData if promise resolves', function() {
+                var handler = jasmine.createSpy('handler');
+                var test = auth.resetPassword(this.credentials);
+                test.then(handler);
+                deferred.resolve();
+                $rootScope.$digest();
+                expect(handler).toHaveBeenCalled();
+            });
+            it('doesnt resolve promise if incorrect', function() {
+                var handler = jasmine.createSpy('handler');
+                var test = auth.resetPassword(this.credentials);
+                test.then(handler);
+                deferred.reject("error");
+                $rootScope.$digest();
+                expect(handler).not.toHaveBeenCalled();
+            });
+            it('passes error message if promise is rejected', function() {
+                var error = jasmine.createSpy('handler');
+                var test = auth.resetPassword(this.credentials);
+                test.then(null, error);
+                deferred.reject("error");
+                $rootScope.$digest();
+                expect(error).toHaveBeenCalledWith("error");
+            });
         });
     });
 }(angular));

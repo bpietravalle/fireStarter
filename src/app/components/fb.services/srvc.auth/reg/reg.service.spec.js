@@ -2,7 +2,7 @@
     "use strict";
 
     describe("Reg Service", function() {
-        var reg, authObj, auth, data, deferred, mock, ref, $q, $rootScope, session, mockAuth;
+        var reg, afEntity, auth, data, deferred, mock, ref, $q, $rootScope, session, mockAuth;
 
         beforeEach(function() {
             MockFirebase.override();
@@ -150,38 +150,46 @@
             it("doesn't return a promise if no authData is passed as argument", function() {
                 var test = reg.getUser();
                 expect(test).not.toBeAPromise();
-						});
+            });
         });
-        // describe("#cancelAccount", function() {
-        //     beforeEach(inject(function() {
-        //         regObj = jasmine.createSpy('regObj');
-        //         spyOn(session, "destroy");
-        //     }));
-        //     describe("when logged in", function() {
-        //         beforeEach(function() {
-        //             spyOn(reg, "isLoggedIn").and.returnValue(true);
-        //         });
-        //         // not passing and not sure why
-        //         // it("calls regObj#$unreg", function() {
-        //         //     reg.cancelAccount();
-        //         //     expect(regObj.calls.count()).toequal(1);
-        //         // });
-        //         it("calls session#destroy", function() {
-        //             reg.logOut();
-        //             expect(session.destroy).toHaveBeenCalled();
-        //         });
-        //     });
-        //     describe("when logged out", function() {
-        //         beforeEach(function() {
-        //             spyOn(reg, "isLoggedIn").and.returnValue(false);
-        //         });
-        //         it("throws an error", function() {
-        //             expect(function() {
-        //                 reg.logOut()
-        //             }).toThrow();
-        //         });
-        //     });
+        describe("#cancelAccount", function() {
+            beforeEach(function() {
+                // spyOn(reg, "cancelAccount").and.callThrough();
+                inject(function(_afEntity_) {
+                    afEntity = _afEntity_;
+                });
+                spyOn(session, "destroy");
+            });
+            //    not passing and not sure why
+            // describe("when logged in", function() {
+            //     beforeEach(function() {
+            //         spyOn(auth, "isLoggedIn").and.returnValue(true);
+            //     });
+            //     it("calls authObj#$removeUser", function() {
+            //         var email = "email@email.com";
+            //         var pass = "password1";
+            //         var authObj = jasmine.createSpy('authObj');
+            //         reg.cancelAccount(email, pass);
+            //         expect(authObj.$removeUser()).toHaveBeenCalled();
+            //     });
+            //     it("calls session#destroy", function() {
+            //         var email = "email@email.com";
+            //         var pass = "password1";
+            //         reg.cancelAccount(email, pass);
+            //         expect(session.destroy).toHaveBeenCalled();
+            //     });
+            // });
+            describe("when logged out", function() {
+                beforeEach(function() {
+                    spyOn(auth, "isLoggedIn").and.returnValue(false);
+                });
+                it("throws an error", function() {
+                    expect(function() {
+                        reg.cancelAccount();
+                    }).toThrow();
+                });
+            });
 
-        // });
+        });
     });
 }(angular));
