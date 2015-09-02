@@ -2,12 +2,6 @@
     "use strict";
 
     function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
-			// not sure - only want #set() to be public
-			// var e = {
-			// ref: setRef,
-			// wrap: afWrap
-			// }
-			// return e;
         var ref = "";
         var entity = "";
         function setRef(path) {
