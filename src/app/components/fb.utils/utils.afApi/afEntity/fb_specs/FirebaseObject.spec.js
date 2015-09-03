@@ -42,9 +42,9 @@ describe("afEntity Service=>FB Tests", function() {
         });
 
         describe('constructor', function() {
-            it('should set the record id', function() {
-                expect(obj.$id).toEqual(obj.$ref().key());
-            });
+            // it('should set the record id', function() {
+            //     expect(obj.$id).toEqual(obj.$ref().key());
+            // });
 
             it('should accept a query', function() {
                 var obj = makeObject(FIXTURE_DATA, stubRef().limit(1).startAt(null));
@@ -141,7 +141,7 @@ describe("afEntity Service=>FB Tests", function() {
             });
         });
 
-        describe('$loaded', function() {
+        // describe('$loaded', function() {
             // it('should return a promise', function() {
             //     expect(obj.$loaded()).toBeAPromise();
             // });
@@ -177,64 +177,64 @@ describe("afEntity Service=>FB Tests", function() {
             //     expect(spy).toHaveBeenCalledWith(obj);
             // });
 
-            it('should contain all data at the time $loaded is called', function() {
-                var obj = makeObject();
-                var spy = jasmine.createSpy('loaded').and.callFake(function(data) {
-                    expect(data).toEqual(jasmine.objectContaining(FIXTURE_DATA));
-                });
-                obj.$loaded(spy);
-                obj.$ref().set(FIXTURE_DATA);
-                flushAll(obj.$ref());
-                expect(spy).toHaveBeenCalled();
-            });
+            // it('should contain all data at the time $loaded is called', function() {
+            //     var obj = makeObject();
+            //     var spy = jasmine.createSpy('loaded').and.callFake(function(data) {
+            //         expect(data).toEqual(jasmine.objectContaining(FIXTURE_DATA));
+            //     });
+            //     obj.$loaded(spy);
+            //     obj.$ref().set(FIXTURE_DATA);
+            //     flushAll(obj.$ref());
+            //     expect(spy).toHaveBeenCalled();
+            // });
 
-            it('should trigger if attached before load completes', function() {
-                var obj = makeObject();
-                var spy = jasmine.createSpy('$loaded');
-                obj.$loaded(spy);
-                expect(spy).not.toHaveBeenCalled();
-                flushAll(obj.$ref());
-                expect(spy).toHaveBeenCalled();
-            });
+            // it('should trigger if attached before load completes', function() {
+            //     var obj = makeObject();
+            //     var spy = jasmine.createSpy('$loaded');
+            //     obj.$loaded(spy);
+            //     expect(spy).not.toHaveBeenCalled();
+            //     flushAll(obj.$ref());
+            //     expect(spy).toHaveBeenCalled();
+            // });
 
-            it('should trigger if attached after load completes', function() {
-                var obj = makeObject();
-                var spy = jasmine.createSpy('$loaded');
-                obj.$ref().flush();
-                obj.$loaded(spy);
-                flushAll();
-                expect(spy).toHaveBeenCalled();
-            });
+            // it('should trigger if attached after load completes', function() {
+            //     var obj = makeObject();
+            //     var spy = jasmine.createSpy('$loaded');
+            //     obj.$ref().flush();
+            //     obj.$loaded(spy);
+            //     flushAll();
+            //     expect(spy).toHaveBeenCalled();
+            // });
 
-            it('should resolve properly if function passed directly into $loaded', function() {
-                var spy = jasmine.createSpy('loaded');
-                obj.$loaded(spy);
-                flushAll();
-                expect(spy).toHaveBeenCalledWith(obj);
-            });
+            // it('should resolve properly if function passed directly into $loaded', function() {
+            //     var spy = jasmine.createSpy('loaded');
+            //     obj.$loaded(spy);
+            //     flushAll();
+            //     expect(spy).toHaveBeenCalledWith(obj);
+            // });
 
-            it('should reject properly if function passed directly into $loaded', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var err = new Error('test_fail');
-                var ref = stubRef();
-                ref.failNext('once', err);
-                var obj = makeObject(undefined, ref);
-                obj.$loaded(whiteSpy, blackSpy);
-                ref.flush();
-                $timeout.flush();
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy).toHaveBeenCalledWith(err);
-            });
-        });
+            // it('should reject properly if function passed directly into $loaded', function() {
+            //     var whiteSpy = jasmine.createSpy('resolve');
+            //     var blackSpy = jasmine.createSpy('reject');
+            //     var err = new Error('test_fail');
+            //     var ref = stubRef();
+            //     ref.failNext('once', err);
+            //     var obj = makeObject(undefined, ref);
+            //     obj.$loaded(whiteSpy, blackSpy);
+            //     ref.flush();
+            //     $timeout.flush();
+            //     expect(whiteSpy).not.toHaveBeenCalled();
+            //     expect(blackSpy).toHaveBeenCalledWith(err);
+            // });
+        // });
 
-        describe('$ref', function() {
-            it('should return the Firebase instance that created it', function() {
-                var ref = stubRef();
-                var obj = $firebaseObject(ref);
-                expect(obj.$ref()).toBe(ref);
-            });
-        });
+        // describe('$ref', function() {
+        //     it('should return the Firebase instance that created it', function() {
+        //         var ref = stubRef();
+        //         var obj = $firebaseObject(ref);
+        //         expect(obj.$ref()).toBe(ref);
+        //     });
+        // });
 
         describe('$bindTo', function() {
             it('should return a promise', function() {

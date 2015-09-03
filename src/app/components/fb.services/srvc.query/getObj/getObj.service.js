@@ -2,15 +2,29 @@
     "use strict";
 
     function getObjectService() {
-        // var path;
+        var fb;
 
-        this.load = function(path) {
-					return path.$loaded();
+        this.id = function(fb) {
+            return fb.$id;
+        };
+        this.ref = function(fb) {
+            return fb.$ref();
+        };
+        this.load = function(fb, opt, err) {
+            if (opt !== null || err !== null) {
+                return fb.$loaded(opt, err);
+            } else {
+                return fb.$loaded();
+            }
+        };
+        this.save = function(fb, result) {
+            if (result !== null) {
+                //do this
+            } else {
+                return fb.$save();
+            }
         };
 
-        function fbObj(path) {
-            return afEntity.set("object", path);
-        }
     }
 
     getObjectService.$inject = [];
