@@ -340,88 +340,88 @@ describe("afEntity Service=>FB Tests", function() {
             });
         });
 
-        describe('$remove', function() {
-            it('should call remove on Firebase ref', function() {
-                var key = arr.$keyAt(1);
-                var spy = spyOn(arr.$ref().child(key), 'remove');
-                arr.$remove(1);
-                expect(spy).toHaveBeenCalled();
-            });
+        // describe('$remove', function() {
+        //     it('should call remove on Firebase ref', function() {
+        //         var key = arr.$keyAt(1);
+        //         var spy = spyOn(arr.$ref().child(key), 'remove');
+        //         arr.$remove(1);
+        //         expect(spy).toHaveBeenCalled();
+        //     });
 
-            it('should return a promise', function() {
-                expect(arr.$remove(1)).toBeAPromise();
-            });
+        //     it('should return a promise', function() {
+        //         expect(arr.$remove(1)).toBeAPromise();
+        //     });
 
-            it('should resolve promise to ref on success', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var expName = arr.$keyAt(1);
-                arr.$remove(1).then(whiteSpy, blackSpy);
-                flushAll(arr.$ref());
-                var resRef = whiteSpy.calls.argsFor(0)[0];
-                expect(whiteSpy).toHaveBeenCalled();
-                expect(resRef).toBeAFirebaseRef();
-                expect(resRef.key()).toBe(expName);
-                expect(blackSpy).not.toHaveBeenCalled();
-            });
+        //     it('should resolve promise to ref on success', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         var expName = arr.$keyAt(1);
+        //         arr.$remove(1).then(whiteSpy, blackSpy);
+        //         flushAll(arr.$ref());
+        //         var resRef = whiteSpy.calls.argsFor(0)[0];
+        //         expect(whiteSpy).toHaveBeenCalled();
+        //         expect(resRef).toBeAFirebaseRef();
+        //         expect(resRef.key()).toBe(expName);
+        //         expect(blackSpy).not.toHaveBeenCalled();
+        //     });
 
-            it('should reject promise on failure', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var key = arr.$keyAt(1);
-                var err = new Error('fail_remove');
-                arr.$ref().child(key).failNext('remove', err);
-                arr.$remove(1).then(whiteSpy, blackSpy);
-                flushAll(arr.$ref());
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy).toHaveBeenCalledWith(err);
-            });
+        //     it('should reject promise on failure', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         var key = arr.$keyAt(1);
+        //         var err = new Error('fail_remove');
+        //         arr.$ref().child(key).failNext('remove', err);
+        //         arr.$remove(1).then(whiteSpy, blackSpy);
+        //         flushAll(arr.$ref());
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         expect(blackSpy).toHaveBeenCalledWith(err);
+        //     });
 
-            it('should reject promise if bad int', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                arr.$remove(-99).then(whiteSpy, blackSpy);
-                flushAll();
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
-            });
+        //     it('should reject promise if bad int', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         arr.$remove(-99).then(whiteSpy, blackSpy);
+        //         flushAll();
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+        //     });
 
-            it('should reject promise if bad object', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                arr.$remove({
-                    foo: false
-                }).then(whiteSpy, blackSpy);
-                flushAll();
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
-            });
+        //     it('should reject promise if bad object', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         arr.$remove({
+        //             foo: false
+        //         }).then(whiteSpy, blackSpy);
+        //         flushAll();
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+        //     });
 
-            it('should work on a query', function() {
-                var ref = stubRef();
-                ref.set(STUB_DATA);
-                ref.flush();
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject').and.callFake(function(e) {
-                    console.error(e);
-                });
-                var query = ref.limit(5); //todo-mock MockFirebase does not support 2.x queries yet
-                var arr = stubArray(null,query);
-                flushAll(arr.$ref());
-                var key = arr.$keyAt(1);
-                arr.$remove(1).then(whiteSpy, blackSpy);
-                flushAll(arr.$ref());
-                expect(whiteSpy).toHaveBeenCalled();
-                expect(blackSpy).not.toHaveBeenCalled();
-            });
+        //     it('should work on a query', function() {
+        //         var ref = stubRef();
+        //         ref.set(STUB_DATA);
+        //         ref.flush();
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject').and.callFake(function(e) {
+        //             console.error(e);
+        //         });
+        //         var query = ref.limit(5); //todo-mock MockFirebase does not support 2.x queries yet
+        //         var arr = stubArray(null,query);
+        //         flushAll(arr.$ref());
+        //         var key = arr.$keyAt(1);
+        //         arr.$remove(1).then(whiteSpy, blackSpy);
+        //         flushAll(arr.$ref());
+        //         expect(whiteSpy).toHaveBeenCalled();
+        //         expect(blackSpy).not.toHaveBeenCalled();
+        //     });
 
-            it('should throw Error if array destroyed', function() {
-                arr.$destroy();
-                expect(function() {
-                    arr.$remove(0);
-                }).toThrowError(Error);
-            });
-        });
+        //     it('should throw Error if array destroyed', function() {
+        //         arr.$destroy();
+        //         expect(function() {
+        //             arr.$remove(0);
+        //         }).toThrowError(Error);
+        //     });
+        // });
 
         describe('$keyAt', function() {
             it('should return key for an integer', function() {
@@ -461,79 +461,79 @@ describe("afEntity Service=>FB Tests", function() {
             });
         });
 
-        describe('$loaded', function() {
-            it('should return a promise', function() {
-                expect(arr.$loaded()).toBeAPromise();
-            });
+        // describe('$loaded', function() {
+        //     it('should return a promise', function() {
+        //         expect(arr.$loaded()).toBeAPromise();
+        //     });
 
-            it('should resolve when values are received', function() {
-                var arr = stubArray();
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                arr.$loaded().then(whiteSpy, blackSpy);
-                flushAll();
-                expect(whiteSpy).not.toHaveBeenCalled();
-                flushAll(arr.$ref());
-                expect(whiteSpy).toHaveBeenCalled();
-                expect(blackSpy).not.toHaveBeenCalled();
-            });
+        //     it('should resolve when values are received', function() {
+        //         var arr = stubArray();
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         arr.$loaded().then(whiteSpy, blackSpy);
+        //         flushAll();
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         flushAll(arr.$ref());
+        //         expect(whiteSpy).toHaveBeenCalled();
+        //         expect(blackSpy).not.toHaveBeenCalled();
+        //     });
 
-            it('should resolve to the array', function() {
-                var spy = jasmine.createSpy('resolve');
-                arr.$loaded().then(spy);
-                flushAll();
-                expect(spy).toHaveBeenCalledWith(arr);
-            });
+        //     it('should resolve to the array', function() {
+        //         var spy = jasmine.createSpy('resolve');
+        //         arr.$loaded().then(spy);
+        //         flushAll();
+        //         expect(spy).toHaveBeenCalledWith(arr);
+        //     });
 
-            it('should have all data loaded when it resolves', function() {
-                var spy = jasmine.createSpy('resolve');
-                arr.$loaded().then(spy);
-                flushAll();
-                var list = spy.calls.argsFor(0)[0];
-                expect(list.length).toBe(5);
-            });
+        //     it('should have all data loaded when it resolves', function() {
+        //         var spy = jasmine.createSpy('resolve');
+        //         arr.$loaded().then(spy);
+        //         flushAll();
+        //         var list = spy.calls.argsFor(0)[0];
+        //         expect(list.length).toBe(5);
+        //     });
 
-            it('should reject when error fetching records', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var err = new Error('test_fail');
-                var ref = stubRef();
-                ref.failNext('on', err);
-                var arr = stubArray(null,ref);
-                arr.$loaded().then(whiteSpy, blackSpy);
-                flushAll(ref);
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy).toHaveBeenCalledWith(err);
-            });
+        //     it('should reject when error fetching records', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         var err = new Error('test_fail');
+        //         var ref = stubRef();
+        //         ref.failNext('on', err);
+        //         var arr = stubArray(null,ref);
+        //         arr.$loaded().then(whiteSpy, blackSpy);
+        //         flushAll(ref);
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         expect(blackSpy).toHaveBeenCalledWith(err);
+        //     });
 
-            it('should resolve if function passed directly into $loaded', function() {
-                var spy = jasmine.createSpy('resolve');
-                arr.$loaded(spy);
-                flushAll();
-                expect(spy).toHaveBeenCalledWith(arr);
-            });
+        //     it('should resolve if function passed directly into $loaded', function() {
+        //         var spy = jasmine.createSpy('resolve');
+        //         arr.$loaded(spy);
+        //         flushAll();
+        //         expect(spy).toHaveBeenCalledWith(arr);
+        //     });
 
-            it('should reject properly when function passed directly into $loaded', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var ref = stubRef();
-                var err = new Error('test_fail');
-                ref.failNext('once', err);
-                var arr = stubArray(null,ref);
-                arr.$loaded(whiteSpy, blackSpy);
-                flushAll(ref);
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy).toHaveBeenCalledWith(err);
-            });
-        });
+        //     it('should reject properly when function passed directly into $loaded', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         var ref = stubRef();
+        //         var err = new Error('test_fail');
+        //         ref.failNext('once', err);
+        //         var arr = stubArray(null,ref);
+        //         arr.$loaded(whiteSpy, blackSpy);
+        //         flushAll(ref);
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         expect(blackSpy).toHaveBeenCalledWith(err);
+        //     });
+        // });
 
-        describe('$ref', function() {
-            it('should return Firebase instance it was created with', function() {
-                var ref = stubRef();
-                var arr = stubArray(null,ref);
-                expect(arr.$ref()).toBe(ref);
-            });
-        });
+        // describe('$ref', function() {
+        //     it('should return Firebase instance it was created with', function() {
+        //         var ref = stubRef();
+        //         var arr = stubArray(null,ref);
+        //         expect(arr.$ref()).toBe(ref);
+        //     });
+        // });
 
         describe('$watch', function() {
             it('should get notified when $$notify is called', function() {

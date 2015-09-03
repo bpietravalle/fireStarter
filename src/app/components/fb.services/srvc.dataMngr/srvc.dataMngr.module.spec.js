@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("srvc.query Module:", function() {
+    describe("srvc.dataMngr Module:", function() {
         beforeEach(function() {
-            module = angular.module("srvc.query");
+            module = angular.module("srvc.dataMngr");
         });
 
         it("should exist", function() {
@@ -15,7 +15,7 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('srvc.query').requires;
+                deps = module.value('srvc.dataMngr').requires;
             });
             it("should depend on fb.utils", function() {
                 expect(hasModule('fb.utils')).toBeTruthy();
