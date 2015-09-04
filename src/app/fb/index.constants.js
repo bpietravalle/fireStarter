@@ -1,8 +1,7 @@
 (function(angular) {
     'use strict';
-    //currently unused
     angular
-        .module('fb.const', ['firebase'])
+        .module('fb.constant', [])
         .constant('FBURL', 'https://your-firebase.firebaseio.com');
 
 })(angular);

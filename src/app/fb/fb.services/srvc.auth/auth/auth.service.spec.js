@@ -36,43 +36,63 @@
         });
 
         describe("passwordAndEmailLogin", function() {
-            beforeEach(inject(function() {
-                spyOn(auth, 'passwordAndEmailLogin').and.callFake(function() {
-                    deferred = $q.defer();
-                    return deferred.promise;
-                });
+            describe("stub/mock", function() {
+                beforeEach(inject(function() {
+                    spyOn(auth, 'passwordAndEmailLogin').and.callFake(function() {
+                        deferred = $q.defer();
+                        return deferred.promise;
+                    });
 
-                this.options = {
-                    someOption: 'a'
-                };
-                this.credentials = {
-                    email: 'myname',
-                    password: 'password'
-                };
-            }));
-            it('passes authData if promise resolves', function() {
-                var handler = jasmine.createSpy('handler');
-                var test = auth.passwordAndEmailLogin(this.credentials, this.options);
-                test.then(handler);
-                deferred.resolve(data);
-                $rootScope.$digest();
-                expect(handler).toHaveBeenCalledWith(data);
+                    this.options = {
+                        someOption: 'a'
+                    };
+                    this.credentials = {
+                        email: 'myname',
+                        password: 'password'
+                    };
+                }));
+                it('passes authData if promise resolves', function() {
+                    var handler = jasmine.createSpy('handler');
+                    var test = auth.passwordAndEmailLogin(this.credentials, this.options);
+                    test.then(handler);
+                    deferred.resolve(data);
+                    $rootScope.$digest();
+                    expect(handler).toHaveBeenCalledWith(data);
+                });
+                it('doesnt pass authData if promise is rejected', function() {
+                    var handler = jasmine.createSpy('handler');
+                    var test = auth.passwordAndEmailLogin(this.credentials, this.options);
+                    test.then(handler);
+                    deferred.reject("error");
+                    $rootScope.$digest();
+                    expect(handler).not.toHaveBeenCalledWith(data);
+                });
+                it('passes error message if promise is rejected', function() {
+                    var error = jasmine.createSpy('handler');
+                    var test = auth.passwordAndEmailLogin(this.credentials, this.options);
+                    test.then(null, error);
+                    deferred.reject("error");
+                    $rootScope.$digest();
+                    expect(error).toHaveBeenCalledWith("error");
+                });
             });
-            it('doesnt pass authData if promise is rejected', function() {
-                var handler = jasmine.createSpy('handler');
-                var test = auth.passwordAndEmailLogin(this.credentials, this.options);
-                test.then(handler);
-                deferred.reject("error");
-                $rootScope.$digest();
-                expect(handler).not.toHaveBeenCalledWith(data);
-            });
-            it('passes error message if promise is rejected', function() {
-                var error = jasmine.createSpy('handler');
-                var test = auth.passwordAndEmailLogin(this.credentials, this.options);
-                test.then(null, error);
-                deferred.reject("error");
-                $rootScope.$digest();
-                expect(error).toHaveBeenCalledWith("error");
+            describe("now for realsies", function() {
+                // beforeEach(function() {
+                //     spyOn(authObj, "$authWithPassword").and.CallThrough();
+                // });
+                it("works", function() {
+                    var options = {
+                        someOption: 'a'
+                    };
+                    var credentials = {
+                        email: 'myname',
+                        password: 'password'
+                    };
+                    var test = auth.passwordAndEmailLogin(credentials, options);
+                    $rootScope.$digest();
+                    expect(test).toEqual("boom");
+
+                });
             });
             //TODO: test session.setAuthData is called
         });

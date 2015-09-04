@@ -3,14 +3,16 @@
 
     function AuthService($q, afEntity, session) {
 
-        var authObj = afEntity.set();
+        this.authObj = function() {
+            return afEntity.set();
+        };
 
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
         };
 
         this.passwordAndEmailLogin = function(creds, options) {
-            return authObj
+            return this.authObj()
                 .$authWithPassword({
                     email: creds.email,
                     password: creds.pass
@@ -28,7 +30,7 @@
         };
 
         this.loginOAuth = function(provider) {
-            return authObj
+            return this.authObj()
                 .$authWithOAuthPopup(provider)
                 // need to add scope
                 .then(function(authData) {
@@ -52,14 +54,15 @@
         };
         this.logOut = function() {
             if (this.isLoggedIn()) {
-                authObj.$unauth();
+                this.authObj()
+                    .$unauth();
                 session.destroy();
             } else {
                 throw new Error("no login data found");
             }
         };
         this.changeEmail = function(creds) {
-            return authObj
+            return this.authObj()
                 .$changeEmail({
                     oldEmail: creds.oldEmail,
                     newEmail: creds.newEmail,
@@ -73,7 +76,7 @@
                     });
         };
         this.resetPassword = function(creds) {
-            return authObj
+            return this.authObj()
                 .$resetPassword({
                     email: creds.email,
                 })
@@ -85,7 +88,7 @@
                     });
         };
         this.changePassword = function(creds) {
-            return authObj
+            return this.authObj()
                 .$changePassword({
                     email: creds.email,
                     oldPassword: creds.oldPassword,

@@ -20,6 +20,9 @@
             it("should depend on Firebase", function() {
                 expect(hasModule('firebase')).toBeTruthy();
             });
+            it("should depend on fb.constant", function() {
+                expect(hasModule('fb.constant')).toBeTruthy();
+            });
         });
     });
 })(angular);
