@@ -34,9 +34,9 @@
             module('srvc.dataMngr');
             module('fbMocks');
             module('testutils');
-            inject(function($firebaseUtils, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
+            inject(function( $firebaseUtils, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
                 testutils = _testutils_;
-								$firebaseArray = _$firebaseArray_;
+                $firebaseArray = _$firebaseArray_;
                 $timeout = _$timeout_;
                 $utils = $firebaseUtils;
                 arrMngr = _arrMngr_;
@@ -121,6 +121,7 @@
                 expect(whiteSpy).not.toHaveBeenCalled();
                 expect(blackSpy).toHaveBeenCalledWith(err);
             });
+           
         });
 
         describe('remove', function() {
@@ -409,7 +410,7 @@
             });
 
             it('should return -1 for invalid key', function() {
-                expect(arrMngr.index(arr,'notarealkey')).toBe(-1);
+                expect(arrMngr.index(arr, 'notarealkey')).toBe(-1);
             });
 
             it('should not show up after removing the item', function() {
@@ -417,10 +418,27 @@
                 expect(rec).not.toBe(null);
                 arr.$$removed(testutils.refSnap(testutils.ref('b')));
                 arr.$$process('child_removed', rec);
-                expect(arrMngr.index(arr,'b')).toBe(-1);
+                expect(arrMngr.index(arr, 'b')).toBe(-1);
             });
         });
-        describe('$add', function() {
+        describe('get', function() {
+            it("should find the correct record", function() {
+                var test = arrMngr.get(arr, 'c');
+                expect(test).toEqual({
+                    aString: 'charlie',
+                    aNumber: 3,
+                    aBoolean: true,
+                    $id: 'c',
+                    $priority: null
+                });
+            });
+            it("should return null if record doesn't exist", function() {
+                var test = arrMngr.get(arr, 'asdsdc');
+                expect(test).toEqual(null);
+
+            });
+        });
+        describe('add', function() {
             it('should call $push on $firebase', function() {
                 var spy = spyOn(arr.$ref(), 'push').and.callThrough();
                 var data = {
@@ -450,21 +468,21 @@
                 var queue = [];
 
                 function addPromise(snap, prevChild) {
-                    return new $utils.promise(
-                        function(resolve) {
-                            queue.push(resolve);
-                        }).then(function(name) {
-                        var data = $firebaseArray.prototype.$$added.call(arr, snap, prevChild);
-                        data.name = name;
-                        return data;
-                    });
-                }
-								//change this to afEntity.
+                        return new $utils.promise(
+                            function(resolve) {
+                                queue.push(resolve);
+                            }).then(function(name) {
+                            var data = $firebaseArray.prototype.$$added.call(arr, snap, prevChild);
+                            data.name = name;
+                            return data;
+                        });
+                    }
+                    //change this to afEntity.
                 arr = mockArr.extendArray(null, $firebaseArray.$extend({
                     $$added: addPromise
                 }));
                 expect(arr.length).toBe(0);
-                arrMngr.add(arr,{
+                arrMngr.add(arr, {
                     userId: '1234'
                 });
                 flushAll(arr.$ref());
@@ -476,24 +494,24 @@
                 expect(arr[0].name).toBe('James');
             });
 
-            it('should wait to resolve $loaded until $$added promise is resolved', function() {
-                var queue = [];
+            // this doesn't test arrMngr.add...remove
+            // it('should wait to resolve $loaded until $$added promise is resolved', function() {
+            //     var queue = [];
 
-                function addPromise(snap, prevChild) {
-                    return new $utils.promise(
-                        function(resolve) {
-                            queue.push(resolve);
-                        }).then(function(name) {
-                        var data = $firebaseArray.prototype.$$added.call(arr, snap, prevChild);
-                        data.name = name;
-                        return data;
-                    });
-                }
+            //     function addPromise(snap, prevChild) {
+            //         return new $utils.promise(
+            //             function(resolve) {
+            //                 queue.push(resolve);
+            //             }).then(function(name) {
+            //             var data = $firebaseArray.prototype.$$added.call(arr, snap, prevChild);
+            //             data.name = name;
+            //             return data;
+            //         });
+            //     }
             //     var called = false;
-								// var ref = stubRef();
-            //     arr = extendArray(null, $firebaseArray.$extend({
+            //     arr = mockArr.extendArray(null, $firebaseArray.$extend({
             //         $$added: addPromise
-            //     }),ref);
+            //     }), ref);
             //     arr.$loaded().then(function() {
             //         expect(arr.length).toBe(1);
             //         called = true;
@@ -512,39 +530,48 @@
             // });
 
 
-            // it('should reject promise on fail', function() {
-            //     var successSpy = jasmine.createSpy('resolve spy');
-            //     var errSpy = jasmine.createSpy('reject spy');
-            //     var err = new Error('fail_push');
-            //     arr.$ref().failNext('push', err);
-            //     arr.$add('its deed').then(successSpy, errSpy);
-            //     flushAll(arr.$ref());
-            //     expect(successSpy).not.toHaveBeenCalled();
-            //     expect(errSpy).toHaveBeenCalledWith(err);
-            // });
+            it('should reject promise on fail', function() {
+                var successSpy = jasmine.createSpy('resolve spy');
+                var errSpy = jasmine.createSpy('reject spy');
+                var err = new Error('fail_push');
+                arr.$ref().failNext('push', err);
+                var res = {
+                    success: successSpy,
+                    failure: errSpy
+                };
+                arrMngr.add(arr, 'its deed', res)
+                flushAll(arr.$ref());
+                expect(successSpy).not.toHaveBeenCalled();
+                expect(errSpy).toHaveBeenCalledWith(err);
+            });
 
-            // it('should work with a primitive value', function() {
-            //     var spyPush = spyOn(arr.$ref(), 'push').and.callThrough();
-            //     var spy = jasmine.createSpy('$add').and.callFake(function(ref) {
-            //         expect(arr.$ref().child(ref.key()).getData()).toEqual('hello');
-            //     });
-            //     arr.$add('hello').then(spy);
-            //     flushAll(arr.$ref());
-            //     expect(spyPush).toHaveBeenCalled();
-            //     expect(spy).toHaveBeenCalled();
-            // });
+            it('should work with a primitive value', function() {
+                var spyPush = spyOn(arr.$ref(), 'push').and.callThrough();
+                var spy = jasmine.createSpy('$add').and.callFake(function(ref) {
+                    expect(arr.$ref().child(ref.key()).getData()).toEqual('hello');
+                });
+                var res = {
+                    success: spy,
+                    failure: null
+                };
+                arrMngr.add(arr, 'hello', res)
+                flushAll(arr.$ref());
+                expect(spyPush).toHaveBeenCalled();
+                expect(spy).toHaveBeenCalled();
+            });
 
-            // it('should throw error if array is destroyed', function() {
-            //     arr.$destroy();
-            //     expect(function() {
-            //         arr.$add({
-            //             foo: 'bar'
-            //         });
-            //     }).toThrowError(Error);
-            // });
+            it('should throw error if array is destroyed', function() {
+                arr.$destroy();
+                expect(function() {
+                    arrMngr.add(arr, {
+                        foo: 'bar'
+                    });
+                }).toThrowError(Error);
+            });
 
+            //not testing arrMngr.add()
             // it('should store priorities', function() {
-            //     var arr = stubArray();
+            //     var arr = mockArr.stubArray();
             //     addAndProcess(arr, testutils.snap('one', 'b', 1), null);
             //     addAndProcess(arr, testutils.snap('two', 'a', 2), 'b');
             //     addAndProcess(arr, testutils.snap('three', 'd', 3), 'd');
@@ -556,28 +583,36 @@
             //     }
             // });
 
-            // it('should observe $priority and $value meta keys if present', function() {
-            //     var spy = jasmine.createSpy('$add').and.callFake(function(ref) {
-            //         expect(ref.priority).toBe(99);
-            //         expect(ref.getData()).toBe('foo');
-            //     });
-            //     var arr = stubArray();
-            //     arr.$add({
-            //         $value: 'foo',
-            //         $priority: 99
-            //     }).then(spy);
-            //     flushAll(arr.$ref());
-            //     expect(spy).toHaveBeenCalled();
-            // });
+            it('should observe $priority and $value meta keys if present', function() {
+                var spy = jasmine.createSpy('$add').and.callFake(function(ref) {
+                    expect(ref.priority).toBe(99);
+                    expect(ref.getData()).toBe('foo');
+                });
+                var arr = mockArr.stubArray();
+                var res = {
+                    success: spy,
+                    failure: null
+                };
+                arrMngr.add(arr, {
+                    $value: 'foo',
+                    $priority: 99
+                }, res);
+                flushAll(arr.$ref());
+                expect(spy).toHaveBeenCalled();
+            });
 
+            //not testing arrMngr.add()
             // it('should work on a query', function() {
-            //     var ref = stubRef();
             //     var query = ref.limit(2);
-            //     var arr = stubArray(); // stubArray(null, query);
+            //     var arr = mockArr.stubArray(); // stubArray(null, query);
             //     addAndProcess(arr, testutils.snap('one', 'b', 1), null);
             //     expect(arr.length).toBe(1);
             // });
         });
+
+        function addAndProcess(arr, snap, prevChild) {
+            arr.$$process('child_added', arr.$$added(snap, prevChild), prevChild);
+        }
 
         var flushAll =
             (function() {

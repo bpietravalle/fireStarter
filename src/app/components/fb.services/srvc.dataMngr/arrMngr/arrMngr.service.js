@@ -2,7 +2,7 @@
     "use strict";
 
     function arrMngrService() {
-        var fb, val, results;
+
         this.ref = function(fb) {
             return fb.$ref();
         };
@@ -33,16 +33,26 @@
         this.destroy = function(fb) {
             return fb.$destroy();
         };
-				this.key = function(fb, val){
-					return fb.$keyAt(val);
-				};
-				this.index = function(fb, val){
-					return fb.$indexFor(val);
-				};
+        this.key = function(fb, val) {
+            return fb.$keyAt(val);
+        };
+        //untested
+        this.get = function(fb, val) {
+            return fb.$getRecord(val);
+        };
+        this.index = function(fb, val) {
+            return fb.$indexFor(val);
+        };
 
-				this.add = function(fb, val){
-					return fb.$add(val);
-				};
+        this.add = function(fb, val, result) {
+            if (angular.isUndefined(result)) {
+                return fb.$add(val);
+            } else {
+                return fb.$add(val)
+                    .then(result.success, result.failure);
+            }
+        };
+
     }
 
     arrMngrService.$inject = [];

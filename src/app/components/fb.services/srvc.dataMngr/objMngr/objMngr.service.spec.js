@@ -20,7 +20,7 @@
                     error: function() {
                         log.error.push(Array.prototype.slice.call(arguments));
                     }
-                })
+                });
             });
             inject(function(_mockObj_, _objMngr_, _$timeout_, _$interval_, _testutils_, $firebaseUtils, _$rootScope_) {
                 objMngr = _objMngr_;
@@ -85,8 +85,11 @@
                 expect(test.$$state.status).toEqual(1);
             });
             it('should resolve when all data is received', function() {
-                var test = objMngr.load(obj);
-                test.then(this.good, this.bad);
+                var res = {
+                    success: this.good,
+                    failure: this.bad
+                };
+                objMngr.load(obj, res);
                 // works without the line below; not sure why
                 // obj.$ref().flush();
                 flushAll();
@@ -97,8 +100,11 @@
                 var err = new Error("ERROR!!!");
                 ref.failNext('once', err);
                 var obj = mockObj.makeObject(null, ref);
-                var test = objMngr.load(obj);
-                test.then(this.good, this.bad);
+                var res = {
+                    success: this.good,
+                    failure: this.bad
+                };
+                objMngr.load(obj, res);
                 flushAll();
                 expect(this.good).not.toHaveBeenCalled();
                 expect(this.bad).toHaveBeenCalledWith(err);
@@ -168,7 +174,6 @@
                     failure: this.bad
                 };
                 objMngr.load(obj, result);
-                // obj.$loaded(this.good,this.bad);
                 ref.flush();
                 $timeout.flush();
                 expect(this.good).not.toHaveBeenCalled();
@@ -192,20 +197,27 @@
                 expect(test).toBeAPromise();
             });
 
-            it('should resolve promise to the ref for this object', function() {
-                var test = objMngr.save(obj);
-                test.then(this.good, this.bad);
+            it('should resolve promise to the ref for this object when passed result obj', function() {
+                var res = {
+                    success: this.good,
+                    failure: this.bad
+                };
+                objMngr.save(obj, res);
+                // test.then(this.good, this.bad);
                 expect(this.good).not.toHaveBeenCalled();
                 flushAll();
                 expect(this.good).toHaveBeenCalled();
                 expect(this.bad).not.toHaveBeenCalled();
             });
 
-            it('should reject promise on failure', function() {
+            it('should reject promise on failure when passed result obj', function() {
                 var err = new Error('test_fail');
                 obj.$ref().failNext('set', err);
-                var test = objMngr.save(obj);
-                test.then(this.good, this.bad);
+                var res = {
+                    success: this.good,
+                    failure: this.bad
+                };
+                objMngr.save(obj, res);
                 expect(this.bad).not.toHaveBeenCalled();
                 flushAll();
                 expect(this.good).not.toHaveBeenCalled();
@@ -272,6 +284,34 @@
                 flushAll();
                 expect(obj.$value).toBe(null);
             });
+            it('should resolve promise when passed result obj', function() {
+                var pass = jasmine.createSpy('resolve');
+                var fail = jasmine.createSpy('resolve');
+                var res = {
+                    success: pass,
+                    failure: fail
+                };
+                objMngr.remove(obj, res);
+                flushAll();
+                expect(fail).not.toHaveBeenCalled();
+                expect(pass).toHaveBeenCalled();
+            });
+
+            it('should reject promise when passed result obj and receive error', function() {
+                var err = new Error("ERROR!!!");
+                ref.failNext('remove', err);
+                var obj = mockObj.makeObject(null, ref);
+                var pass = jasmine.createSpy('resolve');
+                var fail = jasmine.createSpy('resolve');
+                var res = {
+                    success: pass,
+                    failure: fail
+                };
+                objMngr.remove(obj, res);
+                flushAll();
+                expect(fail).toHaveBeenCalled();
+                expect(pass).not.toHaveBeenCalled();
+            });
 
             it('should trigger a value event for $watch listeners', function() {
                 var spy = jasmine.createSpy('$watch listener');
@@ -284,6 +324,7 @@
                 });
             });
 
+						// test not passing
             // it('should work on a query', function() {
             //     ref.set({
             //         foo: 'bar'
@@ -313,7 +354,7 @@
                 obj.$bindTo($scope, 'foo');
                 flushAll();
                 expect($scope.$watch).toHaveBeenCalled();
-                obj.$destroy();
+                objMngr.destroy(obj);
                 flushAll();
                 expect($scope.$watch.$$$offSpy).toHaveBeenCalled();
             });

@@ -20,6 +20,9 @@
             it("should depend on srvc.auth", function() {
                 expect(hasModule('srvc.auth')).toBeTruthy();
             });
+            it("should depend on srvc.dataMngr", function() {
+                expect(hasModule('srvc.dataMngr')).toBeTruthy();
+            });
             it("should depend on srvc.session", function() {
                 expect(hasModule('srvc.session')).toBeTruthy();
             });

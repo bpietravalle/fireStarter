@@ -63,7 +63,10 @@
             return auth
                 .loginOAuth(provider)
                 // need to add scope
-                .then(saveOAuthData(authData),
+                .then(function(authData) {
+                    this.getUser(authData)
+                })
+                .then(saveOAuthData(user),
 
                     function(error) {
                         $q.reject(error);
@@ -81,22 +84,18 @@
         };
 
 
-        function saveOAuthData(authData) {
-            if (authData) {
-                var newUser = {
-                    name: "",
-                    email: "",
-                };
-                if (authData.google) {
-                    newUser.email = authData.google.email;
-                    newUser.name = authData.google.displayName;
-                }
-                user.$ref().set(newUser);
-            } else {
-                console.log("User is logged out");
+        function saveOAuthData(user) {
+            var newUser = {
+                name: "",
+                email: "",
+            };
+            if (authData.google) {
+                newUser.email = authData.google.email;
+                newUser.name = authData.google.displayName;
             }
-        }
+            user.$ref().set(newUser);
 
+        }
         this.googleRegister = function() {
             this.registerOAuth("google");
         };

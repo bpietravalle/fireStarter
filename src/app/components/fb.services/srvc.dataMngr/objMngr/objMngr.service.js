@@ -2,12 +2,6 @@
     "use strict";
 
     function objMngrService() {
-        var fb, val;
-
-        var result = {
-            success: null,
-            failure: null
-        };
 
         this.priority = function(fb, val) {
             if (angular.isUndefined(val)) {
@@ -41,20 +35,22 @@
             if (angular.isUndefined(result)) {
                 return fb.$save();
             } else {
-                return fb.$save(result.success, result.failure);
+                return fb.$save()
+                    .then(result.success, result.failure);
             }
         };
-				this.remove = function(fb, result){
+        this.remove = function(fb, result) {
             if (angular.isUndefined(result)) {
                 return fb.$remove();
             } else {
-                return fb.$remove(result.success, result.failure);
+                return fb.$remove()
+                .then(result.success, result.failure);
             }
 
-				};
-				this.destroy = function(fb) {
-					return fb.$destroy();
-				};
+        };
+        this.destroy = function(fb) {
+            return fb.$destroy();
+        };
 
     }
 

@@ -76,6 +76,7 @@
             });
             //TODO: test session.setAuthData is called
         });
+
         describe("loginOAuth", function() {
             beforeEach(inject(function() {
                 spyOn(auth, 'loginOAuth').and.callFake(function() {
