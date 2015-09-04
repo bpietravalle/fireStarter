@@ -17,7 +17,7 @@
             if (angular.isUndefined(result)) {
                 return fb.$save(val);
             } else {
-                return fb.$save(val);
+                return fb.$save(val)
                     .then(result.success, result.failure);
             }
         };
@@ -33,7 +33,16 @@
         this.destroy = function(fb) {
             return fb.$destroy();
         };
+				this.key = function(fb, val){
+					return fb.$keyAt(val);
+				};
+				this.index = function(fb, val){
+					return fb.$indexFor(val);
+				};
 
+				this.add = function(fb, val){
+					return fb.$add(val);
+				};
     }
 
     arrMngrService.$inject = [];
