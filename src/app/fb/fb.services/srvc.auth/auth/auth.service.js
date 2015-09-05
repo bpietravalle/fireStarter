@@ -11,20 +11,18 @@
             return session.getAuthData() !== null;
         };
 
-        this.passwordAndEmailLogin = function(creds, options) {
+        this.passwordAndEmailLogin = function(creds) {
             return this.authObj
                 .$authWithPassword({
                     email: creds.email,
                     password: creds.pass
-                }, {
-                    remember: options.remember
                 })
                 .then(function(authData) {
                         session.setAuthData(authData);
                         return authData;
                     },
                     function(error) {
-                       $q.reject(error);
+                        $q.reject(error);
                     }
                 );
         };

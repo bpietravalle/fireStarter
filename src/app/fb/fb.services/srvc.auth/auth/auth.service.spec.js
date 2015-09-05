@@ -46,14 +46,11 @@
                     });
                 });
 
-                var options = {
-                    someOption: 'a'
-                };
                 var credentials = {
                     email: 'myname',
                     pass: 'password'
                 };
-                this.test = auth.passwordAndEmailLogin(credentials, options);
+                this.test = auth.passwordAndEmailLogin(credentials);
                 spyOn(session, "setAuthData");
                 spyOn($q, "reject");
 

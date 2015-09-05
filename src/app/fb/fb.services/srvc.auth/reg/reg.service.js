@@ -1,14 +1,11 @@
 (function(angular) {
     "use strict";
 
-    function RegService($q, afEntity, auth) {
-        var registration = {
-            email: "",
-            pass: "",
-            confirm: ""
-        };
+    function RegService($q, $log, afEntity, auth) {
 
-        var authObj = afEntity.set();
+        this.authObj = (function() {
+            return afEntity.set();
+        })();
 
         this.passwordAndEmailRegister = function(registration) {
             if (validParams(registration)) {
@@ -16,7 +13,7 @@
                     email: registration.email,
                     name: ""
                 };
-                return authObj
+                return auth.authObj
                     .$createUser({
                         email: registration.email,
                         password: registration.pass
@@ -48,11 +45,11 @@
 
         function validParams(registration) {
             if (!registration.email) {
-                console.log("no email");
+                $log.info("no email");
             } else if (registration.pass !== registration.confirm) {
-                console.log("password and email don't match")
+                $log.info("password and email don't match")
             } else if (!registration.pass || !registration.confirm) {
-                console.log("please entire a password")
+                $log.info("please entire a password")
             } else {
                 return true;
             }
@@ -79,7 +76,7 @@
                 var user = afEntity.set('object', ['users', authData.uid]);
                 return user.$loaded();
             } else {
-                console.log("no authentication data available");
+                $log.info("no authentication data available");
             }
         };
 
@@ -87,7 +84,7 @@
         function saveOAuthData(user) {
             var newUser = {
                 name: "",
-                email: "",
+                email: ""
             };
             if (authData.google) {
                 newUser.email = authData.google.email;
@@ -108,23 +105,24 @@
         this.cancelAccount = function(email, pass) {
             //TODO: deactivate rather than destroy account
             if (auth.isLoggedIn()) {
-                authObj.$removeUser({
-                    email: email,
-                    password: pass
-                }).then(function() {
-                    session.destroy();
-                    console.log("User has been destroyed");
-                }, function(error) {
-                    $q.reject(error);
-                    console.error("Error", error);
-                });
+                this.authObj
+                    .$removeUser({
+                        email: email,
+                        password: pass
+                    }).then(function() {
+                        session.destroy();
+                        $log.info("User has been destroyed");
+                    }, function(error) {
+                        $q.reject(error);
+                        $log.error("Error", error);
+                    });
             } else {
                 throw new Error("no login data found");
             }
         };
     }
 
-    RegService.$inject = ['$q', 'afEntity', 'auth'];
+    RegService.$inject = ['$q', '$log', 'afEntity', 'auth'];
 
     angular.module('srvc.auth')
         .service('reg', RegService);
