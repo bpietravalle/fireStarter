@@ -2,20 +2,21 @@
     "use strict";
 
     describe("Reg Service", function() {
-        var reg, user, auth, data, deferred, deferred1, mock, ref, $q, $rootScope, session, mockAuth;
+        var reg, user, auth, data, deferred2, deferred, deferred1, mock, ref, $q, mockObj, $rootScope, session, mockAuth;
 
         beforeEach(function() {
             MockFirebase.override();
             module("srvc.auth");
             module("utils.afApi");
             module("fbMocks");
-            inject(function(_reg_, _user_, _session_, _$q_, _$rootScope_, _mockAuth_, _auth_) {
+            inject(function(_reg_, _user_, _session_, _$q_, _$rootScope_, _mockObj_, _mockAuth_, _auth_) {
                 $rootScope = _$rootScope_;
                 $q = _$q_;
                 user = _user_;
                 auth = _auth_;
                 reg = _reg_;
                 session = _session_;
+                mockObj = _mockObj_;
                 mockAuth = _mockAuth_;
                 ref = mockAuth.ref();
                 data = mockAuth.userData();
@@ -26,6 +27,8 @@
             reg = null;
             mockAuth = null;
             data = null;
+            deferred = null;
+            deferred1 = null;
         });
         describe("passwordAndEmailRegister", function() {
             describe("With Invalid params", function() {
@@ -75,7 +78,7 @@
                     };
                     this.data = {
                         email: this.registration.email,
-                        pass: this.registration.pass
+                        password: this.registration.pass
                     };
                     this.test = reg.passwordAndEmailRegister(this.registration);
                     this.error = "Error";
@@ -87,6 +90,11 @@
                         beforeEach(inject(function() {
                             spyOn(auth, "passwordAndEmailLogin").and.callThrough();
                         }));
+                        it('should be a promise', function() {
+                            deferred.resolve(this.data);
+                            $rootScope.$digest();
+                            expect(this.test).toBeAPromise();
+                        });
                         it('should pass userData auth.passwordAndEmailLogin', function() {
                             deferred.resolve(this.data);
                             $rootScope.$digest();
@@ -95,84 +103,119 @@
                     });
                     describe("After authentication", function() {
                         beforeEach(inject(function() {
-                            spyOn(user, "findById");
                             spyOn(auth, 'passwordAndEmailLogin').and.callFake(function() {
                                 deferred1 = $q.defer();
                                 return deferred1.promise;
-
                             });
                         }));
-                        describe("When Resolved", function() {
-                            it('should pass authData to user factory', function() {
-                                deferred.resolve(this.data);
-                                $rootScope.$digest();
-                                deferred1.resolve(data);
-                                $rootScope.$digest();
-                                expect(user.findById).toHaveBeenCalledWith(data);
+
+                        describe("before retrieving user object", function() {
+                            beforeEach(inject(function() {
+                                spyOn(user, 'findById').and.callThrough();
+                            }));
+                            describe("When Resolved", function() {
+                                it('should pass authData.uid to user factory', function() {
+                                    deferred.resolve(this.data);
+                                    $rootScope.$digest();
+                                    deferred1.resolve(data);
+                                    $rootScope.$digest();
+                                    expect(user.findById).toHaveBeenCalledWith(data.uid);
+                                });
+                                // returns a function
+                                // it('user factory returns a promise', function() {
+                                //     deferred.resolve(this.data);
+                                //     $rootScope.$digest();
+                                //     deferred1.resolve(data);
+                                //     $rootScope.$digest();
+                                //     expect(user.findById).toEqual("asdfasd");
+                                // });
                             });
-												});
-                        describe("When Rejected", function() {
-                            it('should not pass authData to user factory', function() {
-                                deferred.resolve(this.data);
-                                $rootScope.$digest();
-                                deferred1.reject(this.error);
-                                $rootScope.$digest();
-                                expect(user.findById).not.toHaveBeenCalledWith(data);
-                            });
-                            it('should send error to $q', function() {
-                                deferred.resolve(this.data);
-                                $rootScope.$digest();
-                                deferred1.reject(this.error);
-                                $rootScope.$digest();
-                                expect($q.reject).toHaveBeenCalledWith(this.error);
+                            describe("When Rejected", function() {
+                                it('should not pass authData to user factory', function() {
+                                    deferred.resolve(this.data);
+                                    $rootScope.$digest();
+                                    deferred1.reject(this.error);
+                                    $rootScope.$digest();
+                                    expect(user.findById).not.toHaveBeenCalledWith(data);
+                                });
+                                it('should send error to $q', function() {
+                                    deferred.resolve(this.data);
+                                    $rootScope.$digest();
+                                    deferred1.reject(this.error);
+                                    $rootScope.$digest();
+                                    expect($q.reject).toHaveBeenCalledWith(this.error);
+                                });
                             });
                         });
+
+                        describe("after retrieving the user object", function() {
+                            beforeEach(inject(function() {
+                                // spyOn(user, 'findById').and.callFake(function() {
+                                //     return mockObj.makeObject(initial);
+                                //     var initial = {
+                                //         uid: '1',
+                                //         email: "",
+                                //         name: ""
+                                //     };
+                                // });
+                            }));
+                            describe("When Resolved", function() {
+                                it('should set the user data', function() {
+                                    deferred.resolve(this.data);
+                                    $rootScope.$digest();
+                                    deferred1.resolve(data);
+                                    $rootScope.$digest();
+                                    expect(deferred1.promise).toEqual("bloook");
+                                });
+                            });
+
+                        });
+                    });
+                    describe("When $createUser is Rejected", function() {
+                        it('should send error to $q.error', function() {
+                            deferred.reject(this.error);
+                            $rootScope.$digest();
+                            expect($q.reject).toHaveBeenCalledWith(this.error);
+                        });
+
                     });
                 });
-                describe("When $createUser is Rejected", function() {
-                    it('should send error to $q.error', function() {
-                        deferred.reject(this.error);
-                        $rootScope.$digest();
-                        expect($q.reject).toHaveBeenCalledWith(this.error);
-                    });
-
-                });
-
-
-
-                // it('passes userData if promise resolves', function() {
-                //     deferred.resolve(this.data);
-                //     $rootScope.$digest();
-                //     expect(deferred.promise).toEqual("boom");
-                // });
-                //
-                //
-                //
-                //
-                //
-                //
-                //
-                //
-                //
-                // it('doesnt pass userData if promise is rejected', function() {
-                //     var handler = jasmine.createSpy('handler');
-                //     var test = reg.passwordAndEmailRegister(this.credentials, this.options);
-                //     test.then(handler);
-                //     deferred.reject("error");
-                //     $rootScope.$digest();
-                //     expect(handler).not.toHaveBeenCalledWith(data);
-                // });
-                // it('passes error message if promise is rejected', function() {
-                //     var error = jasmine.createSpy('handler');
-                //     var test = reg.passwordAndEmailRegister(this.credentials, this.options);
-                //     test.then(null, error);
-                //     deferred.reject("error");
-                //     $rootScope.$digest();
-                //     expect(error).toHaveBeenCalledWith("error");
-                // });
-                //TODO: test session.setAuthData is called
             });
         });
+
+
+
+        // it('passes userData if promise resolves', function() {
+        //     deferred.resolve(this.data);
+        //     $rootScope.$digest();
+        //     expect(deferred.promise).toEqual("boom");
+        // });
+        //
+        //
+        //
+        //
+        //
+        //
+        //
+        //
+        //
+        // it('doesnt pass userData if promise is rejected', function() {
+        //     var handler = jasmine.createSpy('handler');
+        //     var test = reg.passwordAndEmailRegister(this.credentials, this.options);
+        //     test.then(handler);
+        //     deferred.reject("error");
+        //     $rootScope.$digest();
+        //     expect(handler).not.toHaveBeenCalledWith(data);
+        // });
+        // it('passes error message if promise is rejected', function() {
+        //     var error = jasmine.createSpy('handler');
+        //     var test = reg.passwordAndEmailRegister(this.credentials, this.options);
+        //     test.then(null, error);
+        //     deferred.reject("error");
+        //     $rootScope.$digest();
+        //     expect(error).toHaveBeenCalledWith("error");
+        // });
+        //TODO: test session.setAuthData is called
         describe("registerOAuth", function() {
             beforeEach(inject(function() {
                 spyOn(reg, 'registerOAuth').and.callFake(function() {

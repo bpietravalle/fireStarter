@@ -4,7 +4,6 @@
     function RegService($q, $log, user, auth) {
 
         this.passwordAndEmailRegister = function(registration) {
-					var newUser;
             if (validParams(registration)) {
                 return auth.authObj
                     .$createUser({
@@ -14,19 +13,20 @@
                     .then(function(userData) {
                         var creds = {
                             email: registration.email,
-                            pass: registration.pass
+                            password: registration.pass
                         };
                         return auth.passwordAndEmailLogin(creds);
                     })
                     .then(function(authData) {
-                        return getUser(authData);
-                    })
-                    .then(function(data) {
-                            // data.email = registration.email;
-                            // data.name = "";
-                            // return data.$save();
+                            return getUser(authData)
+                                .$ref().set({
+                                    email: registration.email,
+                                    name: ""
+                                });
                         },
-
+                        // ).then(function(user) {
+                        // return user;
+                        // },
                         function(error) {
                             $q.reject(error);
 
@@ -67,7 +67,7 @@
 
         function getUser(authData) {
             if (authData) {
-                return user.findById(authData);
+                return user.findById(authData.uid);
             } else {
                 $log.info("no authentication data available");
             }
