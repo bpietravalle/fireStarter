@@ -5,6 +5,7 @@
 
         this.passwordAndEmailRegister = function(registration) {
             if (validParams(registration)) {
+
                 return auth.authObj
                     .$createUser({
                         email: registration.email,
@@ -18,18 +19,15 @@
                         return auth.passwordAndEmailLogin(creds);
                     })
                     .then(function(authData) {
-                            return getUser(authData)
-                                .$ref().set({
-                                    email: registration.email,
-                                    name: ""
-                                });
+                            var newUser = {
+                                email: registration.email,
+                                name: ""
+                            };
+                            return saveUser(
+                                getUser(authData.uid), newUser);
                         },
-                        // ).then(function(user) {
-                        // return user;
-                        // },
                         function(error) {
                             $q.reject(error);
-
                         });
             } else {
                 throw new Error("Please try again - invalid params");
@@ -55,26 +53,34 @@
                 .loginOAuth(provider)
                 // need to add scope
                 .then(function(authData) {
-                    getUser(authData)
-                })
-                .then(saveOAuthData(user),
+                    saveUser(getUser(authData.uid),
+                        saveOAuthData(authData));
 
-                    function(error) {
-                        $q.reject(error);
-                    }
-                );
+                }, function(error) {
+                    $q.reject(error);
+                });
         };
 
-        function getUser(authData) {
-            if (authData) {
-                return user.findById(authData.uid);
+        function getUser(id) {
+            if (id) {
+                return user.findById(id);
             } else {
                 $log.info("no authentication data available");
             }
         }
 
+        function saveUser(obj, ch) {
+            if (obj, ch) {
+                obj.email = ch.email;
+                obj.name = ch.name;
+                return user.save(obj);
+            } else {
+                $log.info("no user obj");
+            }
+        }
 
-        function saveOAuthData(user) {
+
+        function saveOAuthData(authData) {
             var newUser = {
                 name: "",
                 email: ""
@@ -83,8 +89,7 @@
                 newUser.email = authData.google.email;
                 newUser.name = authData.google.displayName;
             }
-            user.$ref().set(newUser);
-
+            return newUser;
         }
         this.googleRegister = function() {
             this.registerOAuth("google");
@@ -95,15 +100,15 @@
         this.twitterRegister = function() {
             this.registerOAuth("twitter");
         };
-        this.cancelAccount = function(email, pass) {
+        this.cancelAccount = function(credentials) {
             //TODO: deactivate rather than destroy account
             if (auth.isLoggedIn()) {
                 auth.authObj
                     .$removeUser({
-                        email: email,
-                        password: pass
+                        email: credentials.email,
+                        password: credentials.password
                     }).then(function() {
-                        session.destroy();
+                        auth.logOut();
                         $log.info("User has been destroyed");
                     }, function(error) {
                         $q.reject(error);

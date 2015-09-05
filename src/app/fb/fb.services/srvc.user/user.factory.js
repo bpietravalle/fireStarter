@@ -6,8 +6,8 @@
         var utils = {
 
             findById: findById,
-            loadById: loadById
-
+            loadById: loadById,
+            save: save
         }
 
         return utils;
@@ -22,6 +22,10 @@
                 .load(findById(id));
         }
 
+        function save(obj) {
+            return objMngr.
+            save(obj);
+        }
     }
 
 
