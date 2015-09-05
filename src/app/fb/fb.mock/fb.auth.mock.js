@@ -3,6 +3,15 @@
 
     function fbAuthMockService(afEntity, $timeout) {
 
+        this.authObj = function() {
+            var authObj = jasmine.createSpyObj('authObj', ['$authWithCustomToken',
+                '$authAnonymously', '$authWithPassword',
+                '$authWithOAuthPopup', '$authWithOAuthRedirect', '$authWithOAuthToken',
+                '$unauth', '$getAuth', '$onAuth', '$offAuth',
+                '$createUser', '$changePassword', '$changeEmail', '$removeUser', '$resetPassword'
+            ]);
+            return authObj;
+        };
         this.ref = function() {
             var ref = jasmine.createSpyObj('ref', ['authWithCustomToken',
                 'authAnonymously', 'authWithPassword',

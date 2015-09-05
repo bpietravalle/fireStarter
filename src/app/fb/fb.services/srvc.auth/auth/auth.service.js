@@ -1,18 +1,18 @@
 (function(angular) {
     "use strict";
 
-    function AuthService($q, afEntity, session) {
+    function AuthService($q, $log, afEntity, session) {
 
-        this.authObj = function() {
+        this.authObj = (function() {
             return afEntity.set();
-        };
+        }());
 
         this.isLoggedIn = function() {
             return session.getAuthData() !== null;
         };
 
         this.passwordAndEmailLogin = function(creds, options) {
-            return this.authObj()
+            return this.authObj
                 .$authWithPassword({
                     email: creds.email,
                     password: creds.pass
@@ -24,13 +24,13 @@
                         return authData;
                     },
                     function(error) {
-                        $q.reject(error);
+                       $q.reject(error);
                     }
                 );
         };
 
         this.loginOAuth = function(provider) {
-            return this.authObj()
+            return this.authObj
                 .$authWithOAuthPopup(provider)
                 // need to add scope
                 .then(function(authData) {
@@ -54,7 +54,7 @@
         };
         this.logOut = function() {
             if (this.isLoggedIn()) {
-                this.authObj()
+                this.authObj
                     .$unauth();
                 session.destroy();
             } else {
@@ -62,40 +62,40 @@
             }
         };
         this.changeEmail = function(creds) {
-            return this.authObj()
+            return this.authObj
                 .$changeEmail({
                     oldEmail: creds.oldEmail,
                     newEmail: creds.newEmail,
                     password: creds.pass
                 })
                 .then(function() {
-                        console.log("email successfully changed");
+                        $log.info("email successfully changed");
                     },
                     function(error) {
                         $q.reject(error);
                     });
         };
         this.resetPassword = function(creds) {
-            return this.authObj()
+            return this.authObj
                 .$resetPassword({
                     email: creds.email,
                 })
                 .then(function() {
-                        console.log("password reset email sent");
+                        $log.info("password reset email sent");
                     },
                     function(error) {
                         $q.reject(error);
                     });
         };
         this.changePassword = function(creds) {
-            return this.authObj()
+            return this.authObj
                 .$changePassword({
                     email: creds.email,
                     oldPassword: creds.oldPassword,
                     newPassword: creds.newPassword
                 })
                 .then(function() {
-                        console.log("password change email sent");
+                        $log.info("password change email sent");
                     },
                     function(error) {
                         $q.reject(error);
@@ -104,7 +104,7 @@
 
     }
 
-    AuthService.$inject = ['$q', 'afEntity', 'session'];
+    AuthService.$inject = ['$q', '$log', 'afEntity', 'session'];
 
     angular.module('srvc.auth')
         .service('auth', AuthService);
