@@ -23,9 +23,6 @@
             it("should depend on srvc.dataFactories", function() {
                 expect(hasModule('srvc.dataFactories')).toBeTruthy();
             });
-            it("should depend on fb.utils", function() {
-                expect(hasModule('fb.utils')).toBeTruthy();
-            });
         });
     });
 })(angular);

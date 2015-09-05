@@ -39,7 +39,7 @@
             } else {
                 throw new Error("Please try again - invalid params");
             }
-        };
+        }
 
 
         function validParams(registration) {
@@ -67,7 +67,7 @@
                 }, function(error) {
                     $q.reject(error);
                 });
-        };
+        }
 
         function getUser(id) {
             if (id) {
@@ -102,15 +102,15 @@
 
         function googleRegister() {
             vm.registerOAuth("google");
-        };
+        }
 
         function facebookRegister() {
             vm.registerOAuth("facebook");
-        };
+        }
 
         function twitterRegister() {
             vm.registerOAuth("twitter");
-        };
+        }
 
         function cancelAccount(credentials) {
             //TODO: deactivate rather than destroy account
@@ -129,7 +129,7 @@
             } else {
                 throw new Error("no login data found");
             }
-        };
+        }
 
         //these 2 functions are from angularfire seed repo
         function firstPartOfEmail(email) {

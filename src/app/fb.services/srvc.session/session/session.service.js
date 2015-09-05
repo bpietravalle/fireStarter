@@ -11,13 +11,13 @@
 
         function getAuthData() {
             return vm._authData;
-        };
+        }
 
         function setAuthData(authData) {
             vm._authData = authData;
             localStorageService.set('session.authData', JSON.stringify(authData));
             return vm;
-        };
+        }
 
         function getAccessToken() {
             if (vm._authData.google) {
@@ -27,11 +27,11 @@
             } else {
                 return null;
             }
-        };
+        }
 
         function destroy() {
             vm.setAuthData(null);
-        };
+        }
     }
 
     sessionService.$inject = ['$log', 'localStorageService'];

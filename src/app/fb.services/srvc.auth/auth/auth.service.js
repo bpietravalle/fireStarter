@@ -14,14 +14,14 @@
         vm.changeEmail = changeEmail;
         vm.resetPassword = resetPassword;
         vm.changePassword = changePassword;
-				
-				vm.authObj = (function() {
+
+        vm.authObj = (function() {
             return afEntity.set();
         }());
 
         function isLoggedIn() {
             return session.getAuthData() !== null;
-        };
+        }
 
         function passwordAndEmailLogin(creds) {
             return vm.authObj
@@ -37,7 +37,7 @@
                         $q.reject(error);
                     }
                 );
-        };
+        }
 
         function loginOAuth(provider) {
             return vm.authObj
@@ -51,18 +51,19 @@
                         $q.reject(error);
                     }
                 );
-        };
+        }
 
         function googleLogin() {
             vm.loginOAuth("google");
-        };
+        }
 
         function facebookLogin() {
             vm.loginOAuth("facebook");
-        };
+        }
+
         function twitterLogin() {
             vm.loginOAuth("twitter");
-        };
+        }
 
         function logOut() {
             if (vm.isLoggedIn()) {
@@ -72,7 +73,7 @@
             } else {
                 throw new Error("no login data found");
             }
-        };
+        }
 
         function changeEmail(creds) {
             return vm.authObj
@@ -87,7 +88,7 @@
                     function(error) {
                         $q.reject(error);
                     });
-        };
+        }
 
         function resetPassword(creds) {
             return vm.authObj
@@ -100,7 +101,7 @@
                     function(error) {
                         $q.reject(error);
                     });
-        };
+        }
 
         function changePassword(creds) {
             return vm.authObj
@@ -115,7 +116,7 @@
                     function(error) {
                         $q.reject(error);
                     });
-        };
+        }
 
     }
 

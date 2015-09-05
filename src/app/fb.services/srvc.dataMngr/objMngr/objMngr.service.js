@@ -18,7 +18,7 @@
             } else {
                 return fb.$priority = val;
             }
-        };
+        }
 
         function value(fb, val) {
             if (angular.isUndefined(val)) {
@@ -26,15 +26,15 @@
             } else {
                 return fb.$value = val;
             }
-        };
+        }
 
         function id(fb) {
             return fb.$id;
-        };
+        }
 
         function ref(fb) {
             return fb.$ref();
-        };
+        }
 
         function load(fb, result) {
             if (angular.isUndefined(result)) {
@@ -42,7 +42,7 @@
             } else {
                 return fb.$loaded(result.success, result.failure);
             }
-        };
+        }
 
         function save(fb, result) {
             if (angular.isUndefined(result)) {
@@ -51,7 +51,7 @@
                 return fb.$save()
                     .then(result.success, result.failure);
             }
-        };
+        }
 
         function remove(fb, result) {
             if (angular.isUndefined(result)) {
@@ -61,11 +61,11 @@
                     .then(result.success, result.failure);
             }
 
-        };
+        }
 
         function destroy(fb) {
             return fb.$destroy();
-        };
+        }
 
     }
 

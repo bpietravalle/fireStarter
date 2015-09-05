@@ -15,7 +15,7 @@
 
         function ref(fb) {
             return fb.$ref();
-        };
+        }
 
         function load(fb, result) {
             if (angular.isUndefined(result)) {
@@ -23,7 +23,7 @@
             } else {
                 return fb.$loaded(result.success, result.failure);
             }
-        };
+        }
 
         function save(fb, val, result) {
             if (angular.isUndefined(result)) {
@@ -32,7 +32,7 @@
                 return fb.$save(val)
                     .then(result.success, result.failure);
             }
-        };
+        }
 
         function remove(fb, val, result) {
             if (angular.isUndefined(result)) {
@@ -42,23 +42,23 @@
                     .then(result.success, result.failure);
             }
 
-        };
+        }
 
         function destroy(fb) {
             return fb.$destroy();
-        };
+        }
 
         function key(fb, val) {
             return fb.$keyAt(val);
-        };
+        }
 
         function getRec(fb, val) {
             return fb.$getRecord(val);
-        };
+        }
 
         function index(fb, val) {
             return fb.$indexFor(val);
-        };
+        }
 
         function add(fb, val, result) {
             if (angular.isUndefined(result)) {
@@ -67,7 +67,7 @@
                 return fb.$add(val)
                     .then(result.success, result.failure);
             }
-        };
+        }
 
     }
 

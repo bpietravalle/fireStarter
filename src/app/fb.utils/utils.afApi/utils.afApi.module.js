@@ -1,6 +1,6 @@
 (function(angular) {
     "use strict";
 
-    angular.module('utils.afApi', ['firebase', 'utils.jsApi']);
+    angular.module('utils.afApi', ['utils.jsApi']);
 
 })(angular);

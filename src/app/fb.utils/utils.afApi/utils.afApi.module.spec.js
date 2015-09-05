@@ -17,9 +17,6 @@
             beforeEach(function() {
                 deps = module.value('utils.afApi').requires;
             });
-            it("should depend on Firebase", function() {
-                expect(hasModule('firebase')).toBeTruthy();
-            });
             it("should depend on utils.jsApi", function() {
                 expect(hasModule('utils.jsApi')).toBeTruthy();
             });
