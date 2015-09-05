@@ -2,8 +2,15 @@
     "use strict";
 
     function RegService($q, $log, user, auth) {
+        var vm = this;
+        vm.passwordAndEmailRegister = passwordAndEmailRegister;
+        vm.registerOAuth = registerOAuth;
+        vm.googleRegister = googleRegister;
+        vm.facebookRegister = facebookRegister;
+        vm.twitterRegister = twitterRegister;
+        vm.cancelAccount = cancelAccount;
 
-        this.passwordAndEmailRegister = function(registration) {
+        function passwordAndEmailRegister(registration) {
             if (validParams(registration)) {
                 //TODO: move second promise? userData obj isnt being used
                 return auth.authObj
@@ -36,7 +43,7 @@
 
 
         function validParams(registration) {
-					//TODO: these should throw errors
+            //TODO: these should throw errors
             if (!registration.email) {
                 $log.info("no email");
             } else if (registration.pass !== registration.confirm) {
@@ -49,7 +56,7 @@
         }
 
 
-        this.registerOAuth = function(provider) {
+        function registerOAuth(provider) {
             return auth
                 .loginOAuth(provider)
                 // need to add scope
@@ -92,16 +99,20 @@
             }
             return newUser;
         }
-        this.googleRegister = function() {
-            this.registerOAuth("google");
+
+        function googleRegister() {
+            vm.registerOAuth("google");
         };
-        this.facebookRegister = function() {
-            this.registerOAuth("facebook");
+
+        function facebookRegister() {
+            vm.registerOAuth("facebook");
         };
-        this.twitterRegister = function() {
-            this.registerOAuth("twitter");
+
+        function twitterRegister() {
+            vm.registerOAuth("twitter");
         };
-        this.cancelAccount = function(credentials) {
+
+        function cancelAccount(credentials) {
             //TODO: deactivate rather than destroy account
             if (auth.isLoggedIn()) {
                 auth.authObj

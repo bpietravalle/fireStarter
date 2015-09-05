@@ -2,8 +2,9 @@
     "use strict";
 
     function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
-        var ref = "";
-        var entity = "";
+        var entity, ref;
+        var vm = this;
+        vm.set = set;
 
         function setRef(path) {
                 ref = path;
@@ -16,7 +17,8 @@
             }
             //path arg must be an array of strings or of values 
             //that will respond to toString()
-        this.set = function(type, path) {
+
+        function set(type, path) {
             if (arguments.length === 0) {
                 return afWrap('auth', fbRef.root());
             } else {

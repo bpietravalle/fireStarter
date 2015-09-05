@@ -2,17 +2,29 @@
     "use strict";
 
     function AuthService($q, $log, afEntity, session) {
+        var vm = this;
 
-        this.authObj = (function() {
+        vm.isLoggedIn = isLoggedIn;
+        vm.passwordAndEmailLogin = passwordAndEmailLogin;
+        vm.loginOAuth = loginOAuth;
+        vm.googleLogin = googleLogin;
+        vm.facebookLogin = facebookLogin;
+        vm.twitterLogin = twitterLogin;
+        vm.logOut = logOut;
+        vm.changeEmail = changeEmail;
+        vm.resetPassword = resetPassword;
+        vm.changePassword = changePassword;
+				
+				vm.authObj = (function() {
             return afEntity.set();
         }());
 
-        this.isLoggedIn = function() {
+        function isLoggedIn() {
             return session.getAuthData() !== null;
         };
 
-        this.passwordAndEmailLogin = function(creds) {
-            return this.authObj
+        function passwordAndEmailLogin(creds) {
+            return vm.authObj
                 .$authWithPassword({
                     email: creds.email,
                     password: creds.pass
@@ -27,8 +39,8 @@
                 );
         };
 
-        this.loginOAuth = function(provider) {
-            return this.authObj
+        function loginOAuth(provider) {
+            return vm.authObj
                 .$authWithOAuthPopup(provider)
                 // need to add scope
                 .then(function(authData) {
@@ -41,26 +53,29 @@
                 );
         };
 
-        this.googleLogin = function() {
-            this.loginOAuth("google");
+        function googleLogin() {
+            vm.loginOAuth("google");
         };
-        this.facebookLogin = function() {
-            this.loginOAuth("facebook");
+
+        function facebookLogin() {
+            vm.loginOAuth("facebook");
         };
-        this.twitterLogin = function() {
-            this.loginOAuth("twitter");
+        function twitterLogin() {
+            vm.loginOAuth("twitter");
         };
-        this.logOut = function() {
-            if (this.isLoggedIn()) {
-                this.authObj
+
+        function logOut() {
+            if (vm.isLoggedIn()) {
+                vm.authObj
                     .$unauth();
                 session.destroy();
             } else {
                 throw new Error("no login data found");
             }
         };
-        this.changeEmail = function(creds) {
-            return this.authObj
+
+        function changeEmail(creds) {
+            return vm.authObj
                 .$changeEmail({
                     oldEmail: creds.oldEmail,
                     newEmail: creds.newEmail,
@@ -73,8 +88,9 @@
                         $q.reject(error);
                     });
         };
-        this.resetPassword = function(creds) {
-            return this.authObj
+
+        function resetPassword(creds) {
+            return vm.authObj
                 .$resetPassword({
                     email: creds.email,
                 })
@@ -85,8 +101,9 @@
                         $q.reject(error);
                     });
         };
-        this.changePassword = function(creds) {
-            return this.authObj
+
+        function changePassword(creds) {
+            return vm.authObj
                 .$changePassword({
                     email: creds.email,
                     oldPassword: creds.oldPassword,

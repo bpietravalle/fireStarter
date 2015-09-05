@@ -2,18 +2,30 @@
     "use strict";
 
     function arrMngrService() {
+        var vm = this;
+        vm.ref = ref;
+        vm.load = load;
+        vm.save = save;
+        vm.remove = remove;
+        vm.destroy = destroy;
+        vm.add = add;
+        vm.index = index;
+        vm.get = getRec;
+        vm.key = key;
 
-        this.ref = function(fb) {
+        function ref(fb) {
             return fb.$ref();
         };
-        this.load = function(fb, result) {
+
+        function load(fb, result) {
             if (angular.isUndefined(result)) {
                 return fb.$loaded();
             } else {
                 return fb.$loaded(result.success, result.failure);
             }
         };
-        this.save = function(fb, val, result) {
+
+        function save(fb, val, result) {
             if (angular.isUndefined(result)) {
                 return fb.$save(val);
             } else {
@@ -21,7 +33,8 @@
                     .then(result.success, result.failure);
             }
         };
-        this.remove = function(fb, val, result) {
+
+        function remove(fb, val, result) {
             if (angular.isUndefined(result)) {
                 return fb.$remove(val);
             } else {
@@ -30,20 +43,24 @@
             }
 
         };
-        this.destroy = function(fb) {
+
+        function destroy(fb) {
             return fb.$destroy();
         };
-        this.key = function(fb, val) {
+
+        function key(fb, val) {
             return fb.$keyAt(val);
         };
-        this.get = function(fb, val) {
+
+        function getRec(fb, val) {
             return fb.$getRecord(val);
         };
-        this.index = function(fb, val) {
+
+        function index(fb, val) {
             return fb.$indexFor(val);
         };
 
-        this.add = function(fb, val, result) {
+        function add(fb, val, result) {
             if (angular.isUndefined(result)) {
                 return fb.$add(val);
             } else {

@@ -2,32 +2,35 @@
     "use strict";
 
     function sessionService($log, localStorageService) {
+        var vm = this;
+        vm.getAuthData = getAuthData;
+        vm.setAuthData = setAuthData;
+        vm.destroy = destroy;
+        vm.getAccessToken = getAccessToken;
+        vm._authData = JSON.parse(localStorageService.get('session.authData'));
 
-        this._authData = JSON.parse(localStorageService.get('session.authData'));
-
-        this.getAuthData = function() {
-            return this._authData;
-
+        function getAuthData() {
+            return vm._authData;
         };
 
-        this.setAuthData = function(authData) {
-            this._authData = authData;
+        function setAuthData(authData) {
+            vm._authData = authData;
             localStorageService.set('session.authData', JSON.stringify(authData));
-            return this;
+            return vm;
         };
 
-        this.getAccessToken = function() {
-            if (this._authData.google) {
-                return this._authData.google.accessToken;
-            } else if (this._authData.twitter) {
-                return this._authData.twitter.accessToken;
+        function getAccessToken() {
+            if (vm._authData.google) {
+                return vm._authData.google.accessToken;
+            } else if (vm._authData.twitter) {
+                return vm._authData.twitter.accessToken;
             } else {
                 return null;
             }
         };
 
-        this.destroy = function destroy() {
-            this.setAuthData(null);
+        function destroy() {
+            vm.setAuthData(null);
         };
     }
 

@@ -2,15 +2,25 @@
     "use strict";
 
     function objMngrService() {
+        var vm = this;
+        vm.ref = ref;
+        vm.load = load;
+        vm.save = save;
+        vm.remove = remove;
+        vm.destroy = destroy;
+        vm.priority = priority;
+        vm.id = id;
+        vm.value = value;
 
-        this.priority = function(fb, val) {
+        function priority(fb, val) {
             if (angular.isUndefined(val)) {
                 return fb.$priority;
             } else {
                 return fb.$priority = val;
             }
         };
-        this.value = function(fb, val) {
+
+        function value(fb, val) {
             if (angular.isUndefined(val)) {
                 return fb.$value;
             } else {
@@ -18,20 +28,23 @@
             }
         };
 
-        this.id = function(fb) {
+        function id(fb) {
             return fb.$id;
         };
-        this.ref = function(fb) {
+
+        function ref(fb) {
             return fb.$ref();
         };
-        this.load = function(fb, result) {
+
+        function load(fb, result) {
             if (angular.isUndefined(result)) {
                 return fb.$loaded();
             } else {
                 return fb.$loaded(result.success, result.failure);
             }
         };
-        this.save = function(fb, result) {
+
+        function save(fb, result) {
             if (angular.isUndefined(result)) {
                 return fb.$save();
             } else {
@@ -39,16 +52,18 @@
                     .then(result.success, result.failure);
             }
         };
-        this.remove = function(fb, result) {
+
+        function remove(fb, result) {
             if (angular.isUndefined(result)) {
                 return fb.$remove();
             } else {
                 return fb.$remove()
-                .then(result.success, result.failure);
+                    .then(result.success, result.failure);
             }
 
         };
-        this.destroy = function(fb) {
+
+        function destroy(fb) {
             return fb.$destroy();
         };
 
