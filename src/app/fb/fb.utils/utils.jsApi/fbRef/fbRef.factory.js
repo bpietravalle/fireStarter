@@ -24,7 +24,7 @@
                 } else if (typeof args[i] !== 'string') {
 									//TODO: write test for block below
                     try {
-                        return args[i].toString();
+                         args[i] = args[i].toString();
                     } catch(err) {
                         throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
                     }

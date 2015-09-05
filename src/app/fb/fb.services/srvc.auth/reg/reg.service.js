@@ -1,18 +1,11 @@
 (function(angular) {
     "use strict";
 
-    function RegService($q, $log, afEntity, auth) {
-
-        this.authObj = (function() {
-            return afEntity.set();
-        })();
+    function RegService($q, $log, user, auth) {
 
         this.passwordAndEmailRegister = function(registration) {
+					var newUser;
             if (validParams(registration)) {
-                var newUser = {
-                    email: registration.email,
-                    name: ""
-                };
                 return auth.authObj
                     .$createUser({
                         email: registration.email,
@@ -26,11 +19,12 @@
                         return auth.passwordAndEmailLogin(creds);
                     })
                     .then(function(authData) {
-                        this.getUser(authData);
+                        return getUser(authData);
                     })
-                    .then(function(user) {
-                            user.$ref().set(newUser);
-
+                    .then(function(data) {
+                            // data.email = registration.email;
+                            // data.name = "";
+                            // return data.$save();
                         },
 
                         function(error) {
@@ -61,7 +55,7 @@
                 .loginOAuth(provider)
                 // need to add scope
                 .then(function(authData) {
-                    this.getUser(authData)
+                    getUser(authData)
                 })
                 .then(saveOAuthData(user),
 
@@ -70,15 +64,14 @@
                     }
                 );
         };
-        //TODO: write user factory
-        this.getUser = function(authData) {
+
+        function getUser(authData) {
             if (authData) {
-                var user = afEntity.set('object', ['users', authData.uid]);
-                return user.$loaded();
+                return user.findById(authData);
             } else {
                 $log.info("no authentication data available");
             }
-        };
+        }
 
 
         function saveOAuthData(user) {
@@ -105,7 +98,7 @@
         this.cancelAccount = function(email, pass) {
             //TODO: deactivate rather than destroy account
             if (auth.isLoggedIn()) {
-                this.authObj
+                auth.authObj
                     .$removeUser({
                         email: email,
                         password: pass
@@ -122,7 +115,7 @@
         };
     }
 
-    RegService.$inject = ['$q', '$log', 'afEntity', 'auth'];
+    RegService.$inject = ['$q', '$log', 'user', 'auth'];
 
     angular.module('srvc.auth')
         .service('reg', RegService);
