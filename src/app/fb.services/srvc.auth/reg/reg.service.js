@@ -16,28 +16,33 @@
                 return auth.authObj
                     .$createUser({
                         email: registration.email,
-                        password: registration.pass
+                        password: registration.password
                     })
                     .then(function(userData) {
                         var creds = {
                             email: registration.email,
-                            password: registration.pass
+                            password: registration.password
                         };
                         return auth.passwordAndEmailLogin(creds);
                     })
                     .then(function(authData) {
-                            var newUser = {
-                                email: registration.email,
-                                name: firstPartOfEmail(registration.email)
-                            };
-                            return saveUser(
-                                getUser(authData.uid), newUser);
+                        var newUser = {
+                            email: registration.email,
+                            name: firstPartOfEmail(registration.email)
+                        };
+                        //this returns a promise - should be another then()
+                        return saveUser(
+                            getUser(authData.uid), newUser);
+                    })
+                    //untested - but just trying
+                    .then(function(ref) {
+                            $log.info("Successfully updated at: " + ref);
                         },
                         function(error) {
                             $q.reject(error);
                         });
             } else {
-                throw new Error("Please try again - invalid params");
+                throw new Error("Please try again - invalid params.  See: " + registration);
             }
         }
 
@@ -46,9 +51,9 @@
             //TODO: these should throw errors
             if (!registration.email) {
                 $log.info("no email");
-            } else if (registration.pass !== registration.confirm) {
+            } else if (registration.password !== registration.confirm) {
                 $log.info("password and email don't match");
-            } else if (!registration.pass || !registration.confirm) {
+            } else if (!registration.password || !registration.confirm) {
                 $log.info("please entire a password");
             } else {
                 return true;

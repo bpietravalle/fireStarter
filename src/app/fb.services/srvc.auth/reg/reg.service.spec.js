@@ -73,12 +73,12 @@
                     });
                     this.registration = {
                         email: 'myname@emial.com',
-                        pass: 'password',
+                        password: 'password',
                         confirm: 'password'
                     };
                     this.data = {
                         email: this.registration.email,
-                        password: this.registration.pass
+                        password: this.registration.password
                     };
                     this.error = "Error";
                     spyOn($q, "reject");

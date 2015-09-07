@@ -13,7 +13,7 @@
                 $log = _$log_;
                 $q = _$q_;
                 auth = _auth_;
-                session = _session_; 
+                session = _session_;
                 mockAuth = _mockAuth_;
                 ref = mockAuth.ref();
                 data = mockAuth.authData();
@@ -209,6 +209,42 @@
             });
         });
         describe("changePassword", function() {
+            describe("With Invalid params", function() {
+
+                it("throws an error if email is blank", function() {
+                    var params = {
+                        email: "",
+                        oldPassword: 'password',
+                        confirm: 'passWORD',
+                        newPassword: 'passWORD'
+                    };
+                    expect(function() {
+                        auth.changePassword(params);
+                    }).toThrow();
+                });
+                it("throws an error if password is blank", function() {
+                    var params = {
+                        email: "email@emial.som",
+                        oldPassword: "",
+                        confirm: 'passWORD',
+                        newPassword: 'passWORD'
+                    };
+                    expect(function() {
+                        auth.changePassword(params);
+                    }).toThrow();
+                });
+                it("throws an error if password !== confirmation", function() {
+                    var params = {
+                        email: "email@emial.som",
+                        oldPassword: 'password',
+                        confirm: 'paasdasdssWORD',
+                        newPassword: 'passWORD'
+                    };
+                    expect(function() {
+                        auth.changePassword(params);
+                    }).toThrow();
+                });
+            });
             beforeEach(function() {
                 inject(function() {
                     spyOn(auth.authObj, '$changePassword').and.callFake(function() {
@@ -219,9 +255,10 @@
                 var credentials = {
                     email: 'oldone@email.com',
                     oldPassword: 'password',
+                    confirm: 'passWORD',
                     newPassword: 'passWORD'
                 };
-                this.success = "password change email sent";
+                this.success = "password successfully changed";
 
                 auth.changePassword(credentials);
                 spyOn($log, "info");

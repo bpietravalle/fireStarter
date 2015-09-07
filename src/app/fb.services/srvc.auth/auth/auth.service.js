@@ -1,7 +1,7 @@
 (function(angular) {
     "use strict";
 
-    function AuthService($q, $log, afEntity, session) {
+    function AuthService($q, $log, afEntity, session, user) {
         var vm = this;
 
         vm.isLoggedIn = isLoggedIn;
@@ -27,7 +27,7 @@
             return vm.authObj
                 .$authWithPassword({
                     email: creds.email,
-                    password: creds.pass
+                    password: creds.password
                 })
                 .then(function(authData) {
                         session.setAuthData(authData);
@@ -53,8 +53,9 @@
                 );
         }
 
+        //this doesn't return a promise apparently
         function googleLogin() {
-            vm.loginOAuth("google");
+            return vm.loginOAuth("google");
         }
 
         function facebookLogin() {
@@ -80,7 +81,7 @@
                 .$changeEmail({
                     oldEmail: creds.oldEmail,
                     newEmail: creds.newEmail,
-                    password: creds.pass
+                    password: creds.password
                 })
                 .then(function() {
                         $log.info("email successfully changed");
@@ -89,6 +90,27 @@
                         $q.reject(error);
                     });
         }
+
+        function saveUser(obj, ch) {
+            if (obj, ch) {
+                obj.email = ch.email;
+                return user.save(obj);
+            } else {
+                $log.info("no user obj");
+            }
+        }
+
+        function getUser() {
+            var s = session.getAuthData();
+            var id = s.uid;
+
+            if (id) {
+                return user.findById(id);
+            } else {
+                $log.info("no authentication data available");
+            }
+        }
+
 
         function resetPassword(creds) {
             return vm.authObj
@@ -104,23 +126,40 @@
         }
 
         function changePassword(creds) {
-            return vm.authObj
-                .$changePassword({
-                    email: creds.email,
-                    oldPassword: creds.oldPassword,
-                    newPassword: creds.newPassword
-                })
-                .then(function() {
-                        $log.info("password change email sent");
-                    },
-                    function(error) {
-                        $q.reject(error);
-                    });
+            if (validParams(creds)) {
+                return vm.authObj
+                    .$changePassword({
+                        email: creds.email,
+                        oldPassword: creds.oldPassword,
+                        newPassword: creds.newPassword
+                    })
+                    .then(function() {
+                            $log.info("password successfully changed");
+                        },
+                        function(error) {
+                            $q.reject(error);
+                        });
+            } else {
+                throw new Error("Invalid Params.  see: " + creds)
+            }
+
         }
+
+        function validParams(creds) {
+            //TODO: these should throw errors
+            if (!creds.email || !creds.confirm || !creds.newPassword || !creds.oldPassword) {
+                $log.info("Please fill in all the password fields");
+            } else if (creds.newPassword !== creds.confirm) {
+                $log.info("password and confirmation don't match");
+            } else {
+                return true;
+            }
+        }
+
 
     }
 
-    AuthService.$inject = ['$q', '$log', 'afEntity', 'session'];
+    AuthService.$inject = ['$q', '$log', 'afEntity', 'session', 'user'];
 
     angular.module('fb.srvc.auth')
         .service('auth', AuthService);
