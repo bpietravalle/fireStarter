@@ -73,7 +73,7 @@
 
     arrMngrService.$inject = [];
 
-    angular.module("srvc.dataMngr")
+    angular.module("fb.srvc.dataMngr")
         .service("arrMngr", arrMngrService);
 
 })(angular);

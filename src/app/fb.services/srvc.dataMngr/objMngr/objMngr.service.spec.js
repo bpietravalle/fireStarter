@@ -13,7 +13,7 @@
 
 
         beforeEach(function() {
-            module('srvc.dataMngr');
+            module('fb.srvc.dataMngr');
             module("fbMocks");
             module('testutils', function($provide) {
                 $provide.value('$log', {

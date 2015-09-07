@@ -2,7 +2,7 @@
     "use strict";
 
 
-    angular.module("srvc.session", ['LocalStorageModule']);
+    angular.module("fb.srvc.session", ['LocalStorageModule']);
 
 
 })(angular);

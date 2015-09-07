@@ -1,14 +1,14 @@
-(function(angular) {
-    'use strict';
+// (function(angular) {
+//     'use strict';
 
-    angular
-        .module('fb')
-        .run(runBlock);
+//     angular
+//         .module('fb')
+//         .run(runBlock);
 
-    /** @ngInject */
-    function runBlock($log) {
+//     /** @ngInject */
+//     function runBlock($log) {
 
-        $log.debug('runBlock end');
-    }
+//         $log.debug('runBlock end');
+//     }
 
-})(angular);
+// })(angular);

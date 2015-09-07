@@ -2,7 +2,7 @@
     "use strict";
 
 
-    angular.module("srvc.dataFactories", ['srvc.dataMngr']);
+    angular.module("fb.srvc.dataFactories", ['fb.srvc.dataMngr']);
 
 
 })(angular);

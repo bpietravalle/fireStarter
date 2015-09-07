@@ -145,7 +145,7 @@
 
     RegService.$inject = ['$q', '$log', 'user', 'auth'];
 
-    angular.module('srvc.auth')
+    angular.module('fb.srvc.auth')
         .service('reg', RegService);
 
 

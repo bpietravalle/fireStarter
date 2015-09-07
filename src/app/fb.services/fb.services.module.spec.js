@@ -17,17 +17,17 @@
             beforeEach(function() {
                 deps = module.value('fb.services').requires;
             });
-            it("should depend on srvc.dataFactories", function() {
-                expect(hasModule('srvc.dataFactories')).toBeTruthy();
+            it("should depend on fb.srvc.dataFactories", function() {
+                expect(hasModule('fb.srvc.dataFactories')).toBeTruthy();
             });
-            it("should depend on srvc.auth", function() {
-                expect(hasModule('srvc.auth')).toBeTruthy();
+            it("should depend on fb.srvc.auth", function() {
+                expect(hasModule('fb.srvc.auth')).toBeTruthy();
             });
-            it("should depend on srvc.dataMngr", function() {
-                expect(hasModule('srvc.dataMngr')).toBeTruthy();
+            it("should depend on fb.srvc.dataMngr", function() {
+                expect(hasModule('fb.srvc.dataMngr')).toBeTruthy();
             });
-            it("should depend on srvc.session", function() {
-                expect(hasModule('srvc.session')).toBeTruthy();
+            it("should depend on fb.srvc.session", function() {
+                expect(hasModule('fb.srvc.session')).toBeTruthy();
             });
         });
     });

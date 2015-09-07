@@ -31,6 +31,6 @@
 
     userFactory.$inject = ['afEntity', 'objMngr'];
 
-    angular.module("srvc.dataFactories")
+    angular.module("fb.srvc.dataFactories")
         .factory("user", userFactory);
 })(angular);

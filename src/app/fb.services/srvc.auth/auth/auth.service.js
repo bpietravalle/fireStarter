@@ -122,7 +122,7 @@
 
     AuthService.$inject = ['$q', '$log', 'afEntity', 'session'];
 
-    angular.module('srvc.auth')
+    angular.module('fb.srvc.auth')
         .service('auth', AuthService);
 
 

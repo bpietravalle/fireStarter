@@ -71,7 +71,7 @@
 
     objMngrService.$inject = [];
 
-    angular.module("srvc.dataMngr")
+    angular.module("fb.srvc.dataMngr")
         .service("objMngr", objMngrService);
 
 

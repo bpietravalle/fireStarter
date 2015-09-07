@@ -31,7 +31,7 @@
         };
 
         beforeEach(function() {
-            module('srvc.dataMngr');
+            module('fb.srvc.dataMngr');
             module('fbMocks');
             module('testutils');
             inject(function( $firebaseUtils, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {

@@ -6,7 +6,7 @@
 
         beforeEach(function() {
             MockFirebase.override();
-            module("srvc.auth");
+            module("fb.srvc.auth");
             module("fbMocks");
             inject(function(_$log_, _auth_, _session_, _$q_, _$rootScope_, _mockAuth_) {
                 $rootScope = _$rootScope_;

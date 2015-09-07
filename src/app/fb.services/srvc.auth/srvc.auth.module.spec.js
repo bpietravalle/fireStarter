@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("srvc.auth Module:", function() {
+    describe("fb.srvc.auth Module:", function() {
         beforeEach(function() {
-            module = angular.module("srvc.auth");
+            module = angular.module("fb.srvc.auth");
         });
 
         it("should exist", function() {
@@ -15,13 +15,13 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('srvc.auth').requires;
+                deps = module.value('fb.srvc.auth').requires;
             });
-            it("should depend on srvc.session", function() {
-                expect(hasModule('srvc.session')).toBeTruthy();
+            it("should depend on fb.srvc.session", function() {
+                expect(hasModule('fb.srvc.session')).toBeTruthy();
             });
-            it("should depend on srvc.dataFactories", function() {
-                expect(hasModule('srvc.dataFactories')).toBeTruthy();
+            it("should depend on fb.srvc.dataFactories", function() {
+                expect(hasModule('fb.srvc.dataFactories')).toBeTruthy();
             });
         });
     });

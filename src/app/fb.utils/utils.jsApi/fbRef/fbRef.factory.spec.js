@@ -32,7 +32,7 @@
             it("ref.path returns correct URL with child path", function() {
                 var url = "a_string";
                 var test = fbRef.ref(url);
-                expect(test.path).toEqual('https://your-firebase.firebaseio.com/a_string');
+                expect(test.path).toEqual(FBURL + 'a_string');
             });
             it("ref.path returns parent URL if no child path given", function() {
                 var test = fbRef.root();
@@ -40,11 +40,11 @@
             });
             it("ref.path returns correct URL when path = array", function() {
                 var test = fbRef.ref('users', 'phones', '15');
-                expect(test.path).toEqual('https://your-firebase.firebaseio.com/users/phones/15');
+                expect(test.path).toEqual(FBURL + 'users/phones/15');
             });
             it("ref.path returns correct URL when path = array of arrays", function() {
                 var test = fbRef.ref('users', ['phones', 'boom'], '15');
-                expect(test.path).toEqual('https://your-firebase.firebaseio.com/users/phones/boom/15');
+                expect(test.path).toEqual(FBURL + 'users/phones/boom/15');
             });
             //not passing below - matcher syntax
             // it("ref.path throws error if path array item isn't a string", function() {

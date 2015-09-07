@@ -2,7 +2,7 @@
     "use strict";
 
 
-    angular.module("srvc.dataMngr", ['fb.utils']);
+    angular.module("fb.srvc.dataMngr", ['fb.utils']);
 
 
 })(angular);

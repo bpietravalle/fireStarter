@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("srvc.dataFactories Module:", function() {
+    describe("fb.srvc.dataFactories Module:", function() {
         beforeEach(function() {
-            module = angular.module("srvc.dataFactories");
+            module = angular.module("fb.srvc.dataFactories");
         });
 
         it("should exist", function() {
@@ -15,10 +15,10 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('srvc.dataFactories').requires;
+                deps = module.value('fb.srvc.dataFactories').requires;
             });
-            it("should depend on srvc.dataMngr", function() {
-                expect(hasModule('srvc.dataMngr')).toBeTruthy();
+            it("should depend on fb.srvc.dataMngr", function() {
+                expect(hasModule('fb.srvc.dataMngr')).toBeTruthy();
             });
         });
     });

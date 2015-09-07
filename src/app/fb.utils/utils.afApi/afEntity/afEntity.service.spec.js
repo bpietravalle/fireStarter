@@ -7,9 +7,10 @@
         beforeEach(function() {
             MockFirebase.override();
             module('fbMocks');
+						module('fb.constant');
             module('utils.afApi');
-            inject(function(_afEntity_) {
-                root = 'https://your-firebase.firebaseio.com/';
+            inject(function(_afEntity_, _FBURL_) {
+                root = _FBURL_;
                 afEntity = _afEntity_;
             });
         });

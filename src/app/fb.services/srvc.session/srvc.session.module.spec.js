@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("srvc.session Module:", function() {
+    describe("fb.srvc.session Module:", function() {
         beforeEach(function() {
-            module = angular.module("srvc.session");
+            module = angular.module("fb.srvc.session");
         });
 
         it("should exist", function() {
@@ -15,7 +15,7 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('srvc.session').requires;
+                deps = module.value('fb.srvc.session').requires;
             });
             it("should depend on LocalStorageModule", function() {
                 expect(hasModule('LocalStorageModule')).toBeTruthy();
