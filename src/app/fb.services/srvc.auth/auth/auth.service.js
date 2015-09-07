@@ -84,16 +84,20 @@
                     password: creds.password
                 })
                 .then(function() {
-                        $log.info("email successfully changed");
+                    $log.info("email successfully changed");
+                    saveEmail(getUser(), creds.newEmail);
+                })
+                .then(function() {
+                        $log.info("new email successfully saved")
                     },
                     function(error) {
                         $q.reject(error);
                     });
         }
 
-        function saveUser(obj, ch) {
-            if (obj, ch) {
-                obj.email = ch.email;
+        function saveEmail(obj, ne) {
+            if (obj, ne) {
+                obj.email = ne;
                 return user.save(obj);
             } else {
                 $log.info("no user obj");

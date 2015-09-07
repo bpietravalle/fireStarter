@@ -2,15 +2,16 @@
     "use strict";
 
     describe("Auth Service", function() {
-        var auth, error, $log, data, deferred, ref, $q, $rootScope, session, mockAuth;
+        var auth, user, error, $log, data, deferred, ref, $q, $rootScope, session, mockAuth;
 
         beforeEach(function() {
             MockFirebase.override();
             module("fb.srvc.auth");
             module("fbMocks");
-            inject(function(_$log_, _auth_, _session_, _$q_, _$rootScope_, _mockAuth_) {
+            inject(function(_$log_, _user_, _auth_, _session_, _$q_, _$rootScope_, _mockAuth_) {
                 $rootScope = _$rootScope_;
                 $log = _$log_;
+                user = _user_;
                 $q = _$q_;
                 auth = _auth_;
                 session = _session_;
@@ -184,16 +185,52 @@
 
             });
             describe("***When Resolved:  ", function() {
-                it("should call $log.info with success message", function() {
-                    deferred.resolve(this.success);
-                    $rootScope.$digest();
-                    expect($log.info).toHaveBeenCalledWith(this.success);
+                describe("before updating email in firebase", function() {
+                    beforeEach(function() {
+                        var u = {
+                            uid: 1,
+                            email: 'oldone@email.com'
+                        };
+                        spyOn(user, "save");
+                        spyOn(session, "getAuthData").and.returnValue(u);
+                        spyOn(user, "findById").and.returnValue(u);
+                    });
+                    it("user.save is called with updated user", function() {
+                        var newU = {
+                            uid: 1,
+                            email: 'newone@email.com'
+                        };
+                        deferred.resolve(this.success);
+                        $rootScope.$digest();
+                        expect(user.save).toHaveBeenCalledWith(newU);
+                    });
                 });
-                it("shouldn't call $q.reject", function() {
-                    deferred.resolve(this.success);
-                    $rootScope.$digest();
-                    expect($q.reject).not.toHaveBeenCalled();
+                describe("after updating email in firebase", function() {
+                    beforeEach(function() {
+                        var u = {
+                            uid: 1,
+                            email: 'oldone@email.com'
+                        };
+                        spyOn(session, "getAuthData").and.returnValue(u);
+                        spyOn(user, "findById").and.returnValue(u);
+                        spyOn(user, 'save').and.callFake(function() {
+                            deferred = $q.defer();
+                            return deferred.promise;
+                        });
+
+                    });
+                    it("should call $log.info with success message", function() {
+                        deferred.resolve(this.success);
+                        $rootScope.$digest();
+                        expect($log.info).toHaveBeenCalledWith(this.success);
+                    });
+                    it("shouldn't call $q.reject", function() {
+                        deferred.resolve(this.success);
+                        $rootScope.$digest();
+                        expect($q.reject).not.toHaveBeenCalled();
+                    });
                 });
+
             });
             describe("***When Rejected:  ", function() {
                 it("shouldn't call $log.info", function() {
