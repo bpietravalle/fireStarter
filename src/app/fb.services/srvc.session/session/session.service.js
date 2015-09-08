@@ -16,7 +16,7 @@
         function setAuthData(authData) {
             vm._authData = authData;
             localStorageService.set('session.authData', JSON.stringify(authData));
-            return vm;
+            return vm._authData;
         }
 
         function getAccessToken() {

@@ -57,10 +57,9 @@
             });
             describe("***When Resolved:  ", function() {
                 it("auth service should return authData", function() {
-                    var test = auth.passwordAndEmailLogin(this.credentials);
                     deferred.resolve(data);
                     $rootScope.$digest();
-                    expect(test.$$state.value).toEqual(data);
+                    expect(deferred.promise.$$state.value).toEqual(data);
                 });
                 it("should call session.setAuthData with authData", function() {
                     deferred.resolve(data);

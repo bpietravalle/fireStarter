@@ -14,7 +14,7 @@
                 objMngr = _objMngr_;
                 user = _user_;
                 afEntity = _afEntity_;
-								mockObj = _mockObj_;
+                mockObj = _mockObj_;
                 mockAuth = _mockAuth_;
             });
         });
@@ -38,6 +38,7 @@
             beforeEach(function() {
                 spyOn(objMngr, "load").and.callThrough();
                 spyOn(objMngr, "save").and.callThrough();
+                spyOn(objMngr, "bindTo").and.callThrough();
 
             });
             describe("loadById", function() {
@@ -62,6 +63,20 @@
                     var obj = mockObj.makeObject();
                     user.save(obj);
                     expect(objMngr.save).toHaveBeenCalled();
+                });
+            });
+            describe("bindById", function() {
+                beforeEach(function() {
+                    this.s = $rootScope.$new();
+                    this.v = "profile";
+                });
+                it("returns a promise", function() {
+                    var test = user.bindById(1, this.s, this.v);
+                    expect(test).toBeAPromise();
+                });
+                it("sends 'bindTo' to objMngr", function() {
+                    user.bindById(1, this.s, this.v);
+                    expect(objMngr.bindTo).toHaveBeenCalled();
                 });
             });
         });

@@ -7,6 +7,7 @@
 
             findById: findById,
             loadById: loadById,
+						bindById: bindById,
             save: save
         };
 
@@ -26,6 +27,11 @@
             return objMngr.
             save(obj);
         }
+
+				function bindById(id, s, v){
+					return objMngr
+					.bindTo(findById(id), s, v);
+				}
     }
 
 

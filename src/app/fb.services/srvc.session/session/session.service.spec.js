@@ -25,6 +25,10 @@
             session.setAuthData("stuff");
             expect(session._authData).toEqual("stuff");
         });
+        it("session.setAuthData returns vm", function() {
+            var test = session.setAuthData("stuff");
+            expect(test).toEqual("stuff");
+        });
         it("getAuthData returns correct string", function() {
             session.setAuthData("stuff");
             expect(session.getAuthData()).toEqual("stuff");

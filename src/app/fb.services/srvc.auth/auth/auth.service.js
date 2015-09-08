@@ -30,8 +30,8 @@
                     password: creds.password
                 })
                 .then(function(authData) {
-                        session.setAuthData(authData);
-                        return authData;
+                    return session.setAuthData(authData);
+												$log.info("session data: " + authData);
                     },
                     function(error) {
                         $q.reject(error);
@@ -44,8 +44,7 @@
                 .$authWithOAuthPopup(provider)
                 // need to add scope
                 .then(function(authData) {
-                        session.setAuthData(authData);
-                        return authData;
+                    return  session.setAuthData(authData);
                     },
                     function(error) {
                         $q.reject(error);

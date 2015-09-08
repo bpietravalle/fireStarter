@@ -11,6 +11,7 @@
         vm.priority = priority;
         vm.id = id;
         vm.value = value;
+				vm.bindTo = bindTo;
 
         function priority(fb, val) {
             if (angular.isUndefined(val)) {
@@ -67,6 +68,10 @@
             return fb.$destroy();
         }
 
+				function bindTo(fb, s, v){
+
+					return fb.$bindTo(s,v);
+				}
     }
 
     objMngrService.$inject = [];
