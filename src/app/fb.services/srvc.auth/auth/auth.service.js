@@ -16,7 +16,7 @@
         vm.twitterLogin = twitterLogin;
 
         function changeEmail(creds) {
-            var ne = creds.newEmail;
+            var newEmail = creds.newEmail;
 
             return authMngr
                 .changeEmail({
@@ -24,10 +24,9 @@
                     newEmail: creds.newEmail,
                     password: creds.password
                 })
-                .then(changeEmailSuccess,
-                    changeEmailFailure
-                );
-
+                .then(function() {
+                    return changeEmailSuccess(newEmail);
+                }, changeEmailFailure);
         }
 
         function changePassword(creds) {
@@ -61,7 +60,7 @@
         function loginOAuth(provider) {
             return authMngr
                 .authWithOAuthPopup(provider)
-                // need to add scope
+                // need to add scope parameter
                 .then(loginOAuthSuccess,
                     loginOAuthFailure);
         }
@@ -110,9 +109,14 @@
             return setSession(response);
         }
 
-        function changeEmailSuccess(response) {
-            $log.info("email successfully changed** " + response);
-            // return saveEmail(response[0], response[1]);
+        function changeEmailSuccess(email) {
+            return saveEmail(email);
+            //TODO handle promise returned by user.save
+            // .then(function() {
+            //     $log.info("email successfully changed and updated in firebase");
+            // }, function() {
+            //     $log.error("there was an error updating firebase")
+            // });
         }
 
         function resetPasswordSuccess() {
@@ -123,11 +127,10 @@
             $log.info("password successfully changed");
         };
 
-
         // Handling Rejected Promises
 
         function authFailure(error) {
-            $log.error("Auth error: " + error);
+            $log.error(error);
             return $q.reject(error);
         }
 

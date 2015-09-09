@@ -2,13 +2,13 @@
     "use strict";
 
     describe("Auth Service", function() {
-        var auth, user, error, $log, data, deferred, credentials, ref, $q, authMngr, $rootScope, session, mockAuth;
+        var auth, user, error, $log, data, deferred, mockObj, credentials, ref, $q, authMngr, $rootScope, session, mockAuth;
 
         beforeEach(function() {
             MockFirebase.override();
             module("fb.srvc.auth");
             module("fbMocks");
-            inject(function(_$log_, _user_, _auth_, _authMngr_, _session_, _$q_, _$rootScope_, _mockAuth_) {
+            inject(function(_$log_, _user_, _auth_, _authMngr_, _mockObj_, _session_, _$q_, _$rootScope_, _mockAuth_) {
                 $rootScope = _$rootScope_;
                 $log = _$log_;
                 user = _user_;
@@ -16,6 +16,7 @@
                 authMngr = _authMngr_;
                 auth = _auth_;
                 session = _session_;
+                mockObj = _mockObj_;
                 mockAuth = _mockAuth_;
                 ref = mockAuth.ref();
                 data = mockAuth.authData();
@@ -170,6 +171,7 @@
                 inject(function() {
                     spyOn(authMngr, 'changeEmail').and.callFake(function() {
                         deferred = $q.defer();
+                        return deferred.promise;
                     });
                 });
                 credentials = {
@@ -179,97 +181,71 @@
                 };
                 this.success = "email successfully changed";
 
-                var u = {
-                    uid: 1,
+                var info = {
+                    uid: '1',
                     email: 'oldone@email.com'
                 };
-                spyOn(user, "save");
-                spyOn(session, "getAuthData").and.returnValue(u);
-                spyOn($log, "info");
                 spyOn($q, "reject");
+                spyOn($log, "error");
 
+                this.mockUser = mockObj.makeObject(info);
             });
 
             describe("***When Resolved:  ", function() {
-                beforeEach(function() {
-                });
-                it("works", function() {
+                it("should call currentUID on authMngr", function() {
+                    spyOn(authMngr, 'currentUID');
+                    spyOn(user, 'findById');
                     auth.changeEmail(credentials);
                     deferred.resolve("success");
                     $rootScope.$digest();
-                    expect(test).toEqual("asdf");
+                    expect(authMngr.currentUID).toHaveBeenCalled();
                 });
-
-
-
-                // it("session.getAuthData is called", function() {
-                //     expect(session.getAuthData).toHaveBeenCalled();
-                // });
+                it("should send the currentUID to user.findById", function() {
+                    spyOn(authMngr, 'currentUID').and.returnValue('1');
+                    spyOn(user, 'findById');
+                    auth.changeEmail(credentials);
+                    deferred.resolve("success");
+                    $rootScope.$digest();
+                    expect(user.findById).toHaveBeenCalledWith('1');
+                });
+                it("should call user.save with user obj", function() {
+                    spyOn(authMngr, 'currentUID');
+                    spyOn(user, 'findById').and.returnValue(this.mockUser);
+                    spyOn(user, 'save');
+                    auth.changeEmail(credentials);
+                    deferred.resolve("success");
+                    $rootScope.$digest();
+                    expect(user.save).toHaveBeenCalledWith(this.mockUser);
+                });
+                it("should update users email address", function() {
+                    spyOn(authMngr, 'currentUID');
+                    spyOn(user, 'findById').and.returnValue(this.mockUser);
+                    spyOn(user, 'save');
+                    auth.changeEmail(credentials);
+                    deferred.resolve("success");
+                    $rootScope.$digest();
+                    expect(this.mockUser.email).toEqual('newone@email.com');
+                });
                 it("$q.reject isnt called", function() {
+                    deferred.resolve("success");
+                    $rootScope.$digest();
                     expect($q.reject).not.toHaveBeenCalled();
                 });
-
             });
-            // describe("before updating email in firebase", function() {
-            //     beforeEach(function() {
-            //         var u = {
-            //             uid: 1,
-            //             email: 'oldone@email.com'
-            //         };
-            //         spyOn(user, "save");
-            //         spyOn(session, "getAuthData").and.returnValue(u);
-            //         spyOn(user, "findById").and.returnValue(u);
-            //     });
-            //     it("user.save is called with updated user", function() {
-            //         var newU = {
-            //             uid: 1,
-            //             email: 'newone@email.com'
-            //         };
-            //         deferred.resolve(this.success);
-            //         $rootScope.$digest();
-            //         expect(user.save).toHaveBeenCalledWith(newU);
-            //     });
-            // });
-            // describe("after updating email in firebase", function() {
-            //     beforeEach(function() {
-            //         var u = {
-            //             uid: 1,
-            //             email: 'oldone@email.com'
-            //         };
-            //         spyOn(session, "getAuthData").and.returnValue(u);
-            //         spyOn(user, "findById").and.returnValue(u);
-            //         spyOn(user, 'save').and.callFake(function() {
-            //             deferred = $q.defer();
-            //             return deferred.promise;
-            //         });
-
-            //     });
-            //     it("should call $log.info with success message", function() {
-            //         deferred.resolve(this.success);
-            //         $rootScope.$digest();
-            //         expect($log.info).toHaveBeenCalledWith(this.success);
-            //     });
-            //     it("shouldn't call $q.reject", function() {
-            //         deferred.resolve(this.success);
-            //         $rootScope.$digest();
-            //         expect($q.reject).not.toHaveBeenCalled();
-            //     });
-            // });
-
-            // });
-            // describe("***When Rejected:  ", function() {
-            //     it("shouldn't call $log.info", function() {
-            //         deferred.reject(error);
-            //         $rootScope.$digest();
-            //         expect($log.info).not.toHaveBeenCalledWith(this.success);
-            //     });
-            //     it("should call $q.reject", function() {
-            //         deferred.reject(error);
-            //         $rootScope.$digest();
-            //         expect($q.reject).toHaveBeenCalledWith(error);
-            //     });
-            // });
-            // });
+            describe("***When Rejected:  ", function() {
+                it("should call $log.error", function() {
+                    auth.changeEmail(credentials);
+                    deferred.reject(error);
+                    $rootScope.$digest();
+                    expect($log.error).toHaveBeenCalledWith(error);
+                });
+                it("should call $q.reject", function() {
+                    auth.changeEmail(credentials);
+                    deferred.reject(error);
+                    $rootScope.$digest();
+                    expect($q.reject).toHaveBeenCalledWith(error);
+                });
+            });
         });
         describe("changePassword", function() {
             describe("With Invalid params", function() {
