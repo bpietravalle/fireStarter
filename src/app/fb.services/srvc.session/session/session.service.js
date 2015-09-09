@@ -7,6 +7,7 @@
         vm.setAuthData = setAuthData;
         vm.destroy = destroy;
         vm.getAccessToken = getAccessToken;
+				vm.getId = getId;
         vm._authData = JSON.parse(localStorageService.get('session.authData'));
 
         function getAuthData() {
@@ -32,6 +33,10 @@
         function destroy() {
             vm.setAuthData(null);
         }
+
+				function getId(){
+					return getAuthData();
+				}
     }
 
     sessionService.$inject = ['$log', 'localStorageService'];

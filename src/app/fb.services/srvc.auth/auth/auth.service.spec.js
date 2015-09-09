@@ -2,17 +2,18 @@
     "use strict";
 
     describe("Auth Service", function() {
-        var auth, user, error, $log, data, deferred, ref, $q, $rootScope, session, mockAuth;
+        var auth, user, error, $log, data, deferred, credentials, ref, $q, authMngr, $rootScope, session, mockAuth;
 
         beforeEach(function() {
             MockFirebase.override();
             module("fb.srvc.auth");
             module("fbMocks");
-            inject(function(_$log_, _user_, _auth_, _session_, _$q_, _$rootScope_, _mockAuth_) {
+            inject(function(_$log_, _user_, _auth_, _authMngr_, _session_, _$q_, _$rootScope_, _mockAuth_) {
                 $rootScope = _$rootScope_;
                 $log = _$log_;
                 user = _user_;
                 $q = _$q_;
+                authMngr = _authMngr_;
                 auth = _auth_;
                 session = _session_;
                 mockAuth = _mockAuth_;
@@ -40,7 +41,7 @@
         describe("passwordAndEmailLogin", function() {
             beforeEach(function() {
                 inject(function() {
-                    spyOn(auth.authObj, '$authWithPassword').and.callFake(function() {
+                    spyOn(authMngr, 'authWithPassword').and.callFake(function() {
                         deferred = $q.defer();
                         return deferred.promise;
                     });
@@ -95,7 +96,7 @@
         describe("loginOAuth", function() {
             beforeEach(function() {
                 inject(function() {
-                    spyOn(auth.authObj, '$authWithOAuthPopup').and.callFake(function() {
+                    spyOn(authMngr, 'authWithOAuthPopup').and.callFake(function() {
                         deferred = $q.defer();
                         return deferred.promise;
                     });
@@ -105,7 +106,7 @@
                 };
 
                 auth.loginOAuth(this.credentials);
-                spyOn(session, "setAuthData");
+                spyOn(session, "setAuthData").and.callThrough();
                 spyOn($q, "reject");
 
             });
@@ -119,6 +120,7 @@
                     deferred.resolve(data);
                     $rootScope.$digest();
                     expect(session.setAuthData).toHaveBeenCalledWith(data);
+                    expect(session.getAuthData()).toEqual(data);
                 });
                 it("shouldn't call $q.reject", function() {
                     deferred.resolve(data);
@@ -166,83 +168,108 @@
         describe("changeEmail", function() {
             beforeEach(function() {
                 inject(function() {
-                    spyOn(auth.authObj, '$changeEmail').and.callFake(function() {
+                    spyOn(authMngr, 'changeEmail').and.callFake(function() {
                         deferred = $q.defer();
-                        return deferred.promise;
                     });
                 });
-                this.credentials = {
+                credentials = {
                     oldEmail: 'oldone@email.com',
                     newEmail: 'newone@email.com',
                     password: 'password'
                 };
                 this.success = "email successfully changed";
 
-                auth.changeEmail(this.credentials);
+                var u = {
+                    uid: 1,
+                    email: 'oldone@email.com'
+                };
+                spyOn(user, "save");
+                spyOn(session, "getAuthData").and.returnValue(u);
                 spyOn($log, "info");
                 spyOn($q, "reject");
 
             });
+
             describe("***When Resolved:  ", function() {
-                describe("before updating email in firebase", function() {
-                    beforeEach(function() {
-                        var u = {
-                            uid: 1,
-                            email: 'oldone@email.com'
-                        };
-                        spyOn(user, "save");
-                        spyOn(session, "getAuthData").and.returnValue(u);
-                        spyOn(user, "findById").and.returnValue(u);
-                    });
-                    it("user.save is called with updated user", function() {
-                        var newU = {
-                            uid: 1,
-                            email: 'newone@email.com'
-                        };
-                        deferred.resolve(this.success);
-                        $rootScope.$digest();
-                        expect(user.save).toHaveBeenCalledWith(newU);
-                    });
+                beforeEach(function() {
                 });
-                describe("after updating email in firebase", function() {
-                    beforeEach(function() {
-                        var u = {
-                            uid: 1,
-                            email: 'oldone@email.com'
-                        };
-                        spyOn(session, "getAuthData").and.returnValue(u);
-                        spyOn(user, "findById").and.returnValue(u);
-                        spyOn(user, 'save').and.callFake(function() {
-                            deferred = $q.defer();
-                            return deferred.promise;
-                        });
+                it("works", function() {
+                    auth.changeEmail(credentials);
+                    deferred.resolve("success");
+                    $rootScope.$digest();
+                    expect(test).toEqual("asdf");
+                });
 
-                    });
-                    it("should call $log.info with success message", function() {
-                        deferred.resolve(this.success);
-                        $rootScope.$digest();
-                        expect($log.info).toHaveBeenCalledWith(this.success);
-                    });
-                    it("shouldn't call $q.reject", function() {
-                        deferred.resolve(this.success);
-                        $rootScope.$digest();
-                        expect($q.reject).not.toHaveBeenCalled();
-                    });
+
+
+                // it("session.getAuthData is called", function() {
+                //     expect(session.getAuthData).toHaveBeenCalled();
+                // });
+                it("$q.reject isnt called", function() {
+                    expect($q.reject).not.toHaveBeenCalled();
                 });
 
             });
-            describe("***When Rejected:  ", function() {
-                it("shouldn't call $log.info", function() {
-                    deferred.reject(error);
-                    $rootScope.$digest();
-                    expect($log.info).not.toHaveBeenCalledWith(this.success);
-                });
-                it("should call $q.reject", function() {
-                    deferred.reject(error);
-                    $rootScope.$digest();
-                    expect($q.reject).toHaveBeenCalledWith(error);
-                });
-            });
+            // describe("before updating email in firebase", function() {
+            //     beforeEach(function() {
+            //         var u = {
+            //             uid: 1,
+            //             email: 'oldone@email.com'
+            //         };
+            //         spyOn(user, "save");
+            //         spyOn(session, "getAuthData").and.returnValue(u);
+            //         spyOn(user, "findById").and.returnValue(u);
+            //     });
+            //     it("user.save is called with updated user", function() {
+            //         var newU = {
+            //             uid: 1,
+            //             email: 'newone@email.com'
+            //         };
+            //         deferred.resolve(this.success);
+            //         $rootScope.$digest();
+            //         expect(user.save).toHaveBeenCalledWith(newU);
+            //     });
+            // });
+            // describe("after updating email in firebase", function() {
+            //     beforeEach(function() {
+            //         var u = {
+            //             uid: 1,
+            //             email: 'oldone@email.com'
+            //         };
+            //         spyOn(session, "getAuthData").and.returnValue(u);
+            //         spyOn(user, "findById").and.returnValue(u);
+            //         spyOn(user, 'save').and.callFake(function() {
+            //             deferred = $q.defer();
+            //             return deferred.promise;
+            //         });
+
+            //     });
+            //     it("should call $log.info with success message", function() {
+            //         deferred.resolve(this.success);
+            //         $rootScope.$digest();
+            //         expect($log.info).toHaveBeenCalledWith(this.success);
+            //     });
+            //     it("shouldn't call $q.reject", function() {
+            //         deferred.resolve(this.success);
+            //         $rootScope.$digest();
+            //         expect($q.reject).not.toHaveBeenCalled();
+            //     });
+            // });
+
+            // });
+            // describe("***When Rejected:  ", function() {
+            //     it("shouldn't call $log.info", function() {
+            //         deferred.reject(error);
+            //         $rootScope.$digest();
+            //         expect($log.info).not.toHaveBeenCalledWith(this.success);
+            //     });
+            //     it("should call $q.reject", function() {
+            //         deferred.reject(error);
+            //         $rootScope.$digest();
+            //         expect($q.reject).toHaveBeenCalledWith(error);
+            //     });
+            // });
+            // });
         });
         describe("changePassword", function() {
             describe("With Invalid params", function() {
@@ -283,7 +310,7 @@
             });
             beforeEach(function() {
                 inject(function() {
-                    spyOn(auth.authObj, '$changePassword').and.callFake(function() {
+                    spyOn(authMngr, 'changePassword').and.callFake(function() {
                         deferred = $q.defer();
                         return deferred.promise;
                     });
@@ -329,7 +356,7 @@
         describe("resetPassword", function() {
             beforeEach(function() {
                 inject(function() {
-                    spyOn(auth.authObj, '$resetPassword').and.callFake(function() {
+                    spyOn(authMngr, 'resetPassword').and.callFake(function() {
                         deferred = $q.defer();
                         return deferred.promise;
                     });
@@ -371,16 +398,16 @@
         });
         describe("#logout", function() {
             beforeEach(inject(function() {
-                spyOn(auth.authObj, '$unauth');
+                spyOn(authMngr, 'unauth');
                 spyOn(session, "destroy");
             }));
             describe("when logged in", function() {
                 beforeEach(function() {
                     spyOn(auth, "isLoggedIn").and.returnValue(true);
                 });
-                it("calls authObj#$unauth", function() {
+                it("calls authObj#unauth", function() {
                     auth.logOut();
-                    expect(auth.authObj.$unauth).toHaveBeenCalled();
+                    expect(authMngr.unauth).toHaveBeenCalled();
                 });
                 it("calls session#destroy", function() {
                     auth.logOut();
@@ -391,15 +418,15 @@
                 beforeEach(function() {
                     spyOn(auth, "isLoggedIn").and.returnValue(false);
                 });
-                it("throws an error and doesn't call session#destroy or $unauth", function() {
+                it("throws an error and doesn't call session#destroy or unauth", function() {
                     expect(function() {
                         auth.logOut();
                     }).toThrow();
-                    expect(auth.authObj.$unauth).not.toHaveBeenCalled();
+                    expect(authMngr.unauth).not.toHaveBeenCalled();
                     expect(session.destroy).not.toHaveBeenCalled();
                 });
 
             });
         });
     });
-}(angular));
+})(angular);

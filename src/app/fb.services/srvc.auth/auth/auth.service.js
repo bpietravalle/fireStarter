@@ -1,152 +1,185 @@
 (function(angular) {
     "use strict";
 
-    function AuthService($q, $log, afEntity, session, user) {
+    function AuthService($q, $log, authMngr, session, user) {
         var vm = this;
 
-        vm.isLoggedIn = isLoggedIn;
-        vm.passwordAndEmailLogin = passwordAndEmailLogin;
-        vm.loginOAuth = loginOAuth;
-        vm.googleLogin = googleLogin;
-        vm.facebookLogin = facebookLogin;
-        vm.twitterLogin = twitterLogin;
-        vm.logOut = logOut;
         vm.changeEmail = changeEmail;
-        vm.resetPassword = resetPassword;
         vm.changePassword = changePassword;
+        vm.facebookLogin = facebookLogin;
+        vm.googleLogin = googleLogin;
+        vm.isLoggedIn = isLoggedIn;
+        vm.loginOAuth = loginOAuth;
+        vm.logOut = logOut;
+        vm.passwordAndEmailLogin = passwordAndEmailLogin;
+        vm.resetPassword = resetPassword;
+        vm.twitterLogin = twitterLogin;
 
-        vm.authObj = (function() {
-            return afEntity.set();
-        }());
+        function changeEmail(creds) {
+            var ne = creds.newEmail;
 
-        function isLoggedIn() {
-            return session.getAuthData() !== null;
-        }
-
-        function passwordAndEmailLogin(creds) {
-            return vm.authObj
-                .$authWithPassword({
-                    email: creds.email,
+            return authMngr
+                .changeEmail({
+                    oldEmail: creds.oldEmail,
+                    newEmail: creds.newEmail,
                     password: creds.password
                 })
-                .then(function(authData) {
-                    return session.setAuthData(authData);
-												$log.info("session data: " + authData);
-                    },
-                    function(error) {
-                        $q.reject(error);
-                    }
+                .then(changeEmailSuccess,
+                    changeEmailFailure
                 );
+
         }
 
-        function loginOAuth(provider) {
-            return vm.authObj
-                .$authWithOAuthPopup(provider)
-                // need to add scope
-                .then(function(authData) {
-                    return  session.setAuthData(authData);
-                    },
-                    function(error) {
-                        $q.reject(error);
-                    }
-                );
+        function changePassword(creds) {
+            if (validParams(creds)) {
+                return authMngr
+                    .changePassword({
+                        email: creds.email,
+                        oldPassword: creds.oldPassword,
+                        newPassword: creds.newPassword
+                    })
+                    .then(changePasswordSuccess,
+                        changePasswordFailure);
+            } else {
+                throw new Error("Invalid Params.  see: " + creds)
+            }
+
         }
 
-        //this doesn't return a promise apparently
         function googleLogin() {
             return vm.loginOAuth("google");
         }
 
         function facebookLogin() {
-            vm.loginOAuth("facebook");
+            return vm.loginOAuth("facebook");
         }
 
-        function twitterLogin() {
-            vm.loginOAuth("twitter");
+        function isLoggedIn() {
+            return session.getAuthData() !== null;
         }
+
+        function loginOAuth(provider) {
+            return authMngr
+                .authWithOAuthPopup(provider)
+                // need to add scope
+                .then(loginOAuthSuccess,
+                    loginOAuthFailure);
+        }
+
 
         function logOut() {
             if (vm.isLoggedIn()) {
-                vm.authObj
-                    .$unauth();
+                authMngr
+                    .unauth();
                 session.destroy();
             } else {
                 throw new Error("no login data found");
             }
         }
 
-        function changeEmail(creds) {
-            return vm.authObj
-                .$changeEmail({
-                    oldEmail: creds.oldEmail,
-                    newEmail: creds.newEmail,
+        function passwordAndEmailLogin(creds) {
+            return authMngr
+                .authWithPassword({
+                    email: creds.email,
                     password: creds.password
                 })
-                .then(function() {
-                    $log.info("email successfully changed");
-                    saveEmail(getUser(), creds.newEmail);
-                })
-                .then(function() {
-                        $log.info("new email successfully saved")
-                    },
-                    function(error) {
-                        $q.reject(error);
-                    });
+                .then(passAndEmailLoginSuccess,
+                    passAndEmailLoginFailure);
         }
 
-        function saveEmail(obj, ne) {
-            if (obj, ne) {
-                obj.email = ne;
+        function resetPassword(creds) {
+            return authMngr
+                .resetPassword({
+                    email: creds.email,
+                })
+                .then(resetPasswordSuccess,
+                    resetPasswordFailure);
+        }
+
+        function twitterLogin() {
+            return vm.loginOAuth("twitter");
+        }
+
+        //Handling Resolved Promises
+
+        function passAndEmailLoginSuccess(response) {
+            return setSession(response);
+        }
+
+        function loginOAuthSuccess(response) {
+            return setSession(response);
+        }
+
+        function changeEmailSuccess(response) {
+            $log.info("email successfully changed** " + response);
+            // return saveEmail(response[0], response[1]);
+        }
+
+        function resetPasswordSuccess() {
+            $log.info("password reset email sent");
+        };
+
+        function changePasswordSuccess() {
+            $log.info("password successfully changed");
+        };
+
+
+        // Handling Rejected Promises
+
+        function authFailure(error) {
+            $log.error("Auth error: " + error);
+            return $q.reject(error);
+        }
+
+        function passAndEmailLoginFailure(error) {
+            return authFailure(error);
+        }
+
+        function loginOAuthFailure(error) {
+            return authFailure(error);
+        }
+
+        function changeEmailFailure(error) {
+            return authFailure(error);
+        }
+
+        function resetPasswordFailure(error) {
+            return authFailure(error);
+        };
+
+        function changePasswordFailure(error) {
+            return authFailure(error);
+        };
+
+
+        // Helper functions
+
+        function saveEmail(email) {
+
+            var obj = getUser();
+            if (obj) {
+                obj.email = email;
                 return user.save(obj);
             } else {
-                $log.info("no user obj");
+                $log.error("no user obj");
             }
         }
 
         function getUser() {
-            var s = session.getAuthData();
-            var id = s.uid;
-
-            if (id) {
+            var id = authMngr
+                .currentUID();
+            if (id !== null) {
                 return user.findById(id);
             } else {
-                $log.info("no authentication data available");
+                $log.error("no authentication data available");
             }
         }
 
-
-        function resetPassword(creds) {
-            return vm.authObj
-                .$resetPassword({
-                    email: creds.email,
-                })
-                .then(function() {
-                        $log.info("password reset email sent");
-                    },
-                    function(error) {
-                        $q.reject(error);
-                    });
+        function setSession(response) {
+            $log.info("session data set: " + response);
+            return session.setAuthData(response);
         }
 
-        function changePassword(creds) {
-            if (validParams(creds)) {
-                return vm.authObj
-                    .$changePassword({
-                        email: creds.email,
-                        oldPassword: creds.oldPassword,
-                        newPassword: creds.newPassword
-                    })
-                    .then(function() {
-                            $log.info("password successfully changed");
-                        },
-                        function(error) {
-                            $q.reject(error);
-                        });
-            } else {
-                throw new Error("Invalid Params.  see: " + creds)
-            }
-
-        }
 
         function validParams(creds) {
             //TODO: these should throw errors
@@ -162,7 +195,7 @@
 
     }
 
-    AuthService.$inject = ['$q', '$log', 'afEntity', 'session', 'user'];
+    AuthService.$inject = ['$q', '$log', 'authMngr', 'session', 'user'];
 
     angular.module('fb.srvc.auth')
         .service('auth', AuthService);
