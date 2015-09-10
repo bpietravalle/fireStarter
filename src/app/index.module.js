@@ -2,6 +2,6 @@
     'use strict';
 
     angular
-        .module('fb', ['fb.services', 'fb.utils', 'LocalStorageModule', 'firebase']);
+        .module('fb', ['fb.services', 'fb.utils', 'firebase']);
 
 })(angular);

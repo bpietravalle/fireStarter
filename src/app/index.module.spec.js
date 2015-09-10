@@ -23,9 +23,6 @@
             it("should depend on firebase", function() {
                 expect(hasModule("firebase")).toBeTruthy();
             });
-            it("should depend on LocalStorageModule", function() {
-                expect(hasModule("LocalStorageModule")).toBeTruthy();
-            });
             it("should depend on fb.utils", function() {
                 expect(hasModule('fb.utils')).toBeTruthy();
             });

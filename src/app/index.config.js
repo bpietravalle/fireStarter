@@ -3,8 +3,8 @@
 
     angular
         .module('fb')
-        .config(config)
-				.config(configStorage);
+        .config(config);
+				// .config(configStorage);
 
     /** @ngInject */
     function config($logProvider) {
@@ -14,12 +14,12 @@
         // Set options third-party lib
     }
 
-    function configStorage(localStorageServiceProvider) {
+    // function configStorage(localStorageServiceProvider) {
 
-        localStorageServiceProvider
-            .setPrefix('fb')
-            .setNotify(true, true)
+    //     localStorageServiceProvider
+    //         .setPrefix('fb')
+    //         .setNotify(true, true)
 
-    }
+    // }
 
 })(angular);
