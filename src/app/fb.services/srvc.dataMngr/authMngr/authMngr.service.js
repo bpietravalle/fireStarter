@@ -32,7 +32,6 @@
                 .$authWithOAuthPopup(provider);
         }
 
-
         function changeEmail(creds) {
             return vm.authObj
                 .$changeEmail({
@@ -49,7 +48,6 @@
                     oldPassword: creds.oldPassword,
                     newPassword: creds.newPassword
                 });
-
         }
 
         function createUser(creds) {
@@ -90,8 +88,6 @@
             return vm.authObj
                 .$unauth();
         }
-
-
 
     }
 

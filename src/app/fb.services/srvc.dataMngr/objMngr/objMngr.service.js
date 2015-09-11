@@ -69,7 +69,6 @@
         }
 
 				function bindTo(fb, s, v){
-
 					return fb.$bindTo(s,v);
 				}
     }
