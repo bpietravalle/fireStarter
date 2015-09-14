@@ -28,8 +28,12 @@
         }
 
         function authWithOAuthPopup(provider) {
+            var options = {
+                remember: true,
+                scope: "email"
+            };
             return vm.authObj
-                .$authWithOAuthPopup(provider);
+                .$authWithOAuthPopup(provider, options);
         }
 
         function changeEmail(creds) {
@@ -59,9 +63,9 @@
         }
 
         function currentUID() {
-					if( getAuth() !== null){
-            return getAuth().uid;
-					}
+            if (getAuth() !== null) {
+                return getAuth().uid;
+            }
         }
 
         function getAuth() {

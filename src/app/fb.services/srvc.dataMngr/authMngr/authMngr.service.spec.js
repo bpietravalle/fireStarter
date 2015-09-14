@@ -50,10 +50,14 @@
                 credentials = {
                     provider: 'google'
                 };
+								this.options = {
+									remember: true,
+									scope: "email"
+								};
             });
             it("should send credentials to firebase ref", function() {
                 authMngr.authWithOAuthPopup(credentials);
-                expect(ref.$authWithOAuthPopup).toHaveBeenCalledWith(credentials);
+                expect(ref.$authWithOAuthPopup).toHaveBeenCalledWith(credentials, this.options);
             });
             it("should return a promise", function() {
                 var test = authMngr.authWithOAuthPopup(credentials);
