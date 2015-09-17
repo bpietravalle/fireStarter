@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe("objMngr", function() {
-        var objMngr, mockObj, obj, ref, log, $interval, $timeout, $utils, testutils, $rootScope;
+        var objMngr, mockObj, obj, fbHandler, deferred, ref, log, $interval, $timeout, $utils, testutils, $rootScope;
         var FIXTURE_DATA = {
             aString: 'alpha',
             aNumber: 1,
@@ -22,13 +22,14 @@
                     }
                 });
             });
-            inject(function(_mockObj_, _objMngr_, _$timeout_, _$interval_, _testutils_, $firebaseUtils, _$rootScope_) {
+            inject(function(_mockObj_, _objMngr_, _fbHandler_, _$timeout_, _$interval_, _testutils_, $firebaseUtils, _$rootScope_) {
                 objMngr = _objMngr_;
                 $utils = $firebaseUtils;
                 testutils = _testutils_;
                 $rootScope = _$rootScope_;
                 $timeout = _$timeout_;
                 $interval = _$interval_;
+                fbHandler = _fbHandler_;
                 mockObj = _mockObj_;
                 ref = mockObj.stubRef();
                 obj = mockObj.makeObject(FIXTURE_DATA, ref);
@@ -39,6 +40,21 @@
             obj = null;
             ref = null;
         });
+
+        describe('create', function() {
+            beforeEach(function() {
+                spyOn(fbHandler, "handler").and.callThrough();
+            });
+            it("should call fbHandler.handler", function() {
+                objMngr.create(ref, FIXTURE_DATA);
+                expect(fbHandler.handler).toHaveBeenCalledWith(jasmine.any(Function));
+            });
+            it("should return a promise", function() {
+                var test = objMngr.create(ref, FIXTURE_DATA);
+                expect(test).toBeAPromise();
+            });
+        });
+
         describe('value', function() {
             it('should return the correct value', function() {
                 var obj = mockObj.makeObject('a string', ref);
@@ -620,7 +636,7 @@
                 expect(callCount).toEqual(1);
             });
 
-						//Not passing; but passed for afEntity
+            //Not passing; but passed for afEntity
 
             // it('should throw error if double bound', function() {
             //     var $scope = $rootScope.$new();

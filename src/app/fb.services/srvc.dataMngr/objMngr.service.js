@@ -1,17 +1,18 @@
 (function(angular) {
     "use strict";
 
-    function objMngrService() {
+    function objMngrService(fbRef, fbHandler) {
         var vm = this;
         vm.ref = ref;
         vm.load = load;
+        vm.create = create;
         vm.save = save;
         vm.remove = remove;
         vm.destroy = destroy;
         vm.priority = priority;
         vm.id = id;
         vm.value = value;
-				vm.bindTo = bindTo;
+        vm.bindTo = bindTo;
 
         function priority(fb, val) {
             if (angular.isUndefined(val)) {
@@ -28,6 +29,17 @@
                 return fb.$value = val;
             }
         }
+
+				//fb = fbref rather than $fbObject
+				// current would be easier to test
+				// $fbObject.$ref().set(), but this seems more direct
+        function create(fb, data) {
+					//TODO: return error if fb = $fbobject
+            return fbHandler.handler(function(cb) {
+                fb.set(data, cb);
+            });
+        }
+
 
         function id(fb) {
             return fb.$id;
@@ -68,12 +80,12 @@
             return fb.$destroy();
         }
 
-				function bindTo(fb, s, v){
-					return fb.$bindTo(s,v);
-				}
+        function bindTo(fb, s, v) {
+            return fb.$bindTo(s, v);
+        }
     }
 
-    objMngrService.$inject = [];
+    objMngrService.$inject = ['fbRef', 'fbHandler'];
 
     angular.module("fb.srvc.dataMngr")
         .service("objMngr", objMngrService);
