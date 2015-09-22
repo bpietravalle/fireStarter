@@ -11,7 +11,6 @@
         vm.destroy = destroy;
         vm.add = add;
         vm.index = index;
-        vm.updateItem = updateItem;
         vm.updateRecord = updateRecord;
         vm.get = getRec;
         vm.key = key;
@@ -28,11 +27,11 @@
             }
         }
 
-        function save(fb, i, result) {
+        function save(fb, rec, result) {
             if (angular.isUndefined(result)) {
-                return fb.$save(i);
+                return fb.$save(rec);
             } else {
-                return fb.$save(i)
+                return fb.$save(rec)
                     .then(result.success, result.failure);
             }
         }
@@ -49,7 +48,9 @@
         function updateRecord(fb, k, data) {
             var rec = vm.get(fb, k);
             if (rec !== null) {
-                return forIn(rec, data);
+                var newRec;
+                newRec = forProperties(rec, data);
+                return vm.save(newRec);
 
             } else {
                 $q.reject("Record doesn't exist");
@@ -58,28 +59,23 @@
         }
 
         function updateItem(rec, prop, val) {
-            // Object.assign({}, rec);// need to coerce val to object for ES5
-
-            // Object.getOwnPropertyDescriptor(rec, prop);
-
             if (rec.hasOwnProperty(prop)) {
                 rec[prop] = val;
-								$log.info(rec + " has: " + prop);
             } else {
-                $q.reject("Property: " + prop + "not present")
+							//no like
+                $q.reject("Property: " + prop + " is not present")
             }
         }
 
 
-        function forIn(rec, obj) {
+        function forProperties(rec, obj) {
             var i, key, str;
             i = 0;
             for (key in obj) {
                 str = key.toString();
-                return vm.updateItem(rec, str, obj[str]);
+                updateItem(rec, str, obj[str]);
             }
-						return forIn;
-
+            return rec;
 
         }
 

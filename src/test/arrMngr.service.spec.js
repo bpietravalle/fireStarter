@@ -36,8 +36,8 @@
             module('testutils');
             inject(function(_$log_, _$q_, $firebaseUtils, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
                 testutils = _testutils_;
-								$q = _$q_;
-								$log = _$log_;
+                $q = _$q_;
+                $log = _$log_;
                 $firebaseArray = _$firebaseArray_;
                 $timeout = _$timeout_;
                 $utils = $firebaseUtils;
@@ -60,41 +60,76 @@
                     aString: 'gamma'
                 };
                 spyOn(arrMngr, "get").and.callThrough();
-								spyOn($q, "reject").and.callThrough();
+                spyOn($q, "reject").and.callThrough();
                 spyOn(arrMngr, "save");
-								spyOn(arrMngr, "updateItem");
                 arrMngr.updateRecord(arr, "d", newData);
 
             });
-            it("should call get with the first and second args passed", function() {
-                expect(arrMngr.get.calls.argsFor(0)).toEqual([arr, "d"]);
+            describe("With valid data obj", function() {
+                beforeEach(function() {
+                    var newData = {
+                        aNumber: 5,
+                        aString: 'gamma'
+                    };
+                    arrMngr.updateRecord(arr, "d", newData);
+                });
+
+
+                it("should call get with the first and second args passed", function() {
+                    expect(arrMngr.get.calls.argsFor(0)).toEqual([arr, "d"]);
+                });
+
+                it("should not call $q.reject", function() {
+                    expect($q.reject.calls.count()).toEqual(0);
+                });
+                it("should call save with updated record", function() {
+                    expect(arrMngr.save).toHaveBeenCalledWith(
+                        jasmine.objectContaining({
+                            $id: 'd',
+                            aBoolean: true,
+                            aNumber: 5,
+                            aString: 'gamma'
+                        }));
+
+                });
             });
-						it("should call updateItem with correct values", function(){
-							expect(arrMngr.updateItem.calls.argsFor(0)).toEqual([
-										 jasmine.objectContaining({ $id: 'd'}),
-										 'aNumber',
-										 5
-							]);
-						});
-						it("should call updateItem with correct values", function(){
-							expect(arrMngr.updateItem.calls.argsFor(1)).toEqual([
-										 jasmine.objectContaining({ $id: 'd'}),
-										 'aString',
-										 'gamma'
-							]);
-						});
-						it("should not call $q.reject", function(){
-							expect($q.reject.calls.count()).toEqual(0);
-						});
+            describe("With invalid data obj", function() {
+                beforeEach(function() {
+                    this.badData = {
+                        aDifferentThing: "blah",
+                        anotherThing: {
+                            def: "an obj"
+                        }
+
+                    };
+                    arrMngr.updateRecord(arr, "d", this.badData);
+                });
+
+                it("should call $q.reject twice", function() {
+                    expect($q.reject.calls.count()).toEqual(2);
+                });
+
+            });
+            describe("With invalid key", function() {
+                beforeEach(function() {
+                    this.badData = {
+                        aDifferentThing: "blah",
+                        anotherThing: {
+                            def: "an obj"
+                        }
+                    }
+                    arrMngr.updateRecord(arr, "g", this.badData);
+                });
+
+                it("should call $q.reject once", function() {
+                    expect($q.reject.calls.count()).toEqual(1);
+                });
+                it("should call $q.reject with correct return value", function() {
+                    expect($q.reject.calls.argsFor(0)).toEqual(["Record doesn't exist"]);
+                });
 
 
-
-
-            // it("should set array's values", function() {
-            //     arr.$save(3);
-            //     expect(arr.$getRecord('d')).toEqual("asdf");
-            // });
-
+            });
         });
 
         describe('load', function() {

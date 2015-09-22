@@ -32,6 +32,7 @@ module.exports = function(config) {
         singleRun: true,
 
         autoWatch: true,
+        autoWatchBatchDelay: 750,
 
         colors: true,
 
@@ -41,7 +42,8 @@ module.exports = function(config) {
             whitelist: [path.join(conf.paths.src, '/**/!(*.html|*.spec|*.mock).js')]
         },
 
-        reporters: ['coverage', 'spec', 'progress', 'notify', 'nested'],
+        reporters: ['notify', 'progress'],
+        // reporters: ['coverage', 'spec', 'progress', 'notify', 'nested'],
 
         ngHtml2JsPreprocessor: {
             stripPrefix: 'src/',
