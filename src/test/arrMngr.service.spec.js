@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('arrMngr', function() {
-        var arr, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
+        var arr, $log, $q, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
 
         var STUB_DATA = {
             'a': {
@@ -34,8 +34,10 @@
             module('fb.srvc.dataMngr');
             module('fbMocks');
             module('testutils');
-            inject(function( $firebaseUtils, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
+            inject(function(_$log_, _$q_, $firebaseUtils, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
                 testutils = _testutils_;
+								$q = _$q_;
+								$log = _$log_;
                 $firebaseArray = _$firebaseArray_;
                 $timeout = _$timeout_;
                 $utils = $firebaseUtils;
@@ -51,6 +53,50 @@
                 expect(arrMngr.ref(arr)).toBe(ref);
             });
         });
+        describe("UpdateRecord", function() {
+            beforeEach(function() {
+                var newData = {
+                    aNumber: 5,
+                    aString: 'gamma'
+                };
+                spyOn(arrMngr, "get").and.callThrough();
+								spyOn($q, "reject").and.callThrough();
+                spyOn(arrMngr, "save");
+								spyOn(arrMngr, "updateItem");
+                arrMngr.updateRecord(arr, "d", newData);
+
+            });
+            it("should call get with the first and second args passed", function() {
+                expect(arrMngr.get.calls.argsFor(0)).toEqual([arr, "d"]);
+            });
+						it("should call updateItem with correct values", function(){
+							expect(arrMngr.updateItem.calls.argsFor(0)).toEqual([
+										 jasmine.objectContaining({ $id: 'd'}),
+										 'aNumber',
+										 5
+							]);
+						});
+						it("should call updateItem with correct values", function(){
+							expect(arrMngr.updateItem.calls.argsFor(1)).toEqual([
+										 jasmine.objectContaining({ $id: 'd'}),
+										 'aString',
+										 'gamma'
+							]);
+						});
+						it("should not call $q.reject", function(){
+							expect($q.reject.calls.count()).toEqual(0);
+						});
+
+
+
+
+            // it("should set array's values", function() {
+            //     arr.$save(3);
+            //     expect(arr.$getRecord('d')).toEqual("asdf");
+            // });
+
+        });
+
         describe('load', function() {
             it('should return a promise', function() {
                 expect(arrMngr.load(arr)).toBeAPromise();
@@ -121,7 +167,7 @@
                 expect(whiteSpy).not.toHaveBeenCalled();
                 expect(blackSpy).toHaveBeenCalledWith(err);
             });
-           
+
         });
 
         describe('remove', function() {
