@@ -15,6 +15,7 @@
         vm.get = getRec;
         vm.updateNestedArray = updateNestedArray;
         vm.getNestedKey = getNestedKey;
+        vm.parent = parent;
         vm.key = key;
         vm.buildArr = buildArr;
         vm.buildArrRecord = buildArrRecord;
@@ -30,7 +31,7 @@
         }
 
         function buildArrRecord(path, id) {
-            return buildArr(path)
+            return $q.when(buildArr(path))
                 .then(function(response) {
                     return getRec(response, id);
                 })
@@ -53,7 +54,7 @@
         }
 
         function save(path, rec) {
-            return buildArr(path)
+            return $q.when(buildArr(path))
                 .then(function(response) {
                     return response.$save(rec);
                 })
@@ -73,7 +74,6 @@
 
         //TODO: add arg for arr on save -wont work
         function updateRecord(path, id, data) {
-					//TODO: remove $q.when
             return $q.when(buildArrRecord(path, id))
                 .then(function(response) {
                     return forProperties(response, data)
@@ -128,6 +128,7 @@
             }
         }
 
+
         //untested - this fn doesnt seem to be worth the abstraction
         function updateNestedArray(val, col, path, data) {
             return getNestedKey(val, col, path)
@@ -143,7 +144,6 @@
 
         function getNestedKey(val, col, path) {
             //TODO: add constrain so only iterate over recent/active, etc items
-						//TODO: remove $q.when()
             return $q.when(iterateOverColumns(val, col, path))
                 .then(function(response) {
                     return response;
@@ -162,11 +162,14 @@
                             nestedKey = item.$id;
                         }
                     });
-                    if (nestedKey) {
+                    if (nestedKey !== null) {
                         return nestedKey;
                     } else {
                         throw new Error("Foreign key: " + col + " with a value of " + val + " was not found.");
                     }
+                })
+                .catch(function(err) {
+                    $q.reject(err);
                 });
         }
     }

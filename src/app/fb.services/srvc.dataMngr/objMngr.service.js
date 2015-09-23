@@ -89,12 +89,7 @@
         }
 
         function updateItem(rec, prop, val) {
-            // if (rec.hasOwnProperty(prop)) {
             rec[prop] = val;
-            // } else {
-            //no like
-            // $q.reject("Property: " + prop + " is not present")
-            // }
         }
 
 

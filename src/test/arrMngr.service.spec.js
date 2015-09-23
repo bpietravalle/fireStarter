@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('arrMngr', function() {
-        var arr, path, data, $log, $q, deferred, $rootScope, newData, newArr, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
+        var arr, afEntity, path, recId, data, $log, $q, deferred, $rootScope, newData, newArr, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
 
         var STUB_DATA = {
             'a': {
@@ -34,7 +34,8 @@
             module('fb.srvc.dataMngr');
             module('fbMocks');
             module('testutils');
-            inject(function(_$log_, _$q_, $firebaseUtils, _$rootScope_, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
+            inject(function(_$log_, _$q_, _afEntity_, $firebaseUtils, _$rootScope_, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
+                afEntity = _afEntity_;
                 testutils = _testutils_;
                 $q = _$q_;
                 $rootScope = _$rootScope_;
@@ -75,27 +76,29 @@
                         phone_id: "fkeyC"
                     }
                 };
-                spyOn(arrMngr, "updateRecord");
                 spyOn($q, "reject");
                 this.arr = mockArr.nestedMock(data, path);
+                spyOn(afEntity, "set").and.returnValue(this.arr);
             });
             describe("Implementing $q.when", function() {
                 beforeEach(function() {
                     spyOn($q, "when").and.callThrough();
                 });
                 it("should return a promise", function() {
-                    var test = arrMngr.getNestedKey("fkeyA", "phone_id", this.arr);
+                    var test = arrMngr.getNestedKey("fkeyA", "phone_id", path);
                     $rootScope.$digest();
                     expect(test).toBeAPromise();
                 });
                 it("should set the correct nestedKey", function() {
-                    var test = arrMngr.getNestedKey("fkeyA", "phone_id", this.arr);
+                    var test = arrMngr.getNestedKey("fkeyA", "phone_id", path);
                     $rootScope.$digest();
                     expect(test.$$state.value).toEqual('a');
                 });
                 it("should throw an error if no key/val pair found", function() {
                     expect(function() {
-                        arrMngr.getNestedKey("fkeyA", "address_id", this.arr);
+                        var test = arrMngr.getNestedKey("fkeyA", "address_id", path);
+                        $rootScope.$digest();
+                        expect(test).toEqual('a');
                     }).toThrow();
                 });
 
@@ -110,7 +113,7 @@
                 });
                 describe("When $q.when resolves", function() {
                     beforeEach(function() {
-                        arrMngr.getNestedKey("fkeyA", "phone_id", this.arr);
+                        arrMngr.getNestedKey("fkeyA", "phone_id", path);
                         deferred.resolve("a");
                         $rootScope.$digest();
                     });
@@ -125,7 +128,7 @@
 
                 describe("When $q.when is rejected", function() {
                     beforeEach(function() {
-                        arrMngr.getNestedKey("fkeyA", "phone_id", this.arr);
+                        arrMngr.getNestedKey("fkeyA", "phone_id", path);
                         deferred.reject("error");
                         $rootScope.$digest();
                     });
@@ -138,31 +141,35 @@
 
                 });
 
-
-
             });
         });
         describe("UpdateRecord", function() {
             beforeEach(function() {
+                recId = 5;
+                path = ["string"];
                 newData = {
                     aNumber: 5,
                     aString: 'gamma'
                 };
-                spyOn($q, "reject").and.callThrough();
-                spyOn(arrMngr, "save").and.callThrough();
+                spyOn($q, "reject");
+                spyOn(arrMngr, "save");
+                spyOn(afEntity, "set").and.returnValue(arr);
             });
             describe("Implementing $q.when", function() {
                 beforeEach(function() {
                     spyOn($q, "when").and.callThrough();
+                    arrMngr.updateRecord(path, recId, newData);
                 });
-
-                it("should call $q.when with only one arg", function() {
-                    arrMngr.updateRecord(arr, newData);
-                    expect($q.when.calls.argsFor(0).count()).toEqual(1);
+                it("should call $q.when three times", function() {
+                    expect($q.when.calls.count()).toEqual(2);
                 });
-                it("should be called with updated record", function() {
-                    arrMngr.updateRecord(arr, newData);
-                    expect($q.when.calls.argsFor(0)).not.toEqual(arr);
+                describe("On First call", function() {
+                    it("should be called first with updated record", function() {
+                        expect($q.when.calls.argsFor(0)).not.toEqual(arr);
+                    });
+                    it("should pass path to array", function() {
+                        expect(afEntity.set.calls.argsFor(0)[1]).toEqual(path);
+                    });
                 });
             });
 
@@ -173,20 +180,22 @@
                         deferred = $q.defer();
                         return deferred.promise;
                     });
+                    arrMngr.updateRecord(path, recId, newData);
                 });
                 describe("When $q.when resolves", function() {
                     beforeEach(function() {
-                        arrMngr.updateRecord(arr, newData);
                         deferred.resolve(newArr);
                         $rootScope.$digest();
                     });
                     it("should call save with the updated record", function() {
-                        expect(arrMngr.save).toHaveBeenCalledWith(newArr);
+                        expect(arrMngr.save.calls.argsFor(0)[1]).toEqual(newArr);
+                    });
+                    it("should call save with the correct path", function() {
+                        expect(arrMngr.save.calls.argsFor(0)[0]).toEqual(path);
                     });
                 });
                 describe("When $q.when is rejected", function() {
                     beforeEach(function() {
-                        arrMngr.updateRecord(arr, newData);
                         deferred.reject("error");
                         $rootScope.$digest();
                     });
@@ -377,139 +386,139 @@
             });
         });
 
-        describe('$save', function() {
-            it('should accept an array index', function() {
-                var key = arr.$keyAt(2);
-                var spy = spyOn(arr.$ref().child(key), 'set');
-                arr[2].number = 99;
-                arrMngr.save(arr, 2);
-                var expResult = $utils.toJSON(arr[2]);
-                expect(spy).toHaveBeenCalledWith(expResult, jasmine.any(Function));
-            });
+        // describe('$save', function() {
+        //     it('should accept an array index', function() {
+        //         var key = arr.$keyAt(2);
+        //         var spy = spyOn(arr.$ref().child(key), 'set');
+        //         arr[2].number = 99;
+        //         arrMngr.save(arr, 2);
+        //         var expResult = $utils.toJSON(arr[2]);
+        //         expect(spy).toHaveBeenCalledWith(expResult, jasmine.any(Function));
+        //     });
 
-            it('should accept an item from the array', function() {
-                var key = arr.$keyAt(2);
-                var spy = spyOn(arr.$ref().child(key), 'set');
-                arr[2].number = 99;
-                arrMngr.save(arr, arr[2]);
-                var expResult = $utils.toJSON(arr[2]);
-                expect(spy).toHaveBeenCalledWith(expResult, jasmine.any(Function));
-            });
+        //     it('should accept an item from the array', function() {
+        //         var key = arr.$keyAt(2);
+        //         var spy = spyOn(arr.$ref().child(key), 'set');
+        //         arr[2].number = 99;
+        //         arrMngr.save(arr, arr[2]);
+        //         var expResult = $utils.toJSON(arr[2]);
+        //         expect(spy).toHaveBeenCalledWith(expResult, jasmine.any(Function));
+        //     });
 
-            it('should return a promise', function() {
-                expect(arrMngr.save(arr, 1)).toBeAPromise();
-            });
+        //     it('should return a promise', function() {
+        //         expect(arrMngr.save(arr, 1)).toBeAPromise();
+        //     });
 
-            it('should resolve promise on sync when result passed in', function() {
-                var spy = jasmine.createSpy();
-                var res = {
-                    success: spy,
-                    failure: null
-                };
-                arrMngr.save(arr, 1, res);
-                expect(spy).not.toHaveBeenCalled();
-                flushAll(arr.$ref());
-                expect(spy).toHaveBeenCalled();
-            });
+        //     it('should resolve promise on sync when result passed in', function() {
+        //         var spy = jasmine.createSpy();
+        //         var res = {
+        //             success: spy,
+        //             failure: null
+        //         };
+        //         arrMngr.save(arr, 1, res);
+        //         expect(spy).not.toHaveBeenCalled();
+        //         flushAll(arr.$ref());
+        //         expect(spy).toHaveBeenCalled();
+        //     });
 
-            it('should reject promise on failure', function() {
-                var key = arr.$keyAt(1);
-                var err = new Error('test_reject');
-                arr.$ref().child(key).failNext('set', err);
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var res = {
-                    success: whiteSpy,
-                    failure: blackSpy
-                };
-                arrMngr.save(arr, 1, res);
-                flushAll(arr.$ref());
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy).toHaveBeenCalledWith(err);
-            });
+        //     it('should reject promise on failure', function() {
+        //         var key = arr.$keyAt(1);
+        //         var err = new Error('test_reject');
+        //         arr.$ref().child(key).failNext('set', err);
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         var res = {
+        //             success: whiteSpy,
+        //             failure: blackSpy
+        //         };
+        //         arrMngr.save(arr, 1, res);
+        //         flushAll(arr.$ref());
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         expect(blackSpy).toHaveBeenCalledWith(err);
+        //     });
 
-            it('should reject promise on bad index', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var res = {
-                    success: whiteSpy,
-                    failure: blackSpy
-                };
-                arrMngr.save(arr, 99, res);
-                flushAll();
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
-            });
+        //     it('should reject promise on bad index', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         var res = {
+        //             success: whiteSpy,
+        //             failure: blackSpy
+        //         };
+        //         arrMngr.save(arr, 99, res);
+        //         flushAll();
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+        //     });
 
-            it('should reject promise on bad object', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject');
-                var res = {
-                    success: whiteSpy,
-                    failure: blackSpy
-                };
-                arrMngr.save(arr, {
-                    foo: 'baz'
-                }, res);
-                flushAll();
-                expect(whiteSpy).not.toHaveBeenCalled();
-                expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
-            });
+        //     it('should reject promise on bad object', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject');
+        //         var res = {
+        //             success: whiteSpy,
+        //             failure: blackSpy
+        //         };
+        //         arrMngr.save(arr, {
+        //             foo: 'baz'
+        //         }, res);
+        //         flushAll();
+        //         expect(whiteSpy).not.toHaveBeenCalled();
+        //         expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+        //     });
 
-            it('should accept a primitive', function() {
-                var key = arr.$keyAt(1);
-                var ref = arr.$ref().child(key);
-                arr[1] = {
-                    $value: 'happy',
-                    $id: key
-                };
-                arrMngr.save(arr, 1);
-                flushAll(ref);
-                expect(ref.getData()).toBe('happy');
-            });
+        //     it('should accept a primitive', function() {
+        //         var key = arr.$keyAt(1);
+        //         var ref = arr.$ref().child(key);
+        //         arr[1] = {
+        //             $value: 'happy',
+        //             $id: key
+        //         };
+        //         arrMngr.save(arr, 1);
+        //         flushAll(ref);
+        //         expect(ref.getData()).toBe('happy');
+        //     });
 
-            it('should throw error if object is destroyed', function() {
-                arr.$destroy();
-                expect(function() {
-                    arrMngr.save(arr, 0);
-                }).toThrowError(Error);
-            });
+        //     it('should throw error if object is destroyed', function() {
+        //         arr.$destroy();
+        //         expect(function() {
+        //             arrMngr.save(arr, 0);
+        //         }).toThrowError(Error);
+        //     });
 
-            it('should trigger watch event', function() {
-                var spy = jasmine.createSpy('$watch');
-                arr.$watch(spy);
-                var key = arr.$keyAt(1);
-                arr[1].foo = 'watchtest';
-                arrMngr.save(arr, 1);
-                flushAll(arr.$ref());
-                expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({
-                    event: 'child_changed',
-                    key: key
-                }));
-            });
+        //     it('should trigger watch event', function() {
+        //         var spy = jasmine.createSpy('$watch');
+        //         arr.$watch(spy);
+        //         var key = arr.$keyAt(1);
+        //         arr[1].foo = 'watchtest';
+        //         arrMngr.save(arr, 1);
+        //         flushAll(arr.$ref());
+        //         expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({
+        //             event: 'child_changed',
+        //             key: key
+        //         }));
+        //     });
 
-            it('should work on a query', function() {
-                var whiteSpy = jasmine.createSpy('resolve');
-                var blackSpy = jasmine.createSpy('reject').and.callFake(function(e) {
-                    console.error(e);
-                });
-                ref.set(STUB_DATA);
-                ref.flush();
-                var query = ref.limit(5);
-                var arr = mockArr.stubArray(null, query);
-                flushAll(arr.$ref());
-                var key = arr.$keyAt(1);
-                arr[1].foo = 'watchtest';
-                var res = {
-                    success: whiteSpy,
-                    failure: blackSpy
-                };
-                arrMngr.save(arr, 1, res);
-                flushAll(arr.$ref());
-                expect(whiteSpy).toHaveBeenCalled();
-                expect(blackSpy).not.toHaveBeenCalled();
-            });
-        });
+        //     it('should work on a query', function() {
+        //         var whiteSpy = jasmine.createSpy('resolve');
+        //         var blackSpy = jasmine.createSpy('reject').and.callFake(function(e) {
+        //             console.error(e);
+        //         });
+        //         ref.set(STUB_DATA);
+        //         ref.flush();
+        //         var query = ref.limit(5);
+        //         var arr = mockArr.stubArray(null, query);
+        //         flushAll(arr.$ref());
+        //         var key = arr.$keyAt(1);
+        //         arr[1].foo = 'watchtest';
+        //         var res = {
+        //             success: whiteSpy,
+        //             failure: blackSpy
+        //         };
+        //         arrMngr.save(arr, 1, res);
+        //         flushAll(arr.$ref());
+        //         expect(whiteSpy).toHaveBeenCalled();
+        //         expect(blackSpy).not.toHaveBeenCalled();
+        //     });
+        // });
 
         describe('destroy', function() {
             it('should call off on ref', function() {
