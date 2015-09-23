@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe("objMngr", function() {
-        var objMngr, mockObj, obj, fbHandler, deferred, ref, log, $interval, $timeout, $utils, testutils, $rootScope;
+        var objMngr, $q, newData, newObj, mockObj, obj, fbHandler, deferred, ref, log, $interval, $timeout, $utils, testutils, $rootScope;
         var FIXTURE_DATA = {
             aString: 'alpha',
             aNumber: 1,
@@ -22,8 +22,9 @@
                     }
                 });
             });
-            inject(function(_mockObj_, _objMngr_, _fbHandler_, _$timeout_, _$interval_, _testutils_, $firebaseUtils, _$rootScope_) {
+            inject(function(_mockObj_, _$q_, _objMngr_, _fbHandler_, _$timeout_, _$interval_, _testutils_, $firebaseUtils, _$rootScope_) {
                 objMngr = _objMngr_;
+                $q = _$q_;
                 $utils = $firebaseUtils;
                 testutils = _testutils_;
                 $rootScope = _$rootScope_;
@@ -39,6 +40,66 @@
         afterEach(function() {
             obj = null;
             ref = null;
+        });
+
+        describe("UpdateRecord", function() {
+            beforeEach(function() {
+                newData = {
+                    aNumber: 5,
+                    aString: 'gamma'
+                };
+                spyOn($q, "reject").and.callThrough();
+                spyOn(objMngr, "save").and.callThrough();
+            });
+            describe("Implementing $q.when", function() {
+                beforeEach(function() {
+                    spyOn($q, "when").and.callThrough();
+                });
+
+                it("should call $q.when with only one arg", function() {
+                    objMngr.updateRecord(obj, newData);
+                    expect($q.when.calls.count()).toEqual(1);
+                });
+                it("should be called with updated record", function() {
+                    objMngr.updateRecord(obj, newData);
+                    expect($q.when.calls.argsFor(0)).not.toEqual(obj);
+                });
+            });
+
+            describe("Stubbing $q.when", function() {
+                beforeEach(function() {
+                    newObj = mockObj.makeObject(newData, ref);
+                    spyOn($q, "when").and.callFake(function() {
+                        deferred = $q.defer();
+                        return deferred.promise;
+                    });
+                });
+                describe("When $q.when resolves", function() {
+                    beforeEach(function() {
+                        objMngr.updateRecord(obj, newData);
+                        deferred.resolve(newObj);
+                        $rootScope.$digest();
+                    });
+                    it("should call save with the updated record", function() {
+                        expect(objMngr.save).toHaveBeenCalledWith(newObj);
+                    });
+                });
+                describe("When $q.when is rejected", function() {
+                    beforeEach(function() {
+                        objMngr.updateRecord(obj, newData);
+                        deferred.reject("error");
+                        $rootScope.$digest();
+                    });
+                    it("should not call save with the updated record", function() {
+                        expect(objMngr.save).not.toHaveBeenCalledWith(newObj);
+                    });
+                    it("should call $q.reject with the error", function() {
+                        expect($q.reject).toHaveBeenCalledWith("error");
+                    });
+
+                });
+            });
+
         });
 
         describe('create', function() {

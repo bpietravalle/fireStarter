@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('arrMngr', function() {
-        var arr, $log, $q, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
+        var arr, $log, $q, deferred,$rootScope, newData, newArr, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
 
         var STUB_DATA = {
             'a': {
@@ -34,9 +34,10 @@
             module('fb.srvc.dataMngr');
             module('fbMocks');
             module('testutils');
-            inject(function(_$log_, _$q_, $firebaseUtils, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
+            inject(function(_$log_, _$q_, $firebaseUtils, _$rootScope_,_$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
                 testutils = _testutils_;
                 $q = _$q_;
+								$rootScope = _$rootScope_;
                 $log = _$log_;
                 $firebaseArray = _$firebaseArray_;
                 $timeout = _$timeout_;
@@ -55,86 +56,62 @@
         });
         describe("UpdateRecord", function() {
             beforeEach(function() {
-                var newData = {
+                newData = {
                     aNumber: 5,
                     aString: 'gamma'
                 };
-                spyOn(arrMngr, "get").and.callThrough();
                 spyOn($q, "reject").and.callThrough();
                 spyOn(arrMngr, "save").and.callThrough();
-                arrMngr.updateRecord(arr, "d", newData);
-
             });
-						afterEach(function(){
-							arr = null;
-						});
-            describe("With valid data obj", function() {
+            describe("Implementing $q.when", function() {
                 beforeEach(function() {
-                    var newData = {
-                        aNumber: 5,
-                        aString: 'gamma'
-                    };
-                    arrMngr.updateRecord(arr, "d", newData);
+                    spyOn($q, "when").and.callThrough();
                 });
 
-
-                it("should call get with the first and second args passed", function() {
-                    expect(arrMngr.get.calls.argsFor(0)).toEqual([arr, "d"]);
+                it("should call $q.when with only one arg", function() {
+                    arrMngr.updateRecord(arr, newData);
+                    expect($q.when.calls.count()).toEqual(1);
                 });
-
-                it("should not call $q.reject", function() {
-                    expect($q.reject.calls.count()).toEqual(0);
-                });
-                it("should call save with array and the updated record", function() {
-                    expect(arrMngr.save.calls.argsFor(0)).toEqual([ arr,
-                        jasmine.objectContaining({
-                            $id: 'd',
-                            aBoolean: true,
-                            aNumber: 5,
-                            aString: 'gamma'
-                        })]);
-
+                it("should be called with updated record", function() {
+                    arrMngr.updateRecord(arr, newData);
+                    expect($q.when.calls.argsFor(0)).not.toEqual(arr);
                 });
             });
-						// removed hasOwnProperty() to allow for adding undefined properties
-						// would prefer to add back in
-            // describe("With invalid data obj", function() {
-            //     beforeEach(function() {
-            //         this.badData = {
-            //             aDifferentThing: "blah",
-            //             anotherThing: {
-            //                 def: "an obj"
-            //             }
 
-            //         };
-            //         arrMngr.updateRecord(arr, "d", this.badData);
-            //     });
-
-            //     it("should call $q.reject twice", function() {
-            //         expect($q.reject.calls.count()).toEqual(2);
-            //     });
-
-            });
-            describe("With invalid key", function() {
+            describe("Stubbing $q.when", function() {
                 beforeEach(function() {
-                    this.badData = {
-                        aDifferentThing: "blah",
-                        anotherThing: {
-                            def: "an obj"
-                        }
-                    }
-                    arrMngr.updateRecord(arr, "g", this.badData);
+                    newArr = mockArr.stubArray(newData, ref);
+                    spyOn($q, "when").and.callFake(function() {
+                        deferred = $q.defer();
+                        return deferred.promise;
+                    });
                 });
-
-                it("should call $q.reject once", function() {
-                    expect($q.reject.calls.count()).toEqual(1);
+                describe("When $q.when resolves", function() {
+                    beforeEach(function() {
+                        arrMngr.updateRecord(arr, newData);
+                        deferred.resolve(newArr);
+                        $rootScope.$digest();
+                    });
+                    it("should call save with the updated record", function() {
+                        expect(arrMngr.save).toHaveBeenCalledWith(newArr);
+                    });
                 });
-                it("should call $q.reject with correct return value", function() {
-                    expect($q.reject.calls.argsFor(0)).toEqual(["Record doesn't exist"]);
+                describe("When $q.when is rejected", function() {
+                    beforeEach(function() {
+                        arrMngr.updateRecord(arr, newData);
+                        deferred.reject("error");
+                        $rootScope.$digest();
+                    });
+                    it("should not call save with the updated record", function() {
+                        expect(arrMngr.save).not.toHaveBeenCalledWith(newArr);
+                    });
+                    it("should call $q.reject with the error", function() {
+                        expect($q.reject).toHaveBeenCalledWith("error");
+                    });
+
                 });
-
-
             });
+
         });
 
         describe('load', function() {

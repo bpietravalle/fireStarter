@@ -45,30 +45,20 @@
             }
         }
 
-        function updateRecord(fb, k, data) {
-            var rec = vm.get(fb, k);
-            if (rec !== null) {
-                return vm.save(fb, forProperties(rec, data))
-                    .then(function(ref) {
-                        return ref;
-                    })
-                    .catch(function(err) {
-                        $q.reject("Unable to complete save")
-                    });
-
-            } else {
-                $q.reject("Record doesn't exist");
-            }
-
+        function updateRecord(rec, data) {
+            return $q.when(forProperties(rec, data))
+                .then(function(response) {
+                    return vm.save(response);
+                })
+                .catch(function(err) {
+                    $q.reject(err)
+                });
         }
 
+
+
         function updateItem(rec, prop, val) {
-            // if (rec.hasOwnProperty(prop)) {
             rec[prop] = val;
-            // } else {
-            //no like
-            // $q.reject("Property: " + prop + " is not present")
-            // }
         }
 
 

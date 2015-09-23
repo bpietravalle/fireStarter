@@ -1,7 +1,8 @@
 (function(angular) {
     "use strict";
 
-    function objMngrService(fbRef, fbHandler) {
+    /** ngInject */
+    function objMngrService(fbRef, $q, fbHandler) {
         var vm = this;
         vm.ref = ref;
         vm.load = load;
@@ -12,6 +13,7 @@
         vm.priority = priority;
         vm.id = id;
         vm.value = value;
+        vm.updateRecord = updateRecord;
         vm.bindTo = bindTo;
 
         function priority(fb, val) {
@@ -30,11 +32,11 @@
             }
         }
 
-				//fb = fbref rather than $fbObject
-				// current would be easier to test
-				// $fbObject.$ref().set(), but this seems more direct
+        //fb = fbref rather than $fbObject
+        // current would be easier to test
+        // $fbObject.$ref().set(), but this seems more direct
         function create(fb, data) {
-					//TODO: return error if fb = $fbobject
+            //TODO: return error if fb = $fbobject
             return fbHandler.handler(function(cb) {
                 fb.set(data, cb);
             });
@@ -76,6 +78,36 @@
 
         }
 
+        function updateRecord(rec, data) {
+            return $q.when(forProperties(rec, data))
+                .then(function(response) {
+                    return vm.save(response);
+                })
+                .catch(function(err) {
+                    $q.reject(err)
+                });
+        }
+
+        function updateItem(rec, prop, val) {
+            // if (rec.hasOwnProperty(prop)) {
+            rec[prop] = val;
+            // } else {
+            //no like
+            // $q.reject("Property: " + prop + " is not present")
+            // }
+        }
+
+
+        function forProperties(rec, obj) {
+            var key, str;
+            for (key in obj) {
+                str = key.toString();
+                updateItem(rec, str, obj[str]);
+            }
+            return rec;
+
+        }
+
         function destroy(fb) {
             return fb.$destroy();
         }
@@ -84,8 +116,6 @@
             return fb.$bindTo(s, v);
         }
     }
-
-    objMngrService.$inject = ['fbRef', 'fbHandler'];
 
     angular.module("fb.srvc.dataMngr")
         .service("objMngr", objMngrService);
