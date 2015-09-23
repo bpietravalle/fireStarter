@@ -17,73 +17,53 @@
         vm.getNestedKey = getNestedKey;
         vm.key = key;
         vm.buildArr = buildArr;
-        vm.buildArrRecord = buildArrRecord;
 
         function buildArr(path) {
             return $q.when(afEntity.set("array", path))
-                .then(function(response) {
-                    return response;
+                .then(function(res) {
+                    return res;
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                })
-        }
-
-        function buildArrRecord(path, id) {
-            return buildArr(path)
-                .then(function(response) {
-                    return getRec(response, id);
-                })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
-
+                .catch(standardError);
         }
 
         function ref(fb) {
-            return fb.$ref();
+            return $q.when(fb.$ref());
         }
 
-        function load(fb, result) {
-            if (angular.isUndefined(result)) {
-                return fb.$loaded();
-            } else {
-                return fb.$loaded(result.success, result.failure);
-            }
+        function load(path) {
+            return buildArr(path)
+                .then(function(res) {
+                    return res.$loaded();
+                })
+                .catch(standardError);
         }
 
         function save(path, rec) {
             return buildArr(path)
-                .then(function(response) {
-                    return response.$save(rec);
+                .then(function(res) {
+                    return res.$save(rec);
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
-        function remove(fb, val, result) {
-            if (angular.isUndefined(result)) {
-                return fb.$remove(val);
-            } else {
-                return fb.$remove(val)
-                    .then(result.success, result.failure);
-            }
+        function remove(path, val) {
+            return buildArr(path)
+                .then(function(res) {
+                    res.$remove(val);
+                })
+                .catch(standardError);
         }
 
-        //TODO: add arg for arr on save -wont work
         function updateRecord(path, id, data) {
-					//TODO: remove $q.when
-            return $q.when(buildArrRecord(path, id))
-                .then(function(response) {
-                    return forProperties(response, data)
+            //TODO: remove $q.when
+            return $q.when(getRecord(path, id))
+                .then(function(res) {
+                    return forProperties(res, data)
                 })
-                .then(function(response) {
-                    return vm.save(path, response);
+                .then(function(res) {
+                    return vm.save(path, res);
                 })
-                .catch(function(err) {
-                    $q.reject(err)
-                });
+                .catch(standardError);
         }
 
 
@@ -103,61 +83,64 @@
         }
 
 
-        function destroy(fb) {
-            return fb.$destroy();
+        function destroy(path) {
+            return path.$destroy();
         }
 
         function key(fb, val) {
             return fb.$keyAt(val);
         }
 
-        function getRec(fb, val) {
-            return fb.$getRecord(val);
+        function getRec(path, val) {
+            return buildArr(path)
+                .then(function(res) {
+                    res.$getRecord(val);
+                })
+                .catch(standardError);
         }
 
-        function index(fb, val) {
-            return fb.$indexFor(val);
+        function index(path, val) {
+            return buildArr(path)
+                .then(function(res) {
+                    res.$indexFor(val);
+                })
+                .catch(standardError);
         }
 
-        function add(fb, val, result) {
-            if (angular.isUndefined(result)) {
-                return fb.$add(val);
-            } else {
-                return fb.$add(val)
-                    .then(result.success, result.failure);
-            }
+        function add(path, val, result) {
+            return buildArr(path)
+                .then(function(res) {
+                    res.$add(val);
+                })
+                .catch(standardError);
         }
 
         //untested - this fn doesnt seem to be worth the abstraction
         function updateNestedArray(val, col, path, data) {
             return getNestedKey(val, col, path)
-                .then(function(response) {
+                .then(function(res) {
                     return arrMngr
-                        .updateRecord(path, response, data);
+                        .updateRecord(path, res, data);
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
 
         }
 
         function getNestedKey(val, col, path) {
             //TODO: add constrain so only iterate over recent/active, etc items
-						//TODO: remove $q.when()
+            //TODO: remove $q.when()
             return $q.when(iterateOverColumns(val, col, path))
-                .then(function(response) {
-                    return response;
+                .then(function(res) {
+                    return res;
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
         function iterateOverColumns(val, col, path) {
             var nestedKey;
             return buildArr(path)
-                .then(function(response) {
-                    response.forEach(function(item) {
+                .then(function(res) {
+                    res.forEach(function(item) {
                         if (item[col] === val) {
                             nestedKey = item.$id;
                         }
@@ -169,9 +152,13 @@
                     }
                 });
         }
+
+        function standarError(err) {
+            return $q.reject(err);
+        }
     }
 
-    angular.module("fb.srvc.dataMngr")
+    angular.module("path.srvc.dataMngr")
         .service("arrMngr", arrMngrService);
 
 })(angular);
