@@ -19,6 +19,18 @@
             return arr;
         };
 
+
+        this.nestedMock = function(initialData, path) {
+            var ref = new MockFirebase('Mock://').child(path);
+            var arr = afEntity.set("array", ref);
+            if (initialData) {
+                ref.set(initialData);
+                ref.flush();
+                this.flushAll();
+            }
+            return arr;
+        }
+
         this.extendArray = function(initialData, Factory, ref) {
             if (!Factory) {
                 Factory = $firebaseArray;
