@@ -13,8 +13,31 @@
         vm.index = index;
         vm.updateRecord = updateRecord;
         vm.get = getRec;
+        vm.updateNestedArray = updateNestedArray;
         vm.getNestedKey = getNestedKey;
         vm.key = key;
+        // vm.build = build;
+
+        function buildArr(path) {
+            return $q.when(afEntity.set("array", path))
+                .then(function(response) {
+                    return response;
+                })
+                .catch(function(err) {
+                    return $q.reject(err);
+                })
+        }
+
+        function buildArrRecord(path, id) {
+            return $q.when(buildArr(path))
+                .then(function(response) {
+                    return getRec(response, id);
+                })
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
+
+        }
 
         function ref(fb) {
             return fb.$ref();
@@ -46,8 +69,12 @@
             }
         }
 
-        function updateRecord(rec, data) {
-            return $q.when(forProperties(rec, data))
+        //TODO: add arg for arr on save -wont work
+        function updateRecord(path, data) {
+            return $q.when(buildArr(path))
+                .then(function(response) {
+                    return forProperties(response, data)
+                })
                 .then(function(response) {
                     return vm.save(response);
                 })
@@ -56,6 +83,15 @@
                 });
         }
 
+        //this expects specific item in array
+        function parent(rec) {
+            var k = rec.$id;
+            var r = rec.$ref;
+            r - k = parentpath;
+            buildArr(parentPath);
+
+
+        }
 
 
         function updateItem(rec, prop, val) {
@@ -64,8 +100,7 @@
 
 
         function forProperties(rec, obj) {
-            var i, key, str;
-            i = 0;
+            var key, str;
             for (key in obj) {
                 str = key.toString();
                 updateItem(rec, str, obj[str]);
@@ -101,7 +136,7 @@
         }
 
 
-				//untested
+        //untested - this fn doesnt seem to be worth the abstraction
         function updateNestedArray(val, col, arr, data) {
             return $q.when(getNestedKey(val, col, arr))
                 .then(function(response) {
@@ -118,7 +153,7 @@
         }
 
         function getNestedKey(val, col, arr) {
-            //TODO: only iterate over active/recent items
+            //TODO: add constrain so only iterate over recent/active, etc items
             return $q.when(iterateOverColumns(val, col, arr))
                 .then(function(response) {
                     return response;

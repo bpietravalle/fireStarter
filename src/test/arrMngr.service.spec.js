@@ -54,7 +54,7 @@
                 expect(arrMngr.ref(arr)).toBe(ref);
             });
         });
-        // describe("updateNestedArray", function() {
+        // describe("updateNestedArray", function() {});
         describe("GetKey", function() {
             beforeEach(function() {
                 path = "users/1/phones";
@@ -158,7 +158,7 @@
 
                 it("should call $q.when with only one arg", function() {
                     arrMngr.updateRecord(arr, newData);
-                    expect($q.when.calls.count()).toEqual(1);
+                    expect($q.when.calls.argsFor(0).count()).toEqual(1);
                 });
                 it("should be called with updated record", function() {
                     arrMngr.updateRecord(arr, newData);
