@@ -48,9 +48,13 @@
         function updateRecord(fb, k, data) {
             var rec = vm.get(fb, k);
             if (rec !== null) {
-                var newRec;
-                newRec = forProperties(rec, data);
-                return vm.save(newRec);
+                return vm.save(fb, forProperties(rec, data))
+                    .then(function(ref) {
+                        return ref;
+                    })
+                    .catch(function(err) {
+                        $q.reject("Unable to complete save")
+                    });
 
             } else {
                 $q.reject("Record doesn't exist");
@@ -59,12 +63,12 @@
         }
 
         function updateItem(rec, prop, val) {
-            if (rec.hasOwnProperty(prop)) {
-                rec[prop] = val;
-            } else {
-							//no like
-                $q.reject("Property: " + prop + " is not present")
-            }
+            // if (rec.hasOwnProperty(prop)) {
+            rec[prop] = val;
+            // } else {
+            //no like
+            // $q.reject("Property: " + prop + " is not present")
+            // }
         }
 
 

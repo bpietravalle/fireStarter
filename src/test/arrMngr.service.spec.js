@@ -61,10 +61,13 @@
                 };
                 spyOn(arrMngr, "get").and.callThrough();
                 spyOn($q, "reject").and.callThrough();
-                spyOn(arrMngr, "save");
+                spyOn(arrMngr, "save").and.callThrough();
                 arrMngr.updateRecord(arr, "d", newData);
 
             });
+						afterEach(function(){
+							arr = null;
+						});
             describe("With valid data obj", function() {
                 beforeEach(function() {
                     var newData = {
@@ -82,32 +85,34 @@
                 it("should not call $q.reject", function() {
                     expect($q.reject.calls.count()).toEqual(0);
                 });
-                it("should call save with updated record", function() {
-                    expect(arrMngr.save).toHaveBeenCalledWith(
+                it("should call save with array and the updated record", function() {
+                    expect(arrMngr.save.calls.argsFor(0)).toEqual([ arr,
                         jasmine.objectContaining({
                             $id: 'd',
                             aBoolean: true,
                             aNumber: 5,
                             aString: 'gamma'
-                        }));
+                        })]);
 
                 });
             });
-            describe("With invalid data obj", function() {
-                beforeEach(function() {
-                    this.badData = {
-                        aDifferentThing: "blah",
-                        anotherThing: {
-                            def: "an obj"
-                        }
+						// removed hasOwnProperty() to allow for adding undefined properties
+						// would prefer to add back in
+            // describe("With invalid data obj", function() {
+            //     beforeEach(function() {
+            //         this.badData = {
+            //             aDifferentThing: "blah",
+            //             anotherThing: {
+            //                 def: "an obj"
+            //             }
 
-                    };
-                    arrMngr.updateRecord(arr, "d", this.badData);
-                });
+            //         };
+            //         arrMngr.updateRecord(arr, "d", this.badData);
+            //     });
 
-                it("should call $q.reject twice", function() {
-                    expect($q.reject.calls.count()).toEqual(2);
-                });
+            //     it("should call $q.reject twice", function() {
+            //         expect($q.reject.calls.count()).toEqual(2);
+            //     });
 
             });
             describe("With invalid key", function() {
