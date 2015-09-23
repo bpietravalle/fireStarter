@@ -13,6 +13,7 @@
         vm.index = index;
         vm.updateRecord = updateRecord;
         vm.get = getRec;
+        vm.getNestedKey = getNestedKey;
         vm.key = key;
 
         function ref(fb) {
@@ -99,6 +100,47 @@
             }
         }
 
+
+				//untested
+        function updateNestedArray(val, col, arr, data) {
+            return $q.when(getNestedKey(val, col, arr))
+                .then(function(response) {
+                    return vm.getRec(arr, response);
+                })
+                .then(function(response) {
+                    return arrMngr
+                        .updateRecord(response, data);
+                })
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
+
+        }
+
+        function getNestedKey(val, col, arr) {
+            //TODO: only iterate over active/recent items
+            return $q.when(iterateOverColumns(val, col, arr))
+                .then(function(response) {
+                    return response;
+                })
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
+        }
+
+        function iterateOverColumns(val, col, arr) {
+            var nestedKey;
+            arr.forEach(function(item) {
+                if (item[col] === val) {
+                    nestedKey = item.$id;
+                }
+            });
+            if (nestedKey !== null) {
+                return nestedKey;
+            } else {
+                throw new Error("Foreign key: " + col + " with a value of " + val + " was not found.");
+            }
+        }
     }
 
     angular.module("fb.srvc.dataMngr")

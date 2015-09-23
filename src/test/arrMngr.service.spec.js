@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('arrMngr', function() {
-        var arr, $log, $q, deferred,$rootScope, newData, newArr, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
+        var arr, path, data, $log, $q, deferred, $rootScope, newData, newArr, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
 
         var STUB_DATA = {
             'a': {
@@ -34,10 +34,10 @@
             module('fb.srvc.dataMngr');
             module('fbMocks');
             module('testutils');
-            inject(function(_$log_, _$q_, $firebaseUtils, _$rootScope_,_$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
+            inject(function(_$log_, _$q_, $firebaseUtils, _$rootScope_, _$timeout_, _arrMngr_, _testutils_, _mockArr_, _$firebaseArray_) {
                 testutils = _testutils_;
                 $q = _$q_;
-								$rootScope = _$rootScope_;
+                $rootScope = _$rootScope_;
                 $log = _$log_;
                 $firebaseArray = _$firebaseArray_;
                 $timeout = _$timeout_;
@@ -52,6 +52,94 @@
             it('should return Firebase instance it was created with', function() {
                 var arr = mockArr.stubArray(null, ref);
                 expect(arrMngr.ref(arr)).toBe(ref);
+            });
+        });
+        // describe("updateNestedArray", function() {
+        describe("GetKey", function() {
+            beforeEach(function() {
+                path = "users/1/phones";
+                data = {
+                    'a': {
+                        type: "cell",
+                        number: "1234567",
+                        phone_id: "fkeyA"
+                    },
+                    'b': {
+                        type: "work",
+                        number: "9871234",
+                        phone_id: "fkeyB"
+                    },
+                    'c': {
+                        type: "home",
+                        number: "0000000",
+                        phone_id: "fkeyC"
+                    }
+                };
+                spyOn(arrMngr, "updateRecord");
+                spyOn($q, "reject");
+                this.arr = mockArr.nestedMock(data, path);
+            });
+            describe("Implementing $q.when", function() {
+                beforeEach(function() {
+                    spyOn($q, "when").and.callThrough();
+                });
+                it("should return a promise", function() {
+                    var test = arrMngr.getNestedKey("fkeyA", "phone_id", this.arr);
+                    $rootScope.$digest();
+                    expect(test).toBeAPromise();
+                });
+                it("should set the correct nestedKey", function() {
+                    var test = arrMngr.getNestedKey("fkeyA", "phone_id", this.arr);
+                    $rootScope.$digest();
+                    expect(test.$$state.value).toEqual('a');
+                });
+                it("should throw an error if no key/val pair found", function() {
+                    expect(function() {
+                        arrMngr.getNestedKey("fkeyA", "address_id", this.arr);
+                    }).toThrow();
+                });
+
+            });
+
+            describe("Stubbing $q.when", function() {
+                beforeEach(function() {
+                    spyOn($q, "when").and.callFake(function() {
+                        deferred = $q.defer();
+                        return deferred.promise;
+                    });
+                });
+                describe("When $q.when resolves", function() {
+                    beforeEach(function() {
+                        arrMngr.getNestedKey("fkeyA", "phone_id", this.arr);
+                        deferred.resolve("a");
+                        $rootScope.$digest();
+                    });
+
+                    it("should return the value", function() {
+                        expect(deferred.promise.$$state.value).toEqual("a");
+                    });
+                    it("should not call $q.reject", function() {
+                        expect($q.reject).not.toHaveBeenCalled();
+                    });
+                });
+
+                describe("When $q.when is rejected", function() {
+                    beforeEach(function() {
+                        arrMngr.getNestedKey("fkeyA", "phone_id", this.arr);
+                        deferred.reject("error");
+                        $rootScope.$digest();
+                    });
+                    it("should call $q.reject", function() {
+                        expect($q.reject.calls.count()).toEqual(1);
+                    });
+                    it("should return the error message", function() {
+                        expect(deferred.promise.$$state.value).toEqual("error");
+                    });
+
+                });
+
+
+
             });
         });
         describe("UpdateRecord", function() {
