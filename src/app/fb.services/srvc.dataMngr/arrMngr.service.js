@@ -30,6 +30,7 @@
          * @return Promise($firebaseArray)
          */
         function buildArray(path) {
+				 //* TODO: allow fb ojects as well
             return $q.when(afEntity.set("array", path))
                 .catch(standardError);
         }
@@ -137,43 +138,73 @@
         /* following functions use the above for convenience
          */
 
-        //TODO: add constrain so only iterate over recent/active, etc items
 
-        // var key = {
-        // 	build: buildArray(path),
-        // 	iterate: iterateOverColumns(arr, val, col),
-        // 	checkArr: checkArray(key.iterate)
-        // };
+        /* To keep the data structure flat, you need to store data in multiple places,
+         * this helps me to quikcly access the nested primary key if:
+         * I have the objects value and primarykey in the original node
+         * @param {string}...the value of the nested obj
+         * @param {string}..the column name that stores the foreignKey of the nested obj.
+         * @param {Array of strings or stringable items}...path to nested array
+         * @return {string}...primaryKey of nested obj
+         */
 
-        // return $q.all(key)
+        function getNestedKey(val, col, path) {
+            //TODO: add constrain so only iterate over recent/active, etc items
+            return vm.build(path)
+                .then(iterateOverColumns)
+                .then(checkArray)
+                .catch(standardError);
 
+
+            function iterateOverColumns(res) {
+                var nestedKey = null;
+                $q.all(res.map(function(item) {
+                    if (item[col] === val) {
+                        nestedKey = item.$id;
+                    }
+                }));
+                return nestedKey;
+            }
+
+            function checkArray(res) {
+                if (res !== null) {
+                    return res;
+                } else {
+                    throw new Error("Foreign key: " + col + " with a value of: " + val + " was not found.");
+                }
+
+            }
+        }
+
+         /* @param {Array of strings or stringable items}...path to nested array
+         * @param {string}...the record id
+         * @param {Object}..js object where key = property id, value = updated value
+         * @return {Promise(Ref)}...Promise with record's firebase ref
+         */
 
         function updateRecord(path, id, data) {
-            return getRecord(path, id)
-                .then(function(res) {
-                    return forProperties(res, data)
-                })
-                .then(function(res) {
-                    return vm.save(path, res);
-                })
+            return vm.getRecord(path, id)
+                .then(iterateOverData)
+                .then(iterateSuccess)
                 .catch(standardError);
-        }
 
 
-        function updateItem(rec, prop, val) {
-            rec[prop] = val;
-        }
+            function iterateOverData(res) {
+                var key, str, keys;
+                keys = Object.keys(data);
 
-
-        function forProperties(rec, obj) {
-            var key, str;
-            for (key in obj) {
-                str = key.toString();
-                updateItem(rec, str, obj[str]);
+                $q.all(keys.map(function(key) {
+                    str = key.toString();
+                    res[str] = data[str];
+                }));
+                return res;
             }
-            return rec;
-        }
 
+            function iterateSuccess(res) {
+                return vm.save(path, res);
+
+            }
+        }
 
         //untested - this fn doesnt seem to be worth the abstraction
         function updateNestedArray(val, col, path, data) {
@@ -187,63 +218,11 @@
         }
 
 
-        /* To keep the data structure flat, you need to store data in multiple places,
-         * this helps me to quikcly access the nested primary key if:
-         * I have the objects value and primarykey in the original node
-         * @param {string}...the value of the nested obj
-         * @param {string}..the column name that stores the foreignKey of the nested obj.
-         * @param {Array of strings or stringable items}...path to nested array
-         * @return {string}...primaryKey of nested obj
+
+
+
+        /* Helper functions
          */
-
-        function getNestedKey(val, col, path) {
-            return vm.build(path)
-                .then(iterateOverColumns)
-                .then(checkArray)
-                .catch(standardError);
-
-            function iterateOverColumns(res) {
-                var nestedKey
-                return $q.all(res.map(function(item) {
-                    if (item[col] === val) {
-                        nestedKey = item.$id;
-                    }
-                    return nestedKey;
-
-                }));
-
-            }
-
-            function checkArray(res) {
-                //TODO: make this unstupid, looking at first rec works for now
-                // but needs to be foolproof
-                //...perhaps $q.all again to see whats defined
-                // var arr = res.sort(function(a, b){
-																	// if (a.value > b.value){
-																		// return 1;
-																	// } else if( a.value < b.value){
-																		// return -1;
-																	// } else{
-																		// return 0;
-																	// }
-								// });
-
-                if (angular.isDefined(res.pop(0))) {
-                    return res.pop(0);
-                } else {
-                    throw new Error("Foreign key: " + col + " with a value of: " + val + " was not found.");
-                }
-
-                function compare(a, b) {
-                    return b - a;
-                }
-
-
-            }
-        }
-
-
-
         function standardError(err) {
             return $q.reject(err);
         }

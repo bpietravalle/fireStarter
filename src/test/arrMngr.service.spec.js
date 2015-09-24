@@ -505,9 +505,9 @@
                         expect($q.reject).toHaveBeenCalledWith(error);
                     });
                 });
-            })
-        });
+            });
 
+        });
 
         describe("Added functions", function() {
             // describe("updateNestedArray", function() {});
@@ -577,111 +577,87 @@
                     });
                 });
 
-                // describe("Stubbing $q.when", function() {
-                //     beforeEach(function() {
-                //         spyOn($q, "when").and.callFake(function() {
-                //             deferred = $q.defer();
-                //             return deferred.promise;
-                //         });
-                //     });
-                //     describe("When $q.when resolves", function() {
-                //         beforeEach(function() {
-                //             arrMngr.getNestedKey("fkeyA", "phone_id", path);
-                //             deferred.resolve("a");
-                //             $rootScope.$digest();
-                //         });
+            });
+            describe("UpdateRecord", function() {
+                beforeEach(function() {
+                    spyOn($q, "reject")
+                    spyOn(arrMngr, "getRecord").and.callFake(function() {
+                        deferred = $q.defer();
+                        return deferred.promise;
+                    });
+                    data = {
+                        'a': {
+                            type: "cell",
+                            number: "1234567",
+                            phone_id: "fkeyA"
+                        },
+                        'b': {
+                            type: "work",
+                            number: "9871234",
+                            phone_id: "fkeyB"
+                        },
+                        'c': {
+                            type: "home",
+                            number: "0000000",
+                            phone_id: "fkeyC"
+                        }
+                    };
+                    recId = 'a';
+                    arr = mockArr.stubArray(data, ref);
+                    mockRecord = mockArr.mockRecord(arr, recId);
+                    newData = {
+                        aNumber: 5,
+                        aString: 'gamma'
+                    };
+                });
+                describe("Implementing build()", function() {
+                    beforeEach(function() {
+                        arrMngr.updateRecord(path, recId, newData);
+                    });
+                    it("should call getRecord with path and recId", function() {
+                        expect(arrMngr.getRecord.calls.argsFor(0)[0]).toEqual(path);
+                        expect(arrMngr.getRecord.calls.argsFor(0)[1]).toEqual(recId);
+                    });
+                });
+                describe("build() Resolved: ", function() {
+                    beforeEach(function() {
+                        spyOn(arrMngr, "save");
+                        arrMngr.updateRecord(path, recId, newData);
+                        deferred.resolve(mockRecord);
+                        $rootScope.$digest();
+                        $rootScope.$digest();
+                    });
 
-                //         it("should return the value", function() {
-                //             expect(deferred.promise.$$state.value).toEqual("a");
-                //         });
-                //         it("should not call $q.reject", function() {
-                //             expect($q.reject).not.toHaveBeenCalled();
-                //         });
-                //     });
+                    it("should return the correct record wrapped in a promise", function() {
+                        expect(deferred.promise.$$state.value).toEqual(mockRecord);
+                    });
+                    it("should call arrMngr.save with updated record and path", function() {
+                        expect(arrMngr.save).toHaveBeenCalledWith(path, mockRecord);
+                        expect(arrMngr.save.calls.argsFor(0)[1].aString).toEqual("gamma");
+                        expect(arrMngr.save.calls.argsFor(0)[1].aNumber).toEqual(5);
+                    });
+                    it("should not call $q.reject", function() {
+                        expect($q.reject).not.toHaveBeenCalled();
+                    });
+                });
+                describe("build() Rejected: ", function() {
+                    beforeEach(function() {
+                        error = "Error!";
+                        arrMngr.updateRecord(path, recId, newData);
+                        deferred.reject(error);
+                        $rootScope.$digest();
+                    });
+                    it('should return correct error wrapped in a promise', function() {
+                        expect(deferred.promise.$$state.value).toEqual(error);
+                    });
+                    it("should call $q.reject", function() {
+                        expect($q.reject).toHaveBeenCalledWith(error);
+                    });
+                });
 
-                //     describe("When $q.when is rejected", function() {
-                //         beforeEach(function() {
-                //             arrMngr.getNestedKey("fkeyA", "phone_id", path);
-                //             deferred.reject("error");
-                //             $rootScope.$digest();
-                //         });
-                //         it("should call $q.reject", function() {
-                //             expect($q.reject.calls.count()).toEqual(1);
-                //         });
-                //         it("should return the error message", function() {
-                //             expect(deferred.promise.$$state.value).toEqual("error");
-                //         });
 
-                //     });
 
             });
-            // describe("UpdateRecord", function() {
-            // beforeEach(function() {
-            //     recId = 5;
-            //     path = ["string"];
-            //     newData = {
-            //         aNumber: 5,
-            //         aString: 'gamma'
-            //     };
-            //     spyOn($q, "reject");
-            //     spyOn(arrMngr, "save");
-            //     spyOn(afEntity, "set").and.returnValue(arr);
-            // });
-            // describe("Implementing $q.when", function() {
-            //     beforeEach(function() {
-            //         spyOn($q, "when").and.callThrough();
-            //         arrMngr.updateRecord(path, recId, newData);
-            //     });
-            //     it("should call $q.when three times", function() {
-            //         expect($q.when.calls.count()).toEqual(2);
-            //     });
-            //     describe("On First call", function() {
-            //         it("should be called first with updated record", function() {
-            //             expect($q.when.calls.argsFor(0)).not.toEqual(arr);
-            //         });
-            //         it("should pass path to array", function() {
-            //             expect(afEntity.set.calls.argsFor(0)[1]).toEqual(path);
-            //         });
-            //     });
-            // });
-
-            // describe("Stubbing $q.when", function() {
-            //     beforeEach(function() {
-            //         newArr = mockArr.stubArray(newData, ref);
-            //         spyOn($q, "when").and.callFake(function() {
-            //             deferred = $q.defer();
-            //             return deferred.promise;
-            //         });
-            //         arrMngr.updateRecord(path, recId, newData);
-            //     });
-            //     describe("When $q.when resolves", function() {
-            //         beforeEach(function() {
-            //             deferred.resolve(newArr);
-            //             $rootScope.$digest();
-            //         });
-            //         it("should call save with the updated record", function() {
-            //             expect(arrMngr.save.calls.argsFor(0)[1]).toEqual(newArr);
-            //         });
-            //         it("should call save with the correct path", function() {
-            //             expect(arrMngr.save.calls.argsFor(0)[0]).toEqual(path);
-            //         });
-            //     });
-            //     describe("When $q.when is rejected", function() {
-            //         beforeEach(function() {
-            //             deferred.reject("error");
-            //             $rootScope.$digest();
-            //         });
-            //         it("should not call save with the updated record", function() {
-            //             expect(arrMngr.save).not.toHaveBeenCalledWith(newArr);
-            //         });
-            //         it("should call $q.reject with the error", function() {
-            //             expect($q.reject).toHaveBeenCalledWith("error");
-            //         });
-
-            //     });
-            // });
-
-            // });
 
         });
 
