@@ -12,58 +12,80 @@
         vm.add = add;
         vm.index = index;
         vm.updateRecord = updateRecord;
-        vm.get = getRec;
+        vm.getRecord = getRecord;
         vm.updateNestedArray = updateNestedArray;
         vm.getNestedKey = getNestedKey;
         vm.key = key;
-        vm.buildArr = buildArr;
+        vm.build = buildArray;
 
-        function buildArr(path) {
+        /*
+         */
+        function buildArray(path) {
             return $q.when(afEntity.set("array", path))
-                .then(function(res) {
-                    return res;
-                })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
         function ref(fb) {
-            return $q.when(fb.$ref());
+            return $q.when(fb.$ref())
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
+        }
+
+				
+        function key(path, rec) {
+            return vm.build(path)
+                .then(function(res) {
+                    return res.$keyAt(rec);
+                })
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
         function load(path) {
-            return buildArr(path)
+            return vm.build(path)
                 .then(function(res) {
                     return res.$loaded();
                 })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
         function save(path, rec) {
-            return buildArr(path)
+            return vm.build(path)
                 .then(function(res) {
                     return res.$save(rec);
                 })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
         function remove(path, val) {
-            return buildArr(path)
+            return vm.build(path)
                 .then(function(res) {
                     res.$remove(val);
                 })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
         function updateRecord(path, id, data) {
-            //TODO: remove $q.when
-            return $q.when(getRecord(path, id))
+            return getRecord(path, id)
                 .then(function(res) {
                     return forProperties(res, data)
                 })
                 .then(function(res) {
                     return vm.save(path, res);
                 })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
 
@@ -79,40 +101,48 @@
                 updateItem(rec, str, obj[str]);
             }
             return rec;
-
         }
 
 
         function destroy(path) {
-            return path.$destroy();
+            return vm.build(path)
+                .then(function(res) {
+                    res.$destroy();
+                })
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
-        function key(fb, val) {
-            return fb.$keyAt(val);
-        }
 
-        function getRec(path, val) {
-            return buildArr(path)
+        function getRecord(path, val) {
+            return vm.build(path)
                 .then(function(res) {
                     res.$getRecord(val);
                 })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
         function index(path, val) {
-            return buildArr(path)
+            return vm.build(path)
                 .then(function(res) {
                     res.$indexFor(val);
                 })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
-        function add(path, val, result) {
-            return buildArr(path)
+        function add(path, val) {
+            return vm.build(path)
                 .then(function(res) {
                     res.$add(val);
                 })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
         //untested - this fn doesnt seem to be worth the abstraction
@@ -122,23 +152,23 @@
                     return arrMngr
                         .updateRecord(path, res, data);
                 })
-                .catch(standardError);
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
 
         }
 
         function getNestedKey(val, col, path) {
             //TODO: add constrain so only iterate over recent/active, etc items
-            //TODO: remove $q.when()
-            return $q.when(iterateOverColumns(val, col, path))
-                .then(function(res) {
-                    return res;
-                })
-                .catch(standardError);
+            return iterateOverColumns(val, col, path)
+                .catch(function(err) {
+                    return $q.reject(err);
+                });
         }
 
         function iterateOverColumns(val, col, path) {
             var nestedKey;
-            return buildArr(path)
+            return vm.build(path)
                 .then(function(res) {
                     res.forEach(function(item) {
                         if (item[col] === val) {
@@ -153,12 +183,9 @@
                 });
         }
 
-        function standarError(err) {
-            return $q.reject(err);
-        }
     }
 
-    angular.module("path.srvc.dataMngr")
+    angular.module("fb.srvc.dataMngr")
         .service("arrMngr", arrMngrService);
 
 })(angular);

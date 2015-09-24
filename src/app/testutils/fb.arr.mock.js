@@ -18,8 +18,15 @@
             }
             return arr;
         };
+        this.refWithPath = function(path) {
+            var mockPath = path.join('/'); //afEntity changes array to string
+            return new MockFirebase('Mock://').child(mockPath);
+        };
 
 
+				this.mockRecord = function(arr, id){
+					return arr.$getRecord(id);
+				};
         this.nestedMock = function(initialData, path) {
             var ref = new MockFirebase('Mock://').child(path);
             var arr = afEntity.set("array", ref);
