@@ -18,31 +18,27 @@
         vm.key = key;
         vm.build = buildArray;
 
+        return vm;
         /*
          */
         function buildArray(path) {
             return $q.when(afEntity.set("array", path))
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
+
 
         function ref(fb) {
             return $q.when(fb.$ref())
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
-				
+
         function key(path, rec) {
             return vm.build(path)
                 .then(function(res) {
                     return res.$keyAt(rec);
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
         function load(path) {
@@ -50,9 +46,7 @@
                 .then(function(res) {
                     return res.$loaded();
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
         function save(path, rec) {
@@ -60,21 +54,52 @@
                 .then(function(res) {
                     return res.$save(rec);
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
-        function remove(path, val) {
+        function remove(path, rec) {
             return vm.build(path)
                 .then(function(res) {
-                    res.$remove(val);
+                    res.$remove(rec);
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
+        function destroy(path) {
+            return vm.build(path)
+                .then(function(res) {
+                    res.$destroy();
+                })
+                .catch(standardError);
+        }
+
+
+        function getRecord(path, key) {
+            return vm.build(path)
+                .then(function(res) {
+                    res.$getRecord(key);
+                })
+                .catch(standardError);
+        }
+
+        function index(path, val) {
+            return vm.build(path)
+                .then(function(res) {
+                    res.$indexFor(val);
+                })
+                .catch(standardError);
+        }
+
+        function add(path, val) {
+            return vm.build(path)
+                .then(function(res) {
+                    res.$add(val);
+                })
+                .catch(standardError);
+        }
+
+				/*
+				 */
         function updateRecord(path, id, data) {
             return getRecord(path, id)
                 .then(function(res) {
@@ -83,9 +108,7 @@
                 .then(function(res) {
                     return vm.save(path, res);
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
 
@@ -104,47 +127,6 @@
         }
 
 
-        function destroy(path) {
-            return vm.build(path)
-                .then(function(res) {
-                    res.$destroy();
-                })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
-        }
-
-
-        function getRecord(path, val) {
-            return vm.build(path)
-                .then(function(res) {
-                    res.$getRecord(val);
-                })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
-        }
-
-        function index(path, val) {
-            return vm.build(path)
-                .then(function(res) {
-                    res.$indexFor(val);
-                })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
-        }
-
-        function add(path, val) {
-            return vm.build(path)
-                .then(function(res) {
-                    res.$add(val);
-                })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
-        }
-
         //untested - this fn doesnt seem to be worth the abstraction
         function updateNestedArray(val, col, path, data) {
             return getNestedKey(val, col, path)
@@ -152,18 +134,14 @@
                     return arrMngr
                         .updateRecord(path, res, data);
                 })
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
 
         }
 
         function getNestedKey(val, col, path) {
             //TODO: add constrain so only iterate over recent/active, etc items
             return iterateOverColumns(val, col, path)
-                .catch(function(err) {
-                    return $q.reject(err);
-                });
+                .catch(standardError);
         }
 
         function iterateOverColumns(val, col, path) {
@@ -181,6 +159,10 @@
                         throw new Error("Foreign key: " + col + " with a value of " + val + " was not found.");
                     }
                 });
+        }
+
+        function standardError(err) {
+            return $q.reject(err);
         }
 
     }

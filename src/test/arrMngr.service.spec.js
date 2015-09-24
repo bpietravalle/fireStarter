@@ -226,7 +226,7 @@
                 it('should return correct error wrapped in a promise', function() {
                     expect(deferred.promise.$$state.value).toEqual(error);
                 });
-                it("should call $q.reject", function() {
+                it("should call $q.reject with error", function() {
                     expect($q.reject).toHaveBeenCalledWith(error);
                 });
             });
@@ -241,9 +241,9 @@
                 recId = 'a';
                 deferred.resolve(arr);
                 mockRecord = mockArr.mockRecord(arr, recId);
-                arrMngr.save(path, mockRecord);
             });
             it('should call build with path', function() {
+                arrMngr.save(path, mockRecord);
                 expect(arrMngr.build).toHaveBeenCalledWith(path);
             });
             describe("build() Resolved: ", function() {
@@ -254,22 +254,141 @@
                     $rootScope.$digest();
                 });
                 it('should update the value of the correct record', function() {
-        //     it('should accept an array index', function() {
-        //         var key = arr.$keyAt(2);
-        //         var spy = spyOn(arr.$ref().child(key), 'set');
-        //         arr[2].number = 99;
-        //         arrMngr.save(arr, 2);
-        //         var expResult = $utils.toJSON(arr[2]);
-        //         expect(spy).toHaveBeenCalledWith(expResult, jasmine.any(Function));
-        //     });
+									var index = arr.$indexFor(recId);
                     $rootScope.$digest();
 										flushAll();
-                    expect(deferred.promise.$$state.value.$keyAt(1)).toEqual(jasmine.objectContaining({ aString: "new_string"}));
+                    expect(deferred.promise.$$state.value[index].aString).toEqual("new_string");
                 });
             });
             describe("build() Rejected: ", function() {
                 beforeEach(function() {
                     arrMngr.save(path, mockRecord);
+                    error = "Error!";
+                    deferred.reject(error);
+                    $rootScope.$digest();
+                });
+                it('should return correct error wrapped in a promise', function() {
+                    expect(deferred.promise.$$state.value).toEqual(error);
+                });
+                it("should call $q.reject", function() {
+                    expect($q.reject).toHaveBeenCalledWith(error);
+                });
+            });
+        });
+        describe('remove', function() {
+            beforeEach(function() {
+                spyOn($q, "reject");
+                spyOn(arrMngr, "build").and.callFake(function() {
+                    deferred = $q.defer();
+                    return deferred.promise;
+                });
+                recId = 'a';
+                deferred.resolve(arr);
+                mockRecord = mockArr.mockRecord(arr, recId);
+            });
+            it('should call build with path', function() {
+                arrMngr.remove(path, mockRecord);
+                expect(arrMngr.build).toHaveBeenCalledWith(path);
+            });
+            describe("build() Resolved: ", function() {
+							//Note required cycles 
+                beforeEach(function() {
+                    arrMngr.remove(path, mockRecord);
+                    deferred.resolve(arr);
+                    $rootScope.$digest(); //promise 1
+										ref.flush(); //mockfb
+                    $rootScope.$digest();//promise 2 return value
+                });
+                it('should delete the correct record', function() {
+                    expect(deferred.promise.$$state.value.length).toEqual(4);
+                });
+								//TODO: returnvalue = ref
+            });
+            describe("build() Rejected: ", function() {
+                beforeEach(function() {
+                    arrMngr.remove(path, mockRecord);
+                    error = "Error!";
+                    deferred.reject(error);
+                    $rootScope.$digest();
+                });
+                it('should return correct error wrapped in a promise', function() {
+                    expect(deferred.promise.$$state.value).toEqual(error);
+                });
+                it("should call $q.reject", function() {
+                    expect($q.reject).toHaveBeenCalledWith(error);
+                });
+            });
+        });
+        describe('destroy', function() {
+            beforeEach(function() {
+                spyOn($q, "reject");
+                spyOn(arrMngr, "build").and.callFake(function() {
+                    deferred = $q.defer();
+                    return deferred.promise;
+                });
+                recId = 'a';
+                mockRecord = mockArr.mockRecord(arr, recId);
+            });
+            it('should call build with path', function() {
+                arrMngr.destroy(path);
+                expect(arrMngr.build).toHaveBeenCalledWith(path);
+            });
+            describe("build() Resolved: ", function() {
+							//Note required cycles 
+                beforeEach(function() {
+                    arrMngr.destroy(path);
+                    deferred.resolve(arr);
+                    $rootScope.$digest(); //promise 1
+                    $rootScope.$digest();//promise 2 return value
+                });
+                it('should delete all records in the array', function() {
+                    expect(deferred.promise.$$state.value.length).toEqual(0);
+                });
+								//TODO: returnvalue = ref
+            });
+            describe("build() Rejected: ", function() {
+                beforeEach(function() {
+                    arrMngr.destroy(path);
+                    error = "Error!";
+                    deferred.reject(error);
+                    $rootScope.$digest();
+                });
+                it('should return correct error wrapped in a promise', function() {
+                    expect(deferred.promise.$$state.value).toEqual(error);
+                });
+                it("should call $q.reject", function() {
+                    expect($q.reject).toHaveBeenCalledWith(error);
+                });
+            });
+        });
+        describe('getRecord', function() {
+            beforeEach(function() {
+                spyOn($q, "reject");
+                spyOn(arrMngr, "build").and.callFake(function() {
+                    deferred = $q.defer();
+                    return deferred.promise;
+                });
+                recId = 'a';
+                mockRecord = mockArr.mockRecord(arr, recId);
+            });
+            it('should call build with path', function() {
+                arrMngr.getRecord(path, recId);
+                expect(arrMngr.build).toHaveBeenCalledWith(path);
+            });
+            describe("build() Resolved: ", function() {
+                beforeEach(function() {
+                    arrMngr.getRecord(path, recId);
+                    deferred.resolve(arr);
+                    $rootScope.$digest(); //promise 1
+                    $rootScope.$digest();
+                });
+                it('should retrieve the correct record', function() {
+                    expect(deferred.promise).toEqual(mockRecord);
+                });
+            });
+            describe("build() Rejected: ", function() {
+                beforeEach(function() {
+                    arrMngr.getRecord(path, recId);
                     error = "Error!";
                     deferred.reject(error);
                     $rootScope.$digest();
