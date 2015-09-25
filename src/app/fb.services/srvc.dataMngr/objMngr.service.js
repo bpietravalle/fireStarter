@@ -2,79 +2,103 @@
     "use strict";
 
     /** ngInject */
-    function objMngrService(fbRef, $q, fbHandler) {
+    function objMngrService($q, afEntity) {
         var vm = this;
-        vm.ref = ref;
-        vm.load = load;
         vm.create = create;
-        vm.save = save;
-        vm.remove = remove;
+        vm.bindTo = bindTo;
+        vm.build = buildObject;
         vm.destroy = destroy;
-        vm.priority = priority;
         vm.id = id;
+        vm.load = load;
+        vm.ref = ref;
+        vm.remove = remove;
+        vm.save = save;
+        vm.priority = priority;
         vm.value = value;
         vm.updateRecord = updateRecord;
-        vm.bindTo = bindTo;
 
-        function priority(fb, val) {
-            if (angular.isUndefined(val)) {
-                return fb.$priority;
-            } else {
-                return fb.$priority = val;
+        return vm;
+
+        /* constructor for path objects
+         * @param {Array of strings(or objs that respond to toString()}
+         * all 'path' args below are for this param
+         * @return Promise($firebaseObject)
+         */
+        function buildObject(path) {
+            //* TODO: allow ojects as well
+            return $q.when(afEntity.set("object", path))
+                .catch(standardError);
+        }
+
+        /* following functions are a simple wrapper around
+         * $firebaseObject api
+         */
+
+        /* @param {path}
+         * @param {object}..js object of data
+				 * @return {string}..reference where object is stored
+         */
+
+
+        function create(path, data) {
+            return vm.build(path)
+                .then(buildSuccess)
+                .then(setSuccess)
+                .catch(standardError);
+
+            function buildSuccess(res) {
+                return vm.ref(res)
+                    .set(data);
             }
+//untested 
+						function setSuccess(res){
+							return vm.ref(res);
+						}
         }
 
-        function value(fb, val) {
-            if (angular.isUndefined(val)) {
-                return fb.$value;
-            } else {
-                return fb.$value = val;
-            }
+        function bindTo(path, s, v) {
+            return path.$bindTo(s, v);
         }
 
-        //fb = fbref rather than $fbObject
-        // current would be easier to test
-        // $fbObject.$ref().set(), but this seems more direct
-        function create(fb, data) {
-            //TODO: return error if fb = $fbobject
-            return fbHandler.handler(function(cb) {
-                fb.set(data, cb);
-            });
-        }
+        // function priority(path, val) {
+        //         return path.$priority;
+        //     } else {
+        //         return path.$priority = val;
+        //     }
+        // }
+
+        // function value(path, val) {
+        //     if (angular.isUndefined(val)) {
+        //         return path.$value;
+        //     } else {
+        //         return path.$value = val;
+        //     }
+        // }
 
 
+
+        /* @param{$firebaseObject}
+         * @return{string}...key of object
+         */
         function id(fb) {
-            return fb.$id;
+            returnfb.$id;
         }
+
+        /* @param{$firebaseObject}
+         * @return{string}...ref of object
+         */
 
         function ref(fb) {
-            return fb.$ref();
+            returnfb.$ref();
         }
 
-        function load(fb, result) {
-            if (angular.isUndefined(result)) {
-                return fb.$loaded();
-            } else {
-                return fb.$loaded(result.success, result.failure);
-            }
+        function load(path, result) {
         }
 
-        function save(fb, result) {
-            if (angular.isUndefined(result)) {
-                return fb.$save();
-            } else {
-                return fb.$save()
-                    .then(result.success, result.failure);
-            }
+        function save(path, result) {
         }
 
-        function remove(fb, result) {
-            if (angular.isUndefined(result)) {
-                return fb.$remove();
-            } else {
-                return fb.$remove()
-                    .then(result.success, result.failure);
-            }
+        function remove(path, result) {
 
         }
 
@@ -83,9 +107,7 @@
                 .then(function(response) {
                     return vm.save(response);
                 })
-                .catch(function(err) {
-                    $q.reject(err)
-                });
+                .catch(standardError);
         }
 
         function updateItem(rec, prop, val) {
@@ -103,13 +125,17 @@
 
         }
 
-        function destroy(fb) {
-            return fb.$destroy();
+        function destroy(path) {
+            return path.$destroy();
         }
 
-        function bindTo(fb, s, v) {
-            return fb.$bindTo(s, v);
+
+        /* Helper functions
+         */
+        function standardError(err) {
+            return $q.reject(err);
         }
+
     }
 
     angular.module("fb.srvc.dataMngr")

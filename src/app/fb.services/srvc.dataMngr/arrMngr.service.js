@@ -26,7 +26,7 @@
 
         /* constructor for fb arrays 
          * @param {Array of strings(or objs that respond to toString()}
-         * all 'path' args below are for the
+         * all 'path' args below are for this param
          * @return Promise($firebaseArray)
          */
         function buildArray(path) {

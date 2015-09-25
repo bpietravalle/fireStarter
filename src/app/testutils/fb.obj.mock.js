@@ -8,6 +8,11 @@
             return new MockFirebase('Mock://').child('data').child(DEFAULT_ID);
         };
 
+        this.refWithPath = function(path) {
+            var mockPath = path.join('/'); //afEntity changes array to string
+            return new MockFirebase('Mock://').child(mockPath);
+        };
+
         this.makeObject = function(initialData, ref) {
             if (!ref) {
                 ref = this.stubRef();
