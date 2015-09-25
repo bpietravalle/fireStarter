@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('arrMngr', function() {
-        var arr, afEntity, error, path, mockRecord, recId, data, $log, $q, deferred, $rootScope, newData, newArr, ref, $utils, $timeout, testutils, mockArr, arrMngr, $firebaseArray;
+        var arr, afEntity, error, path, mockRecord, recId, data, $log, $q, deferred, $rootScope, newData, newArr, ref, mockArr, arrMngr;
 
         var STUB_DATA = {
             'a': {
@@ -41,14 +41,11 @@
             module('fbMocks');
             module('testutils');
             path = ["users", "1", "phones"];
-            inject(function(_$log_, _$q_, _afEntity_, $firebaseUtils, _$rootScope_, _$timeout_, _arrMngr_, _testutils_, _mockArr_) {
+            inject(function(_$log_, _$q_, _afEntity_, _$rootScope_, _arrMngr_, _mockArr_) {
                 afEntity = _afEntity_;
-                testutils = _testutils_;
                 $q = _$q_;
                 $rootScope = _$rootScope_;
                 $log = _$log_;
-                $timeout = _$timeout_;
-                $utils = $firebaseUtils;
                 arrMngr = _arrMngr_;
                 mockArr = _mockArr_;
                 ref = mockArr.refWithPath(path);

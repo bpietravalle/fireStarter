@@ -21,16 +21,13 @@
         return vm;
 
 
-
-
-
         /* constructor for fb arrays 
          * @param {Array of strings(or objs that respond to toString()}
          * all 'path' args below are for this param
          * @return Promise($firebaseArray)
          */
         function buildArray(path) {
-				 //* TODO: allow fb ojects as well
+            //* TODO: allow fb ojects as well
             return $q.when(afEntity.set("array", path))
                 .catch(standardError);
         }
@@ -176,7 +173,7 @@
             }
         }
 
-         /* @param {Array of strings or stringable items}...path to nested array
+        /* @param {Array of strings or stringable items}...path to nested array
          * @param {string}...the record id
          * @param {Object}..js object where key = property id, value = updated value
          * @return {Promise(Ref)}...Promise with record's firebase ref
@@ -189,6 +186,8 @@
                 .catch(standardError);
 
 
+
+            //TODO: if property doesn't exist than separate key/value pair and try to save separately
             function iterateOverData(res) {
                 var key, str, keys;
                 keys = Object.keys(data);
@@ -199,6 +198,7 @@
                 }));
                 return res;
             }
+
 
             function iterateSuccess(res) {
                 return vm.save(path, res);

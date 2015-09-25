@@ -4,12 +4,12 @@
     /** ngInject */
     function objMngrService($q, afEntity) {
         var vm = this;
-        vm.create = create;
+
         vm.bindTo = bindTo;
         vm.build = buildObject;
         vm.destroy = destroy;
         vm.id = id;
-        vm.load = load;
+        vm.loaded = loaded;
         vm.ref = ref;
         vm.remove = remove;
         vm.save = save;
@@ -33,6 +33,7 @@
         /* following functions are a simple wrapper around
          * $firebaseObject api
          */
+
         function bindTo(path, s, v) {
             return vm.build(path)
                 .then(buildForBind)
@@ -43,28 +44,41 @@
             }
         }
 
-        /* @param {path}
-         * @param {object}..js object of data
-         * @return {string}..reference where object is stored
-         */
-
-        function create(path, data) {
+        function destroy(path) {
             return vm.build(path)
-                .then(buildForCreate)
-                .then(setSuccess)
+                .then(destroySuccess)
                 .catch(standardError);
 
-            function buildForCreate(res) {
-                    return vm.ref(res)
-                        .set(data);
-                }
-                //untested 
+            function destroySuccess(res) {
+                res.$destroy();
+            }
 
-            function setSuccess(res) {
-                return vm.ref(res);
+        }
+
+        /* @param{$firebaseObject}
+         * @return{Promise(string)}...key of object
+         */
+
+        function id(fb) {
+            return $q.when(returnId)
+                .catch(standardError);
+
+            function returnId(fb) {
+                return fb.$id();
             }
         }
 
+
+        function loaded(path) {
+            return vm.build(path)
+                .then(buildForLoad)
+                .catch(standardError);
+
+            function buildForLoad(res) {
+                return res.$loaded();
+            }
+
+        }
 
         function priority(path) {
             return vm.build(path)
@@ -77,17 +91,22 @@
 
         }
 
-        function value(path) {
-            return vm.build(path)
-                .then(buildForValue)
+        /* @param{$firebaseObject}
+         * @return{Promise(string)}...ref of object
+         */
+
+        function ref(fb) {
+            return $q.when(returnRef)
                 .catch(standardError);
 
-            function buildForValue(res) {
-                return res.$value;
+            function returnRef(fb) {
+                return fb.$ref();
             }
-
         }
 
+        /* @param{Path}
+         * @return{Promise(firebaseRef)}
+         */
         function remove(path) {
             return vm.build(path)
                 .then(buildForRemove)
@@ -99,13 +118,17 @@
 
         }
 
-        function load(path) {
-            return vm.build(path)
-                .then(buildForLoad)
+
+        /* @param{$firebaseObject}
+         * @return{Promise(firebaseRef)}
+         */
+
+        function save(fb) {
+            return $q.when(buildForSave)
                 .catch(standardError);
 
-            function buildForLoad(res) {
-                return res.$load();
+            function buildForSave(res) {
+                return res.$save();
             }
 
         }
@@ -122,49 +145,32 @@
         }
 
 
-
-        /* @param{$firebaseObject}
-         * @return{string}...key of object
-         */
-        function id(fb) {
-            return fb.$id;
-        }
-
-        /* @param{$firebaseObject}
-         * @return{string}...ref of object
-         */
-
-        function ref(fb) {
-            return fb.$ref();
-        }
-
-
-        function updateRecord(rec, data) {
-            return $q.when(forProperties(rec, data))
-                .then(function(response) {
-                    return vm.save(response);
-                })
+        //TODO: if property doesn't exist than separate key/value pair and try to save separately
+        function updateRecord(path, data) {
+            return vm.loaded(path)
+                .then(iterateOverData)
+                .then(iterateSuccess)
                 .catch(standardError);
-        }
-
-        function updateItem(rec, prop, val) {
-            rec[prop] = val;
-        }
 
 
-        function forProperties(rec, obj) {
-            var key, str;
-            for (key in obj) {
-                str = key.toString();
-                updateItem(rec, str, obj[str]);
+            function iterateOverData(res) {
+                var key, str, keys;
+                keys = Object.keys(data);
+
+                $q.all(keys.map(function(key) {
+                    str = key.toString();
+                    res[str] = data[str];
+                }));
+                return res;
             }
-            return rec;
 
+            function iterateSuccess(res) {
+                return vm.save(res);
+
+            }
         }
 
-        function destroy(path) {
-            return path.$destroy();
-        }
+
 
 
         /* Helper functions
