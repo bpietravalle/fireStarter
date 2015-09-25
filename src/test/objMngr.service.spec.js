@@ -165,7 +165,6 @@
 
 
 
-        });
         describe("Added functions", function() {});
 
         //         describe("UpdateRecord", function() {

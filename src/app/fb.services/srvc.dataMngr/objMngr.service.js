@@ -33,47 +33,93 @@
         /* following functions are a simple wrapper around
          * $firebaseObject api
          */
+        function bindTo(path, s, v) {
+            return vm.build(path)
+                .then(buildForBind)
+                .catch(standardError);
+
+            function buildForBind(res) {
+                return res.$bindTo(s, v);
+            }
+        }
 
         /* @param {path}
          * @param {object}..js object of data
-				 * @return {string}..reference where object is stored
+         * @return {string}..reference where object is stored
          */
-
 
         function create(path, data) {
             return vm.build(path)
-                .then(buildSuccess)
+                .then(buildForCreate)
                 .then(setSuccess)
                 .catch(standardError);
 
-            function buildSuccess(res) {
-                return vm.ref(res)
-                    .set(data);
+            function buildForCreate(res) {
+                    return vm.ref(res)
+                        .set(data);
+                }
+                //untested 
+
+            function setSuccess(res) {
+                return vm.ref(res);
             }
-//untested 
-						function setSuccess(res){
-							return vm.ref(res);
-						}
         }
 
-        function bindTo(path, s, v) {
-            return path.$bindTo(s, v);
+
+        function priority(path) {
+            return vm.build(path)
+                .then(buildForPriority)
+                .catch(standardError);
+
+            function buildForPriority(res) {
+                return res.$priority;
+            }
+
         }
 
-        // function priority(path, val) {
-        //         return path.$priority;
-        //     } else {
-        //         return path.$priority = val;
-        //     }
-        // }
+        function value(path) {
+            return vm.build(path)
+                .then(buildForValue)
+                .catch(standardError);
 
-        // function value(path, val) {
-        //     if (angular.isUndefined(val)) {
-        //         return path.$value;
-        //     } else {
-        //         return path.$value = val;
-        //     }
-        // }
+            function buildForValue(res) {
+                return res.$value;
+            }
+
+        }
+
+        function remove(path) {
+            return vm.build(path)
+                .then(buildForRemove)
+                .catch(standardError);
+
+            function buildForRemove(res) {
+                return res.$remove();
+            }
+
+        }
+
+        function load(path) {
+            return vm.build(path)
+                .then(buildForLoad)
+                .catch(standardError);
+
+            function buildForLoad(res) {
+                return res.$load();
+            }
+
+        }
+
+        function value(path) {
+            return vm.build(path)
+                .then(buildForValue)
+                .catch(standardError);
+
+            function buildForValue(res) {
+                return res.$value;
+            }
+
+        }
 
 
 
@@ -81,7 +127,7 @@
          * @return{string}...key of object
          */
         function id(fb) {
-            returnfb.$id;
+            return fb.$id;
         }
 
         /* @param{$firebaseObject}
@@ -89,18 +135,9 @@
          */
 
         function ref(fb) {
-            returnfb.$ref();
+            return fb.$ref();
         }
 
-        function load(path, result) {
-        }
-
-        function save(path, result) {
-        }
-
-        function remove(path, result) {
-
-        }
 
         function updateRecord(rec, data) {
             return $q.when(forProperties(rec, data))

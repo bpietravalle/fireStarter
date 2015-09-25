@@ -1,6 +1,7 @@
 (function(angular) {
     "use strict";
 
+		/** ngInject */
     function AuthManager(afEntity) {
         var vm = this;
 
@@ -16,6 +17,7 @@
         vm.unauth = unauth;
 
         vm.authObj = (function() {
+					//TODO: use $q.when and add then to below
             return afEntity.set();
         }());
 
@@ -95,7 +97,6 @@
 
     }
 
-    AuthManager.$inject = ['afEntity'];
 
     angular.module('fb.srvc.dataMngr')
         .service('authMngr', AuthManager);
