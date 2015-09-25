@@ -27,7 +27,7 @@
          * @return Promise($firebaseArray)
          */
         function buildArray(path) {
-            //* TODO: allow fb ojects as well
+            //* TODO: allow fb ojects as well- afEntity.setRef() already allows it
             return $q.when(afEntity.set("array", path))
                 .catch(standardError);
         }
@@ -187,7 +187,7 @@
 
 
 
-            //TODO: if property doesn't exist than separate key/value pair and try to save separately
+            //TODO: if property doesn't exist than separate key/value pair and try to save new property separately
             function iterateOverData(res) {
                 var key, str, keys;
                 keys = Object.keys(data);
@@ -206,15 +206,14 @@
             }
         }
 
-        //untested - this fn doesnt seem to be worth the abstraction
         function updateNestedArray(val, col, path, data) {
-            return getNestedKey(val, col, path)
-                .then(function(res) {
-                    return arrMngr
-                        .updateRecord(path, res, data);
-                })
+            return vm.getNestedKey(val, col, path)
+                .then(getKeySuccess)
                 .catch(standardError);
 
+            function getKeySuccess(res) {
+                return vm.updateRecord(path, res, data);
+            }
         }
 
 

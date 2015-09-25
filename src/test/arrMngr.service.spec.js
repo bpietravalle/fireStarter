@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('arrMngr', function() {
-        var arr, afEntity, error, path, mockRecord, recId, data, $log, $q, deferred, $rootScope, newData, newArr, ref, mockArr, arrMngr;
+        var arr, afEntity, error, path, fkey, col, mockRecord, recId, data, $log, $q, deferred1, deferred, $rootScope, newData, newArr, ref, mockArr, arrMngr;
 
         var STUB_DATA = {
             'a': {
@@ -507,7 +507,6 @@
         });
 
         describe("Added functions", function() {
-            // describe("updateNestedArray", function() {});
             describe("GetNestedKey", function() {
                 beforeEach(function() {
                     spyOn($q, "reject")
@@ -655,12 +654,95 @@
 
 
             });
+            describe("updateNestedArray", function() {
+                beforeEach(function() {
+                    spyOn($q, "reject")
+                    spyOn(arrMngr, "getNestedKey").and.callFake(function() {
+                        deferred = $q.defer();
+                        return deferred.promise;
+                    });
+                    spyOn(arrMngr, "updateRecord").and.callFake(function() {
+                        deferred1 = $q.defer();
+                        return deferred.promise;
+                    });
+                    data = {
+                        'a': {
+                            type: "cell",
+                            number: "1234567",
+                            phone_id: "fkeyA"
+                        },
+                        'b': {
+                            type: "work",
+                            number: "9871234",
+                            phone_id: "fkeyB"
+                        },
+                        'c': {
+                            type: "home",
+                            number: "0000000",
+                            phone_id: "fkeyC"
+                        }
+                    };
+                    fkey = "fkeyA";
+                    col = "phone_id";
+                    recId = 'a';
+                    arr = mockArr.stubArray(data, ref);
+                    mockRecord = mockArr.mockRecord(arr, recId);
+                    newData = {
+                        number: "202-202-1111",
+                        type: 'fax'
+                    };
+                });
+                describe("build() Resolved: ", function() {
+                    beforeEach(function() {
+                        arrMngr.updateNestedArray(fkey, col, path, newData);
+                        deferred.resolve(recId);
+                        $rootScope.$digest();
+                        deferred1.resolve(ref);
+                        $rootScope.$digest();
+                        $rootScope.$digest();
+                    });
+
+                    it("should return the correct Id wrapped in a promise", function() {
+                        expect(deferred.promise.$$state.value).toEqual(recId);
+                    });
+                    it("should call getNestedKey with path and and fkey value and column", function() {
+                        expect(arrMngr.getNestedKey.calls.argsFor(0)[0]).toEqual("fkeyA");
+                        expect(arrMngr.getNestedKey.calls.argsFor(0)[1]).toEqual("phone_id");
+                        expect(arrMngr.getNestedKey.calls.argsFor(0)[2]).toEqual(path);
+                    });
+                    it("should call arrMngr.updateRecord with path correct recId and data", function() {
+                        expect(arrMngr.updateRecord.calls.argsFor(0)[0]).toEqual(path);
+                        expect(arrMngr.updateRecord.calls.argsFor(0)[1]).toEqual(recId);
+                        expect(arrMngr.updateRecord.calls.argsFor(0)[2]).toEqual(newData);
+                    });
+                    it("should not call $q.reject", function() {
+                        expect($q.reject).not.toHaveBeenCalled();
+                    });
+                });
+                describe("build() Rejected: ", function() {
+                    beforeEach(function() {
+                        error = "Error!";
+                        arrMngr.updateNestedArray(fkey, col, path, newData);
+                        deferred.reject(error);
+                        $rootScope.$digest();
+                    });
+                    it('should return correct error wrapped in a promise', function() {
+                        expect(deferred.promise.$$state.value).toEqual(error);
+                    });
+                    it("should call $q.reject", function() {
+                        expect($q.reject).toHaveBeenCalledWith(error);
+                    });
+                });
+
+
+
+            });
+
+
+
 
         });
 
-        function addAndProcess(arr, snap, prevChild) {
-            arr.$$process('child_added', arr.$$added(snap, prevChild), prevChild);
-        }
 
         var flushAll =
             (function() {

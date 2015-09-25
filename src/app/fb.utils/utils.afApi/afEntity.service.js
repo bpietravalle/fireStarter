@@ -7,11 +7,13 @@
         vm.set = set;
 
         function setRef(path) {
+					//TODO this fn should only allow arrays and strings
                 ref = path;
                 if (typeof ref === 'string' || Array.isArray(ref)) {
                     return fbRef.ref(ref);
                 } else {
                     //only using this to pass Mockfirebase right now
+										//but will work in new objMngr/arrMngr build fns as well
                     return ref;
                 }
             }
@@ -19,6 +21,7 @@
             //that will respond to toString()
 
         function set(type, path) {
+					//TODO: check here if path = fbobject/array
             if (arguments.length === 0) {
                 return afWrap('auth', fbRef.root());
             } else {
