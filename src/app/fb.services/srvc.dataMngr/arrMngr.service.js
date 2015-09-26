@@ -15,6 +15,7 @@
         vm.ref = ref;
         vm.remove = remove;
         vm.save = save;
+				vm.timestamp = timestamp;
         vm.updateNestedArray = updateNestedArray;
         vm.updateRecord = updateRecord;
 
@@ -225,6 +226,11 @@
         function standardError(err) {
             return $q.reject(err);
         }
+
+				//TODO: add test
+				function timestamp(){
+					return Firebase.ServeValue.TIMESTAMP;
+				}
 
     }
 

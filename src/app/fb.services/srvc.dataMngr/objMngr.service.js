@@ -14,6 +14,7 @@
         vm.remove = remove;
         vm.save = save;
         vm.priority = priority;
+        vm.timestamp = timestamp;
         vm.value = value;
         vm.updateRecord = updateRecord;
 
@@ -156,16 +157,16 @@
             function iterateOverData(res) {
                 var key, str, keys;
                 keys = Object.keys(data)
-                //TODO test code below for older browsers; from coderwall.com
-                // if (!Object.keys) Object.keys = function(o) {
-                //     if (o !== Object(o))
-                //         throw new TypeError('Object.keys called on a non-object');
-                //     var k = [],
-                //         p;
-                //     for (p in o)
-                //         if (Object.prototype.hasOwnProperty.call(o, p)) k.push(p);
-                //     return k;
-                // };
+                    //TODO test code below for older browsers; from coderwall.com
+                    // if (!Object.keys) Object.keys = function(o) {
+                    //     if (o !== Object(o))
+                    //         throw new TypeError('Object.keys called on a non-object');
+                    //     var k = [],
+                    //         p;
+                    //     for (p in o)
+                    //         if (Object.prototype.hasOwnProperty.call(o, p)) k.push(p);
+                    //     return k;
+                    // };
 
                 $q.all(keys.map(function(key) {
                     str = key.toString();
@@ -187,6 +188,11 @@
          */
         function standardError(err) {
             return $q.reject(err);
+        }
+
+        //TODO: add test
+        function timestamp() {
+            return Firebase.ServeValue.TIMESTAMP;
         }
 
     }
