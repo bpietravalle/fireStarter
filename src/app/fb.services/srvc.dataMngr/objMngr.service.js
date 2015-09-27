@@ -192,7 +192,7 @@
 
         //TODO: add test
         function timestamp() {
-            return Firebase.ServeValue.TIMESTAMP;
+            return Firebase.ServerValue.TIMESTAMP;
         }
 
     }
