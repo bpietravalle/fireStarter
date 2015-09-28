@@ -111,7 +111,7 @@
                 });
                 it('should call $q.when with the firebaseobject', function() {
                     objMngr.save(obj);
-                    expect($q.when).toHaveBeenCalledWith(jasmine.any(Function));
+                    expect($q.when).toHaveBeenCalled();
                     expect($q.when).not.toHaveBeenCalledWith(obj);
                 });
                 describe("build() Resolved: ", function() {

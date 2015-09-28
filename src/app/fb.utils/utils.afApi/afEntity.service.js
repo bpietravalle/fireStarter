@@ -2,33 +2,25 @@
     "use strict";
 
     function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
-        var entity, ref;
         var vm = this;
         vm.set = set;
+				vm.wrap = afWrap;
 
         function setRef(path) {
-					//TODO this fn should only allow arrays and strings
-                ref = path;
-                if (typeof ref === 'string' || Array.isArray(ref)) {
-                    return fbRef.ref(ref);
-                } else {
-                    //only using this to pass Mockfirebase right now
-										//but will work in new objMngr/arrMngr build fns as well
-                    return ref;
-                }
-            }
-            //path arg must be an array of strings or of values 
-            //that will respond to toString()
+            return fbRef.ref(path);
+        }
 
         function set(type, path) {
-					//TODO: check here if path = fbobject/array
+
             if (arguments.length === 0) {
                 return afWrap('auth', fbRef.root());
+            } else if (Array.isArray(path)) {
+							//think this should be Object.proto.toString
+                return vm.wrap(type, setRef(path));
             } else {
-                entity = setRef(path);
-                return afWrap(type, entity);
+                return path;
             }
-        };
+        }
 
         function afWrap(type, entity) {
             if (type === 'object') {

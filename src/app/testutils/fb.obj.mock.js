@@ -17,7 +17,7 @@
             if (!ref) {
                 ref = this.stubRef();
             }
-            var obj = afEntity.set("object", ref);
+            var obj = afEntity.wrap("object", ref);
             if (angular.isDefined(initialData)) {
                 ref.ref().set(initialData);
                 ref.flush();

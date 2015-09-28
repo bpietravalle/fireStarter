@@ -42,8 +42,8 @@ module.exports = function(config) {
             whitelist: [path.join(conf.paths.src, '/**/!(*.html|*.spec|*.mock).js')]
         },
 
-        reporters: ['notify', 'progress'],
-        // reporters: ['coverage', 'spec', 'progress', 'notify', 'nested'],
+        // reporters: ['notify', 'progress'],
+        reporters: ['coverage', 'spec', 'progress', 'notify', 'nested'],
 
         ngHtml2JsPreprocessor: {
             stripPrefix: 'src/',

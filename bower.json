@@ -4,7 +4,7 @@
   "license": "MIT",
   "description": "angular services for Firebase",
   "dependencies": {
-    "angular": "~1.4.0",
+    "angular": "~1.4.4",
     "firebase": "~2.2.9",
     "angularfire": "~1.1.2",
     "angular-local-storage": "~0.2.2"
@@ -14,7 +14,7 @@
     "angular-mocks": "~1.4.0"
   },
   "resolutions": {
-    "angular": "~1.4.0"
+    "angular": "~1.4.4"
   },
   "repository": {
     "type": "git",

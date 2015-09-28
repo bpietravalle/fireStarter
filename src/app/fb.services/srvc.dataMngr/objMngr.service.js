@@ -21,7 +21,7 @@
         return vm;
 
         /* constructor for path objects
-         * @param {Array of strings(or objs that respond to toString()}
+         * @param {Array of strings||$firebaseObject}
          * all 'path' args below are for this param
          * @return Promise($firebaseObject)
          */
@@ -134,7 +134,7 @@
                 .catch(standardError);
 
             function attemptSave(res) {
-                return res.$save();
+                return $q.when(res.$save());
             }
 
             function saveSuccess(res) {
@@ -157,17 +157,23 @@
 
         //TODO: if property doesn't exist than separate key/value pair and try to save separately
         function updateRecord(path, data) {
+            if (angular.isDefined(data)) {
+                return updateRecordWithDataObj(path, data);
+            } else {
+                return save(path);
+            }
+
+        }
+
+        function updateRecordWithDataObj(path, data) {
             return setupForUpdate()
                 .then(iterateOverData)
                 .then(iterateSuccess)
                 .catch(standardError);
 
 
-
             function setupForUpdate() {
                 return $q.all([loadObject(path), buildKeys(data)])
-
-
 
             }
 
@@ -178,10 +184,8 @@
 
             function buildKeys(res) {
                 var obj = {
-
                     keys: Object.keys(res),
                     data: res
-
                 }
 
                 return $q.when(obj);
@@ -223,9 +227,6 @@
 
             }
         }
-
-
-
 
         /* Helper functions
          */

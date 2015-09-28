@@ -1,4 +1,4 @@
-// code (almostly entirely) from firebase/angularfire-seed repo
+// code from firebase/angularfire-seed repo
 (function(angular) {
     "use strict";
 

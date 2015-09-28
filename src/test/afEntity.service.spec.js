@@ -47,7 +47,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = afEntity.set("object", "users");
+                    entity = afEntity.set("object", ["users"]);
                     val = y[1];
                     meth = y[0];
                     expect(typeof entity[meth]).toEqual(val);
@@ -72,7 +72,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = afEntity.set("array", "users");
+                    entity = afEntity.set("array", ["users"]);
                     val = y[1];
                     meth = y[0];
                     expect(typeof entity[meth]).toEqual(val);
@@ -81,7 +81,6 @@
             methods.forEach(test_entity_methods);
         });
         describe("accessible $firebaseAuth methods", function() {
-            // can't test $unAuth via this macro
             var entity, val, meth;
             var methods = [
                 ['$authWithCustomToken', 'function'],

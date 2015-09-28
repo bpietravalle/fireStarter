@@ -23,12 +23,11 @@
 
 
         /* constructor for fb arrays 
-         * @param {Array of strings(or objs that respond to toString()}
+         * @param {Array of strings||$firebaseArray}
          * all 'path' args below are for this param
          * @return Promise($firebaseArray)
          */
         function buildArray(path) {
-            //* TODO: allow fb ojects as well- afEntity.setRef() already allows it
             return $q.when(afEntity.set("array", path))
                 .catch(standardError);
         }
@@ -62,21 +61,17 @@
 
         function getRecord(path, key) {
             return vm.build(path)
-                .then(completeSuccess)
+                .then(completeGetRecord)
                 .then(getRecSuccess)
                 .catch(standardError);
 
-            function completeSuccess(res) {
-                $log.info("heres' the build result:")
-                $log.info(res);
-                $log.info("key");
-                $log.info(key);
+            function completeGetRecord(res) {
                 return res.$getRecord(key);
             }
 
             function getRecSuccess(res) {
-                $log.info("in getrecsuccess");
-                $log.info(res);
+							//TODO if return the constructed $firebaseArray as well as the record,
+							// then can use this fn to update records 
                 return res;
             }
 
@@ -140,19 +135,13 @@
                 .catch(standardError);
 
             function completeSave(res) {
-                $log.info("complete save")
-                $log.info(res);
                 return res.$save(rec);
             }
 
             function saveSuccess(res) {
-                $log.info("save success")
-                $log.info(res);
                 return res;
             }
         }
-
-
 
 
         /* following functions use the above for convenience
@@ -196,18 +185,25 @@
             }
         }
 
-        /* @param {Array of strings or stringable items}...path to nested array
-         * @param {string}...the record id
+        /* @param {$firebaseArray}...can't be an array of strings here unless change getRecord
+         * @param {string||$firebaseObject}...the record id
          * @param {Object}..js object where key = property id, value = updated value
          * @return {Promise(Ref)}...Promise with record's firebase ref
          */
 
         function updateRecord(path, id, data) {
+            if (angular.isDefined(data)) {
+                return updateRecordWithDataObj(path, id, data);
+            } else {
+                return vm.save(path, id);//$fbArray, $fbObject
+            }
+        }
+
+        function updateRecordWithDataObj(path, id, data) {
             return vm.getRecord(path, id)
                 .then(iterateOverData)
                 .then(iterateSuccess)
                 .catch(standardError);
-
 
 
             //TODO: if property doesn't exist than separate key/value pair and try to save new property separately
@@ -224,10 +220,6 @@
 
 
             function iterateSuccess(res) {
-                $log.info("in iterateSuccess:")
-                $log.info(path);
-                $log.info(res);
-
                 return vm.save(path, res);
 
             }

@@ -10,7 +10,7 @@
             if (!ref) {
                 ref = this.stubRef();
             }
-            var arr = afEntity.set("array", ref);
+            var arr = afEntity.wrap("array", ref);
             if (initialData) {
                 ref.set(initialData);
                 ref.flush();
