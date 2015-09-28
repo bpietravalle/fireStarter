@@ -1,7 +1,7 @@
 (function(angular) {
     "use strict";
 
-    /** ngInject */
+    /** @ngInject */
     function arrMngrService($q, afEntity, $log) {
         var vm = this;
         vm.add = add;

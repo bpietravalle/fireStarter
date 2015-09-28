@@ -1,7 +1,7 @@
 (function(angular) {
     "use strict";
 
-		/** ngInject */
+		/** @ngInject */
     function AuthManager(afEntity) {
         var vm = this;
 
