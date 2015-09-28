@@ -51,7 +51,7 @@
                 .catch(standardError);
 
             function destroySuccess(res) {
-                res.$destroy();
+                return res.$destroy();
             }
 
         }

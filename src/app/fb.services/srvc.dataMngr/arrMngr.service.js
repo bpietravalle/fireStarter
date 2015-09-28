@@ -44,7 +44,7 @@
                 .catch(standardError);
 
             function addSuccess(res) {
-                res.$add(obj);
+                return res.$add(obj);
             }
         }
 
@@ -76,7 +76,7 @@
                 .catch(standardError);
 
             function indexForSuccess(res) {
-                res.$indexFor(val);
+                return res.$indexFor(val);
             }
         }
 
@@ -116,7 +116,7 @@
                 .catch(standardError);
 
             function removeSuccess(res) {
-                res.$remove(rec);
+               return res.$remove(rec);
             }
         }
 
