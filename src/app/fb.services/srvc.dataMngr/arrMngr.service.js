@@ -55,7 +55,7 @@
                 .catch(standardError);
 
             function destroySuccess(res) {
-                res.$destroy();
+                return res.$destroy();
             }
 
         }
@@ -66,7 +66,7 @@
                 .catch(standardError);
 
             function getRecordSuccess(res) {
-                res.$getRecord(key);
+                return res.$getRecord(key);
             }
         }
 
