@@ -2,7 +2,7 @@
     "use strict";
 
     /** @ngInject */
-    function objMngrService($q, afEntity) {
+    function objMngrService($q, afEntity, $log) {
         var vm = this;
 
         vm.bindTo = bindTo;
@@ -73,12 +73,16 @@
         function loaded(path) {
             return vm.build(path)
                 .then(buildForLoad)
+                .then(loadSuccess)
                 .catch(standardError);
 
             function buildForLoad(res) {
                 return res.$loaded();
             }
 
+            function loadSuccess(res) {
+                return res;
+            }
         }
 
         function priority(path) {
@@ -125,11 +129,16 @@
          */
 
         function save(fb) {
-            return $q.when(buildForSave)
+            return attemptSave(fb)
+                .then(saveSuccess)
                 .catch(standardError);
 
-            function buildForSave(res) {
+            function attemptSave(res) {
                 return res.$save();
+            }
+
+            function saveSuccess(res) {
+                return res;
             }
 
         }
@@ -148,31 +157,65 @@
 
         //TODO: if property doesn't exist than separate key/value pair and try to save separately
         function updateRecord(path, data) {
-            return vm.loaded(path)
+            return setupForUpdate()
                 .then(iterateOverData)
                 .then(iterateSuccess)
                 .catch(standardError);
 
 
-            function iterateOverData(res) {
-                var key, str, keys;
-                keys = Object.keys(data)
-                    //TODO test code below for older browsers; from coderwall.com
-                    // if (!Object.keys) Object.keys = function(o) {
-                    //     if (o !== Object(o))
-                    //         throw new TypeError('Object.keys called on a non-object');
-                    //     var k = [],
-                    //         p;
-                    //     for (p in o)
-                    //         if (Object.prototype.hasOwnProperty.call(o, p)) k.push(p);
-                    //     return k;
-                    // };
 
-                $q.all(keys.map(function(key) {
-                    str = key.toString();
-                    res[str] = data[str];
-                }));
-                return res;
+            function setupForUpdate() {
+                return $q.all([loadObject(path), buildKeys(data)])
+
+
+
+            }
+
+            function loadObject(res) {
+                return vm
+                    .loaded(res);
+            }
+
+            function buildKeys(res) {
+                var obj = {
+
+                    keys: Object.keys(res),
+                    data: res
+
+                }
+
+                return $q.when(obj);
+                //TODO test code below for older browsers; from coderwall.com
+                // if (!Object.keys) Object.keys = function(o) {
+                //     if (o !== Object(o))
+                //         throw new TypeError('Object.keys called on a non-object');
+                //     var k = [],
+                //         p;
+                //     for (p in o)
+                //         if (Object.prototype.hasOwnProperty.call(o, p)) k.push(p);
+                //     return k;
+                // };
+
+            }
+
+
+            //TODO: change it back to how fn appears in arrMngr
+            function iterateOverData(res) {
+                var obj, str, keys, dataSet;
+
+                keys = res[1].keys;
+                dataSet = res[1].data;
+                obj = res[0];
+
+                return $q.all(keys.map(function(key) {
+                        str = key.toString();
+                        obj[str] = dataSet[str];
+                    }))
+                    .then(returnObj);
+
+                function returnObj(res) {
+                    return obj;
+                }
             }
 
             function iterateSuccess(res) {
@@ -187,6 +230,7 @@
         /* Helper functions
          */
         function standardError(err) {
+            $log.error(err);
             return $q.reject(err);
         }
 

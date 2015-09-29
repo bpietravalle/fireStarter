@@ -15,7 +15,7 @@
         vm.ref = ref;
         vm.remove = remove;
         vm.save = save;
-				vm.timestamp = timestamp;
+        vm.timestamp = timestamp;
         vm.updateNestedArray = updateNestedArray;
         vm.updateRecord = updateRecord;
 
@@ -62,12 +62,25 @@
 
         function getRecord(path, key) {
             return vm.build(path)
-                .then(getRecordSuccess)
+                .then(completeSuccess)
+                .then(getRecSuccess)
                 .catch(standardError);
 
-            function getRecordSuccess(res) {
+            function completeSuccess(res) {
+                $log.info("heres' the build result:")
+                $log.info(res);
+                $log.info("key");
+                $log.info(key);
                 return res.$getRecord(key);
             }
+
+            function getRecSuccess(res) {
+                $log.info("in getrecsuccess");
+                $log.info(res);
+                return res;
+            }
+
+
         }
 
         function indexFor(path, val) {
@@ -116,17 +129,26 @@
                 .catch(standardError);
 
             function removeSuccess(res) {
-               return res.$remove(rec);
+                return res.$remove(rec);
             }
         }
 
         function save(path, rec) {
             return vm.build(path)
+                .then(completeSave)
                 .then(saveSuccess)
                 .catch(standardError);
 
-            function saveSuccess(res) {
+            function completeSave(res) {
+                $log.info("complete save")
+                $log.info(res);
                 return res.$save(rec);
+            }
+
+            function saveSuccess(res) {
+                $log.info("save success")
+                $log.info(res);
+                return res;
             }
         }
 
@@ -202,6 +224,10 @@
 
 
             function iterateSuccess(res) {
+                $log.info("in iterateSuccess:")
+                $log.info(path);
+                $log.info(res);
+
                 return vm.save(path, res);
 
             }
@@ -227,10 +253,10 @@
             return $q.reject(err);
         }
 
-				//TODO: add test
-				function timestamp(){
-					return Firebase.ServerValue.TIMESTAMP;
-				}
+        //TODO: add test
+        function timestamp() {
+            return Firebase.ServerValue.TIMESTAMP;
+        }
 
     }
 

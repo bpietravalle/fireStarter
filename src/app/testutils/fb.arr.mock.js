@@ -65,6 +65,17 @@
             };
         })();
 
+        this.recArrayData = {
+            "1": {
+                number: "202-202-1111",
+                type: "cell"
+            },
+            "2": {
+                number: "603-202-5555",
+                type: "fax"
+            }
+        };
+
     }
 
     fbArrMockService.$inject = ['afEntity', '$timeout', '$firebaseArray'];
