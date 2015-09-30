@@ -17,8 +17,8 @@
             beforeEach(function() {
                 deps = module.value('fb.services').requires;
             });
-            it("should depend on fb.srvc.dataMngr", function() {
-                expect(hasModule('fb.srvc.dataMngr')).toBeTruthy();
+            it("should depend on fb.utils", function() {
+                expect(hasModule("fb.utils")).toBeTruthy();
             });
         });
     });

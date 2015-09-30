@@ -18,7 +18,7 @@
         };
 
         beforeEach(function() {
-            module('fb.srvc.dataMngr');
+            module('fb.services');
             module("fbMocks");
             recId = 123;
             path = ["users", recId];

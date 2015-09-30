@@ -98,7 +98,7 @@
     }
 
 
-    angular.module('fb.srvc.dataMngr')
+    angular.module('fb.services')
         .service('authMngr', AuthManager);
 
 

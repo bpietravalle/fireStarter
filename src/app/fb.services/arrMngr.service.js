@@ -16,6 +16,9 @@
         vm.remove = remove;
         vm.save = save;
         vm.timestamp = timestamp;
+				//
+				// TODO: need to debug - somehow broke/ I think bc 
+				// they construct an array after editing the record
         vm.updateNestedArray = updateNestedArray;
         vm.updateRecord = updateRecord;
 
@@ -61,18 +64,30 @@
 
         function getRecord(path, key) {
             return vm.build(path)
-                .then(completeGetRecord)
+                .then(completeFn)
                 .then(getRecSuccess)
                 .catch(standardError);
 
-            function completeGetRecord(res) {
-                return res.$getRecord(key);
+            function completeFn(res) {
+                return $q.all([tryGetRecord(res), storeArray(res)]);
+            }
+
+            function tryGetRecord(res) {
+                return $q.when(res.$getRecord(key));
+            }
+
+            function storeArray(res) {
+                //in case path arg is just array of strings
+                return $q.when(res);
             }
 
             function getRecSuccess(res) {
-							//TODO if return the constructed $firebaseArray as well as the record,
-							// then can use this fn to update records 
-                return res;
+                //if return the constructed $firebaseArray as well as the record,
+                // then can use this fn to update records 
+                return {
+                    record: res[0],
+                    array: res[1],
+                };
             }
 
 
@@ -185,8 +200,8 @@
             }
         }
 
-        /* @param {$firebaseArray}...can't be an array of strings here unless change getRecord
-         * @param {string||$firebaseObject}...the record id
+        /* @param {$firebaseArray}...
+         * @param {String}..recid.
          * @param {Object}..js object where key = property id, value = updated value
          * @return {Promise(Ref)}...Promise with record's firebase ref
          */
@@ -195,12 +210,13 @@
             if (angular.isDefined(data)) {
                 return updateRecordWithDataObj(path, id, data);
             } else {
-                return vm.save(path, id);//$fbArray, $fbObject
+                return vm.save(path, id); //$fbArray, $fbObject
             }
         }
 
         function updateRecordWithDataObj(path, id, data) {
-            return vm.getRecord(path, id)
+					/* this does not work unless get record within the fn */
+            return $q.when(id)
                 .then(iterateOverData)
                 .then(iterateSuccess)
                 .catch(standardError);
@@ -252,7 +268,7 @@
 
     }
 
-    angular.module("fb.srvc.dataMngr")
+    angular.module("fb.services")
         .service("arrMngr", arrMngrService);
 
 })(angular);

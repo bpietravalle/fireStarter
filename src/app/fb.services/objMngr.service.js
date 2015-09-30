@@ -16,6 +16,8 @@
         vm.priority = priority;
         vm.timestamp = timestamp;
         vm.value = value;
+				// TODO: need to debug - somehow broke/ I think bc 
+				// it constructs an array after editing the record
         vm.updateRecord = updateRecord;
 
         return vm;
@@ -160,7 +162,7 @@
             if (angular.isDefined(data)) {
                 return updateRecordWithDataObj(path, data);
             } else {
-                return save(path);
+                return vm.save(path);
             }
 
         }
@@ -242,7 +244,7 @@
 
     }
 
-    angular.module("fb.srvc.dataMngr")
+    angular.module("fb.services")
         .service("objMngr", objMngrService);
 
 
