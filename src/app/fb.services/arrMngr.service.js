@@ -16,9 +16,9 @@
         vm.remove = remove;
         vm.save = save;
         vm.timestamp = timestamp;
-				//
-				// TODO: need to debug - somehow broke/ I think bc 
-				// they construct an array after editing the record
+        //
+        // TODO: need to debug - somehow broke/ I think bc 
+        // they construct an array after editing the record
         vm.updateNestedArray = updateNestedArray;
         vm.updateRecord = updateRecord;
 
@@ -26,7 +26,7 @@
 
 
         /* constructor for fb arrays 
-         * @param {Array of strings||$firebaseArray}
+         * @param {Array of strings}
          * all 'path' args below are for this param
          * @return Promise($firebaseArray)
          */
@@ -62,6 +62,7 @@
 
         }
 
+				/*not worth the abstraction*/
         function getRecord(path, key) {
             return vm.build(path)
                 .then(completeFn)
@@ -133,24 +134,36 @@
         }
 
 
-        function remove(path, rec) {
-            return vm.build(path)
+        /* @param {$firebaseArray}
+         * @return fb reference
+         */
+
+
+        function remove(arr, rec) {
+            return attemptRemove(arr, rec)
                 .then(removeSuccess)
                 .catch(standardError);
 
+            function attemptRemove(arr, rec) {
+                return arr.$remove(rec);
+            }
+
             function removeSuccess(res) {
-                return res.$remove(rec);
+                return res;
             }
         }
 
-        function save(path, rec) {
-            return vm.build(path)
-                .then(completeSave)
+        /* @param {$firebaseArray}
+         * @return fb reference
+         */
+
+        function save(arr, rec) {
+            return attemptSave(arr, rec)
                 .then(saveSuccess)
                 .catch(standardError);
 
-            function completeSave(res) {
-                return res.$save(rec);
+            function attemptSave(arr, rec) {
+                return arr.$save(rec);
             }
 
             function saveSuccess(res) {
@@ -215,7 +228,7 @@
         }
 
         function updateRecordWithDataObj(path, id, data) {
-					/* this does not work unless get record within the fn */
+            /* this does not work unless get record within the fn */
             return $q.when(id)
                 .then(iterateOverData)
                 .then(iterateSuccess)

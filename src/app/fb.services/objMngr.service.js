@@ -23,12 +23,11 @@
         return vm;
 
         /* constructor for path objects
-         * @param {Array of strings||$firebaseObject}
+         * @param {Array of strings}
          * all 'path' args below are for this param
          * @return Promise($firebaseObject)
          */
         function buildObject(path) {
-            //* TODO: allow ojects as well - afEntity.setRef() already allows it
             return $q.when(afEntity.set("object", path))
                 .catch(standardError);
         }
@@ -111,17 +110,22 @@
             }
         }
 
-        /* @param{Path}
+        /* @param{$firebaseObject}
          * @return{Promise(firebaseRef)}
          */
-        function remove(path) {
-            return vm.build(path)
-                .then(buildForRemove)
+        function remove(obj) {
+            return attemptRemove(obj)
+                .then(removeSuccess)
                 .catch(standardError);
 
-            function buildForRemove(res) {
-                return res.$remove();
+            function attemptRemove(res) {
+                return $q.when(res.$save());
             }
+
+            function removeSuccess(res) {
+                return res;
+            }
+
 
         }
 
@@ -130,8 +134,8 @@
          * @return{Promise(firebaseRef)}
          */
 
-        function save(fb) {
-            return attemptSave(fb)
+        function save(obj) {
+            return attemptSave(obj)
                 .then(saveSuccess)
                 .catch(standardError);
 
