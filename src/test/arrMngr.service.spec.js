@@ -248,95 +248,82 @@
             describe('save', function() {
                 beforeEach(function() {
                     spyOn($q, "reject");
-                    spyOn(arrMngr, "build").and.callFake(function() {
-                        deferred = $q.defer();
-                        return deferred.promise;
-                    });
+                    spyOn(arr, "$save").and.callThrough();
                     recId = 'a';
-                    deferred.resolve(arr);
                     mockRecord = mockArr.mockRecord(arr, recId);
                 });
-                it('should call build with path', function() {
+                it('should call $save with array and record', function() {
                     arrMngr.save(arr, mockRecord);
-                    expect(arrMngr.build).toHaveBeenCalledWith(arr);
+                    expect(arr.$save).toHaveBeenCalledWith(mockRecord);
                 });
-                describe("build() Resolved: ", function() {
-                    beforeEach(function() {
-                        this.index = arr.$indexFor(recId);
-                        mockRecord.aString = "new_string";
-                        arrMngr.save(arr, mockRecord);
-                        deferred.resolve(arr);
-                        spyOn(deferred.promise.$$state.value, "$save").and.callThrough();
-                        $rootScope.$digest();
-                    });
-                    it('should update the value of the correct record', function() {
-                        expect(deferred.promise.$$state.value[this.index].aString).toEqual("new_string");
-                    });
-                    it("should call $save with correct record", function() {
-                        expect(deferred.promise.$$state.value.$save).toHaveBeenCalledWith(mockRecord);
-                    });
+								it("should not call $q.reject", function(){
+                    arrMngr.save(arr, mockRecord);
+                    $rootScope.$digest();
+                    ref.flush();
+                    expect($q.reject).not.toHaveBeenCalled();
+								});
+                it('should call build with path', function() {
+                    mockRecord.aNumber = newData.aNumber;
+                    mockRecord.aString = newData.aString;
+                    arrMngr.save(arr, mockRecord);
+                    $rootScope.$digest();
+                    ref.flush();
+                    expect(mockRecord.aNumber).toEqual(newData.aNumber);
+                    expect(mockRecord.aString).toEqual(newData.aString);
                 });
-                describe("build() Rejected: ", function() {
-                    beforeEach(function() {
-                        arrMngr.save(path, mockRecord);
-                        error = "Error!";
-                        deferred.reject(error);
-                        $rootScope.$digest();
-                    });
-                    it('should return correct error wrapped in a promise', function() {
-                        expect(deferred.promise.$$state.value).toEqual(error);
-                    });
-                    it("should call $q.reject", function() {
-                        expect($q.reject).toHaveBeenCalledWith(error);
-                    });
-                });
+                // describe("build() Rejected: ", function() {
+                //     beforeEach(function() {
+                //         arrMngr.save(path, mockRecord);
+                //         error = "Error!";
+                //         deferred.reject(error);
+                //         $rootScope.$digest();
+                //     });
+                //     it('should return correct error wrapped in a promise', function() {
+                //         expect(deferred.promise.$$state.value).toEqual(error);
+                //     });
+                //     it("should call $q.reject", function() {
+                //         expect($q.reject).toHaveBeenCalledWith(error);
+                //     });
+                // });
             });
             describe('remove', function() {
                 beforeEach(function() {
                     spyOn($q, "reject");
-                    spyOn(arrMngr, "build").and.callFake(function() {
-                        deferred = $q.defer();
-                        return deferred.promise;
-                    });
                     recId = 'a';
-                    deferred.resolve(arr);
+                    spyOn(arr, "$remove").and.callThrough();
                     mockRecord = mockArr.mockRecord(arr, recId);
                 });
-                it('should call build with path', function() {
-                    arrMngr.remove(path, mockRecord);
-                    expect(arrMngr.build).toHaveBeenCalledWith(path);
+                it('should call $remove with array and record', function() {
+                    arrMngr.remove(arr, mockRecord);
+                    expect(arr.$remove).toHaveBeenCalledWith(mockRecord);
                 });
-                describe("build() Resolved: ", function() {
-                    //Note required cycles 
-                    beforeEach(function() {
-                        arrMngr.remove(path, mockRecord);
-                        deferred.resolve(arr);
-                        spyOn(deferred.promise.$$state.value, "$remove").and.callThrough();
-                        $rootScope.$digest(); //promise 1
-                        ref.flush(); //mockfb
-                        $rootScope.$digest(); //promise 2 return value
-                    });
-                    it('should delete the correct record', function() {
-                        expect(deferred.promise.$$state.value.length).toEqual(4);
-                    });
-                    it("should call $remove with correct record", function() {
-                        expect(deferred.promise.$$state.value.$remove).toHaveBeenCalledWith(mockRecord);
-                    });
+                it('should delete the correct record', function() {
+                    arrMngr.remove(arr, mockRecord);
+                    $rootScope.$digest();
+                    ref.flush();
+                    expect(mockRecord).not.toBe();
                 });
-                describe("build() Rejected: ", function() {
-                    beforeEach(function() {
-                        arrMngr.remove(path, mockRecord);
-                        error = "Error!";
-                        deferred.reject(error);
-                        $rootScope.$digest();
-                    });
-                    it('should return correct error wrapped in a promise', function() {
-                        expect(deferred.promise.$$state.value).toEqual(error);
-                    });
-                    it("should call $q.reject", function() {
-                        expect($q.reject).toHaveBeenCalledWith(error);
-                    });
-                });
+								it("should not call $q.reject", function(){
+                    arrMngr.remove(arr, mockRecord);
+                    $rootScope.$digest();
+                    ref.flush();
+                    expect($q.reject).not.toHaveBeenCalled();
+								});
+
+                // describe("build() Rejected: ", function() {
+                //     beforeEach(function() {
+                //         arrMngr.remove(path, mockRecord);
+                //         error = "Error!";
+                //         deferred.reject(error);
+                //         $rootScope.$digest();
+                //     });
+                //     it('should return correct error wrapped in a promise', function() {
+                //         expect(deferred.promise.$$state.value).toEqual(error);
+                //     });
+                //     it("should call $q.reject", function() {
+                //         expect($q.reject).toHaveBeenCalledWith(error);
+                //     });
+                // });
             });
             describe('destroy', function() {
                 beforeEach(function() {
@@ -621,41 +608,41 @@
             //             aString: 'gamma'
             //         };
             //     });
-                // describe("build() Resolved: ", function() {
-                //     beforeEach(function() {
-                //         spyOn(arrMngr, "save").and.callThrough();
-                //         arrMngr.updateRecord(arr, mockRecord, newData);
-                //         deferred.resolve(mockRecord);
-                //         $rootScope.$digest();
-                //         $rootScope.$digest();
-                //     });
+            // describe("build() Resolved: ", function() {
+            //     beforeEach(function() {
+            //         spyOn(arrMngr, "save").and.callThrough();
+            //         arrMngr.updateRecord(arr, mockRecord, newData);
+            //         deferred.resolve(mockRecord);
+            //         $rootScope.$digest();
+            //         $rootScope.$digest();
+            //     });
 
-                //     it("should return the correct record wrapped in a promise", function() {
-                //         expect(deferred.promise.$$state.value).toEqual(mockRecord);
-                //     });
-                //     it("should call arrMngr.save with updated record and path", function() {
-                //         expect(arrMngr.save).toHaveBeenCalledWith(arr, mockRecord);
-                //         expect(arrMngr.save.calls.argsFor(0)[1].aString).toEqual("gamma");
-                //         expect(arrMngr.save.calls.argsFor(0)[1].aNumber).toEqual(5);
-                //     });
-                //     it("should not call $q.reject", function() {
-                //         expect($q.reject).not.toHaveBeenCalled();
-                //     });
-                // });
-                // describe("build() Rejected: ", function() {
-                //     beforeEach(function() {
-                //         error = "Error!";
-                //         arrMngr.updateRecord(arr, mockRecord, newData);
-                //         deferred.reject(error);
-                //         $rootScope.$digest();
-                //     });
-                //     it('should return correct error wrapped in a promise', function() {
-                //         expect(deferred.promise.$$state.value).toEqual(error);
-                //     });
-                //     it("should call $q.reject", function() {
-                //         expect($q.reject).toHaveBeenCalledWith(error);
-                //     });
-                // });
+            //     it("should return the correct record wrapped in a promise", function() {
+            //         expect(deferred.promise.$$state.value).toEqual(mockRecord);
+            //     });
+            //     it("should call arrMngr.save with updated record and path", function() {
+            //         expect(arrMngr.save).toHaveBeenCalledWith(arr, mockRecord);
+            //         expect(arrMngr.save.calls.argsFor(0)[1].aString).toEqual("gamma");
+            //         expect(arrMngr.save.calls.argsFor(0)[1].aNumber).toEqual(5);
+            //     });
+            //     it("should not call $q.reject", function() {
+            //         expect($q.reject).not.toHaveBeenCalled();
+            //     });
+            // });
+            // describe("build() Rejected: ", function() {
+            //     beforeEach(function() {
+            //         error = "Error!";
+            //         arrMngr.updateRecord(arr, mockRecord, newData);
+            //         deferred.reject(error);
+            //         $rootScope.$digest();
+            //     });
+            //     it('should return correct error wrapped in a promise', function() {
+            //         expect(deferred.promise.$$state.value).toEqual(error);
+            //     });
+            //     it("should call $q.reject", function() {
+            //         expect($q.reject).toHaveBeenCalledWith(error);
+            //     });
+            // });
 
 
 

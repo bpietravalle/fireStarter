@@ -104,94 +104,83 @@
             });
             describe('save', function() {
                 beforeEach(function() {
-                    spyOn($q, "when").and.callFake(function() {
-                        deferred = $q.defer();
-                        return deferred.promise;
-                    });
+                    spyOn(obj, "$save").and.callThrough();
                 });
-                it('should call $q.when with the firebaseobject', function() {
+                it('should call $save with the firebaseobject', function() {
                     objMngr.save(obj);
-                    expect($q.when).toHaveBeenCalled();
-                    expect($q.when).not.toHaveBeenCalledWith(obj);
+                    expect(obj.$save).toHaveBeenCalled();
                 });
                 describe("build() Resolved: ", function() {
                     beforeEach(function() {
                         obj.email = "NEWEMAIL@email.com";
                         objMngr.save(obj);
-                        deferred.resolve(obj);
-                        spyOn(deferred.promise.$$state.value, "$save").and.callThrough();
                         $rootScope.$digest();
+                        ref.flush();
                     });
                     it('should update the value of the correct record', function() {
-                        expect(deferred.promise.$$state.value.email).toEqual("NEWEMAIL@email.com");
+                        expect(obj.email).toEqual("NEWEMAIL@email.com");
                     });
-                    it("should call $save before $q.when resolves", function() {
-                        expect(deferred.promise.$$state.value.$save).not.toHaveBeenCalled();
-                    });
-                });
-                describe("build() Rejected: ", function() {
-                    beforeEach(function() {
+                    it("should not call $q.reject", function() {
                         objMngr.save(obj);
-                        error = "Error!";
-                        deferred.reject(error);
                         $rootScope.$digest();
-                    });
-                    it('should return correct error wrapped in a promise', function() {
-                        expect(deferred.promise.$$state.value).toEqual(error);
-                    });
-                    it("should call $q.reject", function() {
-                        expect($q.reject).toHaveBeenCalledWith(error);
+                        ref.flush();
+                        expect($q.reject).not.toHaveBeenCalled();
                     });
                 });
+                // describe("build() Rejected: ", function() {
+                //     beforeEach(function() {
+                //         objMngr.save(obj);
+                //         error = "Error!";
+                //         $rootScope.$digest();
+                // ref.flush();
+                //     });
+                //     it('should return correct error wrapped in a promise', function() {
+                //         // expect(obj).toEqual(error);
+                //     });
+                //     it("should call $q.reject", function() {
+                //         expect($q.reject).toHaveBeenCalledWith(error);
+                //     });
+                // });
             });
             describe('remove', function() {
                 beforeEach(function() {
-                    spyOn(objMngr, "build").and.callFake(function() {
-                        deferred = $q.defer();
-                        return deferred.promise;
-                    });
-                    deferred.resolve(obj);
+                    spyOn(obj, "$remove").and.callThrough();;
                 });
-                it('should call build with path', function() {
-                    objMngr.remove(path);
-                    expect(objMngr.build).toHaveBeenCalledWith(path);
+                it('should call $remove', function() {
+                    objMngr.remove(obj);
+                    expect(obj.$remove).toHaveBeenCalled();
                 });
                 describe("build() Resolved: ", function() {
-                    //Note required cycles 
                     beforeEach(function() {
-                        objMngr.remove(path);
-                        deferred.resolve(obj);
-                        spyOn(deferred.promise.$$state.value, "$remove").and.callThrough();
+                        objMngr.remove(obj);
                         $rootScope.$digest(); //promise 1
                         ref.flush(); //mockfb
                         $rootScope.$digest(); //promise 2 return value
                     });
-                    // it('should delete the correct record', function() {
-                    // var test = objMngr.remove(path);
-                    //     deferred.resolve(obj);
-                    //     $rootScope.$digest(); //promise 1
-                    //     ref.flush(); //mockfb
-                    //     $rootScope.$digest(); //promise 2 return value
-                    //     expect(test).toEqual(4);
-                    // });
-                    it("should call $remove with correct record", function() {
-                        expect(deferred.promise.$$state.value.$remove).toHaveBeenCalled();
+                    it('should delete the correct record', function() {
+                        expect(obj).not.toBe();
                     });
-                });
-                describe("build() Rejected: ", function() {
-                    beforeEach(function() {
-                        objMngr.remove(path);
-                        error = "Error!";
-                        deferred.reject(error);
+                    it("should not call $q.reject", function() {
+                        objMngr.remove(obj);
                         $rootScope.$digest();
-                    });
-                    it('should return correct error wrapped in a promise', function() {
-                        expect(deferred.promise.$$state.value).toEqual(error);
-                    });
-                    it("should call $q.reject", function() {
-                        expect($q.reject).toHaveBeenCalledWith(error);
+                        ref.flush();
+                        expect($q.reject).not.toHaveBeenCalled();
                     });
                 });
+                // describe("build() Rejected: ", function() {
+                //     beforeEach(function() {
+                //         objMngr.remove(obj);
+                //         error = "Error!";
+                //         deferred.reject(error);
+                //         $rootScope.$digest();
+                //     });
+                //     it('should return correct error wrapped in a promise', function() {
+                //         expect(deferred.promise.$$state.value).toEqual(error);
+                //     });
+                //     it("should call $q.reject", function() {
+                //         expect($q.reject).toHaveBeenCalledWith(error);
+                //     });
+                // });
             });
             describe('destroy', function() {
                 beforeEach(function() {
@@ -385,8 +374,8 @@
             });
             describe('bindTo', function() {
                 beforeEach(function() {
-									scope = jasmine.createSpy("scope");
-									varName = jasmine.createSpy("varName");
+                    scope = jasmine.createSpy("scope");
+                    varName = jasmine.createSpy("varName");
                     spyOn(objMngr, "build").and.callFake(function() {
                         deferred = $q.defer();
                         return deferred.promise;

@@ -119,7 +119,7 @@
                 .catch(standardError);
 
             function attemptRemove(res) {
-                return $q.when(res.$save());
+                return $q.when(res.$remove());
             }
 
             function removeSuccess(res) {
