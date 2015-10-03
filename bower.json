@@ -4,10 +4,11 @@
   "license": "MIT",
   "description": "angular services for Firebase",
   "dependencies": {
+    "AngularGeoFire": "angularGeoFire#~3.0.0",
     "angular": "~1.4.4",
-    "firebase": "~2.2.9",
+    "angular-local-storage": "~0.2.2",
     "angularfire": "~1.1.2",
-    "angular-local-storage": "~0.2.2"
+    "firebase": "~2.2.9"
   },
   "devDependencies": {
     "mockfirebase": "~0.11.0",
