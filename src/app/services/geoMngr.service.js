@@ -6,7 +6,6 @@
         var vm = this;
         vm.build = GeoFire;
 
-
         function GeoFire(name, path) {
             if (!name || !path) {
                 throw new Error("You must define a name and a path to build a GeoFire object");
@@ -22,6 +21,8 @@
             geo.remove = geofireRemove;
             geo.set = geofireSet;
 
+						//
+						// geoInstance();
 
 
             function geofireDistance(loc1, loc2) {
@@ -38,7 +39,7 @@
 						//then can get rid of calling instance();
             function geoInstance() {
                 return $q.when(new $geofire(geo.ref()));
-            };
+            }
 
 
             function geofireGet(key) {

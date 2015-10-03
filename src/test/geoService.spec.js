@@ -55,6 +55,17 @@
                     new geoMngr.build(null, "asdf");
                 }).toThrow();
             });
+						// it("should call geoInstance()", function(){
+						// 	new geoMngr.build("feeders",["path"]);
+                    // expect($q.when).toHaveBeenCalledWith(jasmine.objectContaining({
+                        // $get: jasmine.any(Function),
+                        // $set: jasmine.any(Function),
+                        // $remove: jasmine.any(Function),
+                        // $distance: jasmine.any(Function),
+                        // $query: jasmine.any(Function)
+                    // }));
+						// 	// expect($q.when).toHaveBeenCalledWith(ref);
+						// });
         });
 
         describe("Properties", function() {
