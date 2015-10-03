@@ -2,41 +2,41 @@
     "use strict";
 
     /** @ngInject */
-    function geoMngrService($geofire, $log, fbRef) {
+    function geoMngrService($geofire, $q, $log, fbRef) {
         var vm = this;
 
-        vm.field = field;
+        vm.field = geoField;
         vm.get = get;
         vm.remove = remove;
         vm.set = set;
         vm.query = query;
 
-        vm.field = (function() {
-            return new $geofire(fbRef.ref(GFURL));
-        })();
+        // vm.field = (function() {
+        //     return new $geofire(fbRef.ref(GFURL));
+        // })();
 
-        function get(k) {
-            return vm.field
-                .$get(k);
+        function geoField(str) {
+            return $q.when(new $geofire(fbRef.ref(str)));
         }
 
-        function query(data) {
-            return vm.field
-                .$query({
-                    center: data.center,
-                    radius: data.radius
-                });
+        function get(obj, k) {
+            return $q.when(obj.$get(k));
+        }
+
+        function query(obj, data) {
+            return obj.$query({
+                center: data.center,
+                radius: data.radius
+            });
         }
 
 
-        function remove(k) {
-            return vm.field
-                .$remove(k);
+        function remove(obj, k) {
+            return $q.when(obj.$remove(k));
         }
 
-        function set(k, c) {
-            return vm.field
-                .$set(k, c);
+        function set(obj, k, c) {
+            return $q.when(obj.$set(k, c));
         }
 
 

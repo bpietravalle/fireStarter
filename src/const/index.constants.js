@@ -2,7 +2,7 @@
     'use strict';
     angular
         .module('fb.constant', [])
-        .constant('FBURL', 'https://your-firebase.firebaseio.com/');
+        .constant('FBURL', 'https://your-firebase.firebaseio.com/')
         .constant('GFURL', 'geofire');
 
 				//TODO: need to import the url - 
