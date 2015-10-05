@@ -4,7 +4,6 @@
     /** @ngInject */
     function geoMngrService($geofire, $q, $log, fbRef) {
         var vm = this;
-
         vm.build = GeoFire;
 
 
@@ -35,6 +34,8 @@
                 }
             }
 
+						//TODO this should be the actual constructor
+						//then can get rid of calling instance();
             function geoInstance() {
                 return $q.when(new $geofire(geo.ref()));
             };
@@ -94,7 +95,6 @@
                 return $q.reject(err);
             }
 
-						return geo;
         }
 
 
