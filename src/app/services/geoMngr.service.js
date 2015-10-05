@@ -79,13 +79,13 @@
                 };
             };
 
-            function geofireSet(key) {
+            function geofireSet(key, coords) {
                 return geo.instance()
                     .then(callSet)
                     .catch(standardError);
 
                 function callSet(res) {
-                    return res.$set(key);
+                    return res.$set(key, coords);
                 };
             };
 

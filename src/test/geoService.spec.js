@@ -107,11 +107,11 @@
                     });
                 });
                 describe("set", function() {
-                    it("should call $set on the instance with passed key argument", function() {
-                        geoExample.set(key);
+                    it("should call $set on the instance with passed key and coords arguments", function() {
+                        geoExample.set(key, coords);
                         deferred.resolve(gfSpy);
                         $rootScope.$digest();
-                        expect(gfSpy.$set).toHaveBeenCalledWith(key);
+                        expect(gfSpy.$set).toHaveBeenCalledWith(key, coords);
                     });
                 });
                 describe("remove", function() {
