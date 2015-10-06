@@ -24,18 +24,16 @@
         };
 
 
-        vm.make = function(name, path, initialData) {
+        vm.make = function(path, initialData) {
             var ref = vm.refWithPath(path);
             spyOn(fbRef, "ref").and.returnValue(ref);
-            var obj = new geoMngr.build(name, path);
+            var obj = geoMngr(path);
             if (angular.isDefined(initialData)) {
-                obj.instance();
-                ref.ref().set(initialData);
-                ref.flush();
+                obj.ref().set(initialData);
+                obj.ref().flush();
             } else {
-                obj.instance();
-                ref.ref().set(vm.initialData);
-                ref.flush();
+                obj.ref().set(vm.initialData);
+                obj.ref().flush();
             }
 
             return obj;

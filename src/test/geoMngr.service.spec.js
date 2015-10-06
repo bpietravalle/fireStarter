@@ -29,9 +29,7 @@
             key = "a_key";
             gfName = "feeders";
             gfPath = ["geofield"];
-            ref = geoMock.refWithPath(gfPath);
-            spyOn(fbRef, "ref").and.returnValue(ref);
-            spyOn($q, "when").and.callThrough();
+
         });
 
         afterEach(function() {
@@ -41,44 +39,43 @@
         it("should be defined", function() {
             expect(geoMngr).toBeDefined();
         });
-        describe("Build", function() {
+        describe("Constructor", function() {
             it("should be defined", function() {
-                var g = new geoMngr.build("feeders", ["feederPath"]);
+                var g = geoMngr(["feederPath"]);
                 expect(g).toBeDefined();
             });
             it("should throw an error if name and ref aren't present", function() {
                 expect(function() {
-                    new geoMngr.build("asdf");
-                }).toThrow();
-                expect(function() {
-                    new geoMngr.build(null, "asdf");
+                    geoMngr();
                 }).toThrow();
             });
-            // it("should call geoInstance()", function(){
-            // 	new geoMngr.build("feeders",["path"]);
-            // expect($q.when).toHaveBeenCalledWith(jasmine.objectContaining({
-            // $get: jasmine.any(Function),
-            // $set: jasmine.any(Function),
-            // $remove: jasmine.any(Function),
-            // $distance: jasmine.any(Function),
-            // $query: jasmine.any(Function)
-            // }));
-            // 	// expect($q.when).toHaveBeenCalledWith(ref);
+            it("should return a $geofire object wrapped in a promise", function() {
+                spyOn($q, "when").and.callThrough();
+                geoMngr(gfPath);
+                $rootScope.$digest();
+                expect($q.when.calls.argsFor(0)[0]).toEqual(jasmine.objectContaining({
+                    $get: jasmine.any(Function),
+                    $set: jasmine.any(Function),
+                    $remove: jasmine.any(Function),
+                    $distance: jasmine.any(Function),
+                    $query: jasmine.any(Function)
+                }));
+            });
+            // it("should be an instanceof Geofire", function() {
+            //     var g = geoMngr(["feederPath"]);
+            //     expect(g).toEqual('Geofire');
             // });
         });
 
-        describe("Properties", function() {
+        describe("Properties that don't return a promise", function() {
             beforeEach(function() {
-                geoExample = new geoMngr.build(gfName, gfPath);
+                ref = geoMock.refWithPath(gfPath);
+                spyOn(fbRef, "ref").and.returnValue(ref);
+                geoExample = geoMngr(gfPath);
             });
 
-            describe("Name", function() {
-                it("should equal the first argument", function() {
-                    expect(geoExample.name).toEqual(gfName);
-                });
-            });
             describe("Path", function() {
-                it("should equal the second argument", function() {
+                it("should equal the constructor's argument", function() {
                     expect(geoExample.path).toEqual(gfPath);
                 });
             });
@@ -91,74 +88,61 @@
                     expect(geoExample.ref()).toEqual(ref);
                 });
             });
-            describe("Instance", function() {
-                it("should return a $geofire object wrapped in a promise", function() {
-                    geoExample.instance();
+        });
+        describe("$geofire Functions", function() {
+            beforeEach(function() {
+                gfSpy = jasmine.createSpyObj("$geofire", ["$get", "$set", "$remove", "$query", "$distance"]);
+                // spyOn(fbRef, "ref").and.returnValue(ref);
+                spyOn($q, "when").and.callFake(function() {
+                    deferred = $q.defer();
+                    return deferred.promise;
+                });
+                geoExample = geoMngr(gfPath);
+
+            });
+
+            describe("set", function() {
+                it("should call $set on the $geofire object with passed key and coords arguments", function() {
+                    geoExample.set(key, coords);
+                    deferred.resolve(gfSpy);
                     $rootScope.$digest();
-                    expect($q.when.calls.argsFor(0)[0]).toEqual(jasmine.objectContaining({
-                        $get: jasmine.any(Function),
-                        $set: jasmine.any(Function),
-                        $remove: jasmine.any(Function),
-                        $distance: jasmine.any(Function),
-                        $query: jasmine.any(Function)
-                    }));
-                });
-                it("should be a promise", function() {
-                    expect(geoExample.instance()).toBeAPromise();
+                    expect(gfSpy.$set).toHaveBeenCalledWith(key, coords);
                 });
             });
-            describe("$geofire Functions", function() {
-                beforeEach(function() {
-                    gfSpy = jasmine.createSpyObj("$geofire", ["$get", "$distance", "$query", "$remove", "$set"]);
-
-                    spyOn(geoExample, "instance").and.callFake(function() {
-                        deferred = $q.defer();
-                        return deferred.promise;
-                    });
+            describe("remove", function() {
+                it("should call $remove on the $geofire object with passed key argument", function() {
+                    geoExample.remove(key);
+                    deferred.resolve(gfSpy);
+                    $rootScope.$digest();
+                    expect(gfSpy.$remove).toHaveBeenCalledWith(key);
                 });
-                describe("set", function() {
-                    it("should call $set on the instance with passed key and coords arguments", function() {
-                        geoExample.set(key, coords);
-                        deferred.resolve(gfSpy);
-                        $rootScope.$digest();
-                        expect(gfSpy.$set).toHaveBeenCalledWith(key, coords);
-                    });
-                });
-                describe("remove", function() {
-                    it("should call $remove on the instance with passed key argument", function() {
-                        geoExample.remove(key);
-                        deferred.resolve(gfSpy);
-                        $rootScope.$digest();
-                        expect(gfSpy.$remove).toHaveBeenCalledWith(key);
-                    });
-                });
-                describe("get", function() {
-                    it("should call $get on the instance with passed key argument", function() {
-                        geoExample.get(key);
-                        deferred.resolve(gfSpy);
-                        $rootScope.$digest();
-                        expect(gfSpy.$get).toHaveBeenCalledWith(key);
-                    });
-                });
-                describe("query", function() {
-                    it("should call $query on the instance with passed data object argument", function() {
-                        geoExample.query(data);
-                        deferred.resolve(gfSpy);
-                        $rootScope.$digest();
-                        expect(gfSpy.$query).toHaveBeenCalledWith(data);
-                    });
-                });
-                describe("distance", function() {
-                    it("should call $distance on the instance with passed key argument", function() {
-                        geoExample.distance(location.a, location.b);
-                        deferred.resolve(gfSpy);
-                        $rootScope.$digest();
-                        expect(gfSpy.$distance.calls.argsFor(0)[0]).toEqual(location.a);
-                        expect(gfSpy.$distance.calls.argsFor(0)[1]).toEqual(location.b);
-                    });
-                });
-
             });
+            describe("get", function() {
+                it("should call $get on the $geofire object with passed key argument", function() {
+                    geoExample.get(key);
+                    deferred.resolve(gfSpy);
+                    $rootScope.$digest();
+                    expect(gfSpy.$get).toHaveBeenCalledWith(key);
+                });
+            });
+            describe("query", function() {
+                it("should call $query on the $geofire object with passed data object argument", function() {
+                    geoExample.query(data);
+                    deferred.resolve(gfSpy);
+                    $rootScope.$digest();
+                    expect(gfSpy.$query).toHaveBeenCalledWith(data);
+                });
+            });
+            describe("distance", function() {
+                it("should call $distance on the $geofire object with passed key argument", function() {
+                    geoExample.distance(location.a, location.b);
+                    deferred.resolve(gfSpy);
+                    $rootScope.$digest();
+                    expect(gfSpy.$distance.calls.argsFor(0)[0]).toEqual(location.a);
+                    expect(gfSpy.$distance.calls.argsFor(0)[1]).toEqual(location.b);
+                });
+            });
+
         });
 
 

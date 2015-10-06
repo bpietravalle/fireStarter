@@ -1,31 +1,50 @@
 (function() {
     "use strict";
+    var GeoMngr;
+
+
+    angular.module("fb.services")
+        .factory("geoMngr", geoMngrFactory);
 
     /** @ngInject */
-    function geoMngrService($geofire, $q, $log, fbRef) {
-        var vm = this;
-        vm.build = GeoFire;
+    function geoMngrFactory($q, $geofire, fbRef) {
 
-        function GeoFire(name, path) {
-            if (!name || !path) {
-                throw new Error("You must define a name and a path to build a GeoFire object: " + name + ", " + path);
-            }
-            var geo = this;
+        return function(path) {
+
+            var gf = new GeoMngr($q, $geofire, fbRef, path);
+            return gf.construct();
+        };
+
+    }
+
+    GeoMngr = function($q, $geofire, fbRef, path) {
+        this._q = $q;
+        this._$geofire = $geofire;
+        this._fbRef = fbRef;
+        if (!path) {
+            throw new Error("You must define a path to build a GeoFire object: " + path);
+        }
+        this._path = path;
+				this._geofireRef = this._fbRef.ref(this._path);
+				this._angularGeoFire = this._q.when(this._$geofire(this._geofireRef));
+    };
+
+    GeoMngr.prototype = {
+        construct: function() {
+            var self = this;
+            var geo = {};
+
             geo.distance = geofireDistance;
             geo.get = geofireGet;
-            geo.instance = geoInstance; 
-            geo.name = name;
-            geo.path = path;
+            geo.path = self._path;
             geo.query = geofireQuery;
             geo.ref = geofireRef;
             geo.remove = geofireRemove;
             geo.set = geofireSet;
 
-            // TODO make geo.instance() a private function called within each of the fns;
-						// need to edit the specs 
 
             function geofireDistance(loc1, loc2) {
-                return geo.instance()
+                return self._angularGeoFire
                     .then(calculateDistance)
                     .catch(standardError);
 
@@ -34,24 +53,20 @@
                 }
             }
 
-            function geoInstance() {
-                return $q.when(new $geofire(geo.ref()));
-            }
-
 
             function geofireGet(key) {
-                return geo.instance()
+                return self._angularGeoFire
                     .then(callGet)
                     .catch(standardError);
 
                 function callGet(res) {
                     return res.$get(key);
-                };
-            };
+                }
+            }
 
             function geofireQuery(data) {
 
-                return geo.instance()
+                return self._angularGeoFire
                     .then(completeQuery)
                     .catch(standardError);
 
@@ -64,45 +79,38 @@
             }
 
             function geofireRef() {
-                // if (Array.isArray(path) || angular.isString(path)) {
-                return fbRef.ref(path);
-                // } else {
-                //     return path;
-                // }
+                return self._geofireRef;
             }
 
 
             function geofireRemove(key) {
-                return geo.instance()
+                return self._angularGeoFire
                     .then(callRemove)
                     .catch(standardError);
 
                 function callRemove(res) {
                     return res.$remove(key);
-                };
-            };
+                }
+            }
 
             function geofireSet(key, coords) {
-                return geo.instance()
+                return self._angularGeoFire
                     .then(callSet)
                     .catch(standardError);
 
                 function callSet(res) {
                     return res.$set(key, coords);
-                };
-            };
-
-
+                }
+            }
 
             function standardError(err) {
-                return $q.reject(err);
+                return self._q.reject(err);
             }
+            self._geo = geo;
+            return self._geo;
 
         }
 
-
     }
 
-    angular.module("fb.services")
-        .service("geoMngr", geoMngrService);
-})();
+}).call(this);

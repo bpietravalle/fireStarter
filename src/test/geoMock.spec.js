@@ -1,7 +1,7 @@
 (function() {
     "use strict";
 
-    describe("GeoMngr Service", function() {
+    describe("GeoMock", function() {
         var geo, test, geoExample, geoMock, feederGPS, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, obj, data, fbRef, key, field, coords;
 
         key = "a_string";
@@ -20,7 +20,7 @@
             key = "a_key";
             gfName = "feeders";
             gfPath = ["geofield"];
-            test = geoMock.make("feeders", ["feeder", "path"]);
+            test = geoMock.make(["feeder", "path"]);
         });
 
         afterEach(function() {
@@ -32,11 +32,11 @@
         });
         describe("GeoMock functions", function() {
 
-            var definedfns = ["instance", "name", "path", "ref",
+            var definedfns = [ "path", "ref",
                 "get", "distance", "query", "remove", "set"
             ];
 
-            var promisefns = ["instance", "get", "set",
+            var promisefns = ["get", "set",
                 "distance", "query", "remove"
             ];
 
