@@ -36,8 +36,11 @@
             geo = null;
         });
 
-        it("should be defined", function() {
+        it("factory should be defined", function() {
             expect(geoMngr).toBeDefined();
+        });
+        it(" factory instance should be defined", function() {
+            expect(geoMngr(gfPath)).toBeDefined();
         });
         describe("Constructor", function() {
             it("should be defined", function() {
@@ -63,7 +66,7 @@
             });
             // it("should be an instanceof Geofire", function() {
             //     var g = geoMngr(["feederPath"]);
-            //     expect(g).toEqual('Geofire');
+            //     expect(Object.prototype(g)).toEqual('Geofire');
             // });
         });
 

@@ -25,8 +25,8 @@
             throw new Error("You must define a path to build a GeoFire object: " + path);
         }
         this._path = path;
-				this._geofireRef = this._fbRef.ref(this._path);
-				this._angularGeoFire = this._q.when(this._$geofire(this._geofireRef));
+        this._geofireRef = this._fbRef.ref(this._path);
+        this._angularGeoFire = this._q.when(this._$geofire(this._geofireRef));
     };
 
     GeoMngr.prototype = {
@@ -107,10 +107,10 @@
                 return self._q.reject(err);
             }
             self._geo = geo;
-            return self._geo;
+            return self._geo
 
         }
 
-    }
+    };
 
-}).call(this);
+}.call(this));
