@@ -2,7 +2,7 @@
     "use strict";
 
     describe("GeoMngr Service", function() {
-        var geo, geoExample, geoMock, feederGPS, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, mockObj, ref, obj, data, geoMngr, fbRef, key, field, coords, $geofire;
+        var geo, test, geoExample, geoMock, feederGPS, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, obj, data, fbRef, key, field, coords;
 
         key = "a_string";
         radius = 0.1;
@@ -12,30 +12,61 @@
         };
         beforeEach(function() {
             module("fbMocks");
-            module("fb.services");
-            inject(function(_geoMngr_, _$q_, _$rootScope_, _geoMock_, _fbRef_, _$geofire_) {
+            inject(function(_$q_, _$rootScope_, _geoMock_) {
                 $rootScope = _$rootScope_;
-                fbRef = _fbRef_;
                 geoMock = _geoMock_;
-                $geofire = _$geofire_;
-                geoMngr = _geoMngr_;
                 $q = _$q_;
             });
             key = "a_key";
             gfName = "feeders";
             gfPath = ["geofield"];
+            test = geoMock.make("feeders", ["feeder", "path"]);
         });
 
         afterEach(function() {
-            geo = null;
+            test = null;
         });
 
-        it("test geoMock", function() {
-            var test = geoMock.make("feeders", ["feeder", "path"]);
-            expect(test).toEqual("asdf");
-            expect(test.ref()).toEqual("asdf");
+        it("mock constructor", function() {
+            expect(test).toBeDefined();
+        });
+        describe("GeoMock functions", function() {
+
+            var definedfns = ["instance", "name", "path", "ref",
+                "get", "distance", "query", "remove", "set"
+            ];
+
+            var promisefns = ["instance", "get", "set",
+                "distance", "query", "remove"
+            ];
+
+            function testPromise(y) {
+                it("the " + y + " function should return a promise", function() {
+                    expect(test[y]()).toBeAPromise();
+                });
+            }
+
+            function testDefined(y) {
+                it("the " + y + " function should be defined", function() {
+                    expect(test[y]).toBeDefined();
+                });
+            }
+
+            promisefns.forEach(testPromise);
+            definedfns.forEach(testDefined);
+
 
         });
+        // TODO add more tests for return values and testing getting/setting, etc
+        // describe("After Calling Instance", function(){
+        // 	beforeEach(function(){
+        // 		test.instance();
+        // 		$rootScope.$digest();
+        // 	});
+        // 	it("should still be able to call ref, name, and path", function(){
+
+
+        // 	});
 
 
     });

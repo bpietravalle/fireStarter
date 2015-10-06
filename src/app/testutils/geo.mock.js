@@ -25,24 +25,25 @@
 
 
         vm.make = function(name, path, initialData) {
-            spyOn(fbRef, "ref").and.callFake(function() {
-                var ref = vm.refWithPath(path);
-                return ref;
-            });
+            var ref = vm.refWithPath(path);
+            spyOn(fbRef, "ref").and.returnValue(ref);
             var obj = new geoMngr.build(name, path);
             if (angular.isDefined(initialData)) {
                 obj.instance();
                 ref.ref().set(initialData);
                 ref.flush();
-                $timeout.flush();
             } else {
                 obj.instance();
                 ref.ref().set(vm.initialData);
                 ref.flush();
-                $timeout.flush();
             }
 
             return obj;
+        };
+
+        vm.flushRef = function(mock) {
+            mock.ref().flush();
+            return mock.ref();
         };
     }
     angular.module('fbMocks')

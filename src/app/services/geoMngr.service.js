@@ -13,7 +13,7 @@
             var geo = this;
             geo.distance = geofireDistance;
             geo.get = geofireGet;
-            geo.instance = geoInstance;
+            geo.instance = geoInstance; 
             geo.name = name;
             geo.path = path;
             geo.query = geofireQuery;
@@ -21,9 +21,8 @@
             geo.remove = geofireRemove;
             geo.set = geofireSet;
 
-            //
-            // geoInstance();
-
+            // TODO make geo.instance() a private function called within each of the fns;
+						// need to edit the specs 
 
             function geofireDistance(loc1, loc2) {
                 return geo.instance()
@@ -35,8 +34,6 @@
                 }
             }
 
-            //TODO this should be the actual constructor
-            //then can get rid of calling instance();
             function geoInstance() {
                 return $q.when(new $geofire(geo.ref()));
             }
@@ -68,7 +65,7 @@
 
             function geofireRef() {
                 // if (Array.isArray(path) || angular.isString(path)) {
-                    return fbRef.ref(path);
+                return fbRef.ref(path);
                 // } else {
                 //     return path;
                 // }
