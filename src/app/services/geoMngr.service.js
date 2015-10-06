@@ -8,7 +8,7 @@
 
         function GeoFire(name, path) {
             if (!name || !path) {
-                throw new Error("You must define a name and a path to build a GeoFire object");
+                throw new Error("You must define a name and a path to build a GeoFire object: " + name + ", " + path);
             }
             var geo = this;
             geo.distance = geofireDistance;
@@ -21,8 +21,8 @@
             geo.remove = geofireRemove;
             geo.set = geofireSet;
 
-						//
-						// geoInstance();
+            //
+            // geoInstance();
 
 
             function geofireDistance(loc1, loc2) {
@@ -35,8 +35,8 @@
                 }
             }
 
-						//TODO this should be the actual constructor
-						//then can get rid of calling instance();
+            //TODO this should be the actual constructor
+            //then can get rid of calling instance();
             function geoInstance() {
                 return $q.when(new $geofire(geo.ref()));
             }
@@ -67,8 +67,13 @@
             }
 
             function geofireRef() {
-                return fbRef.ref(path);
-            };
+                // if (Array.isArray(path) || angular.isString(path)) {
+                    return fbRef.ref(path);
+                // } else {
+                //     return path;
+                // }
+            }
+
 
             function geofireRemove(key) {
                 return geo.instance()
