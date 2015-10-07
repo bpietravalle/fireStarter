@@ -7,25 +7,27 @@
         .factory("geoMngr", geoMngrFactory);
 
     /** @ngInject */
-    function geoMngrFactory($q, $geofire, fbRef) {
+    function geoMngrFactory($q, $geofire, fbRef, $log) {
 
         return function(path) {
-            var gf = new GeoMngr($q, $geofire, fbRef, path);
+            var gf = new GeoMngr($q, $geofire, fbRef, $log, path);
             return gf.construct();
         };
 
     }
 
-    GeoMngr = function($q, $geofire, fbRef, path) {
+    GeoMngr = function($q, $geofire, fbRef, $log, path) {
         this._q = $q;
-        this._$geofire = $geofire;
+        this._geofire = $geofire;
         this._fbRef = fbRef;
+        this._log = $log;
         if (!path) {
             throw new Error("You must define a path to build a GeoFire object: " + path);
+
         }
         this._path = path;
         this._geofireRef = this._fbRef.ref(this._path);
-        this._angularGeoFire = this._q.when(this._$geofire(this._geofireRef));
+        this._angularGeoFire = this._q.when(this._geofire(this._geofireRef));
     };
 
     GeoMngr.prototype = {
@@ -78,6 +80,7 @@
                     .catch(standardError);
 
                 function completeQuery(res) {
+                    self._log.info(res);
                     return res.$query({
                         center: data.center,
                         radius: data.radius

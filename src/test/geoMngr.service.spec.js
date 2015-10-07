@@ -2,7 +2,7 @@
     "use strict";
 
     describe("GeoMngr Service", function() {
-        var geo, STUB_DATA, result, failure, successSpy, failureSpy, NEW_DATA, geoExample, geoMock, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, mockObj, ref, obj, data, geoMngr, fbRef, key, field, coords, $geofire;
+        var geo, STUB_DATA, result, $log, failure, successSpy, failureSpy, NEW_DATA, geoExample, geoMock, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, mockObj, ref, obj, data, geoMngr, fbRef, key, field, coords, $geofire;
 
         STUB_DATA = {
             "a": {
@@ -59,8 +59,9 @@
         beforeEach(function() {
             module("fbMocks");
             module("fb.services");
-            inject(function(_geoMngr_, _$q_, _$rootScope_, _geoMock_, _fbRef_, _$geofire_) {
+            inject(function(_geoMngr_, _$q_, _$log_, _$rootScope_, _geoMock_, _fbRef_, _$geofire_) {
                 $rootScope = _$rootScope_;
+                $log = _$log_;
                 fbRef = _fbRef_;
                 geoMock = _geoMock_;
                 $geofire = _$geofire_;
@@ -72,10 +73,14 @@
             gfName = "feeders";
             gfPath = ["geofield"];
 
+            ref = geoMock.refWithPath(gfPath);
+            spyOn($log, "info").and.callThrough();
         });
 
         afterEach(function() {
             geo = null;
+            ref = null;
+            geoMngr = null;
         });
 
         it("factory should be defined", function() {
@@ -85,9 +90,23 @@
             expect(geoMngr(gfPath)).toBeDefined();
         });
         describe("Constructor", function() {
+            beforeEach(function() {
+                spyOn(fbRef, "ref").and.returnValue(ref);
+                spyOn($q, "when").and.callThrough();
+                geoMngr(gfPath);
+            });
             it("should be defined", function() {
-                var g = geoMngr(["feederPath"]);
-                expect(g).toBeDefined();
+                this.gf = geoMngr(["feederPath"]);
+                expect(this.gf).toBeDefined();
+            });
+            it("should call fbRef in the constructor", function() {
+                expect(fbRef.ref).toHaveBeenCalledWith(gfPath);
+            });
+            it("should call $q.when once immediately", function() {
+                expect($q.when.calls.count()).toEqual(1);
+            });
+            it("should call $log.info once with 'Constructing $geofire'", function() {
+                expect($log.info.calls.count()).toEqual(1);
             });
             it("should throw an error if name and ref aren't present", function() {
                 expect(function() {
@@ -95,8 +114,6 @@
                 }).toThrow();
             });
             it("should return a $geofire object wrapped in a promise", function() {
-                spyOn($q, "when").and.callThrough();
-                geoMngr(gfPath);
                 $rootScope.$digest();
                 expect($q.when.calls.argsFor(0)[0]).toEqual(jasmine.objectContaining({
                     $get: jasmine.any(Function),
@@ -106,10 +123,6 @@
                     $query: jasmine.any(Function)
                 }));
             });
-            // it("should be an instanceof Geofire", function() {
-            //     var g = geoMngr(["feederPath"]);
-            //     expect(Object.prototype(g)).toEqual('Geofire');
-            // });
         });
 
         describe("Properties that don't return a promise", function() {
@@ -189,37 +202,45 @@
             });
 
         });
-        // describe("Testing return value", function() {
-        //     beforeEach(function() {
-        //         spyOn($q, "when").and.callFake(function() {
-        //             deferred = $q.defer();
-        //             return deferred.promise;
-        //         });
-        //         obj = geoMock.make(gfPath, STUB_DATA);
-        //         geoExample = geoMngr(gfPath);
-        //         successSpy = jasmine.createSpy("success");
-        //         failureSpy = jasmine.createSpy("failure");
-        //         deferred.resolve(obj);
-        //         $rootScope.$digest();
-        //     });
+        describe("Testing return value", function() {
+            beforeEach(function() {
+                spyOn($q, "when").and.callFake(function() {
+                    deferred = $q.defer();
+                    return deferred.promise;
+                });
+                obj = geoMock.make(gfPath, STUB_DATA);
+            });
 
-        //     it("should work", function() {
-        //         wrapPromise(obj.get('keyA'));
-        //         $rootScope.$digest();
-        //         expect(obj).toEqual(geoExample);
-        //         expect(failure).toEqual("asdf");
+            it("should call $q.when twice", function() {
+                geoMngr(gfPath);
+                deferred.resolve(obj);
+                $rootScope.$digest();
+                obj.query('keyA', [90, 180]);
+                $rootScope.$digest();
+                expect($q.when.calls.count()).toEqual(2);
+            });
+            it("should be a promise", function() {
+                this.gf = geoMngr(["feederPath"]);
+                expect(this.gf.set()).toBeAPromise();
+            });
+						// it("should wrap", function(){
+						// 	wrapPromise(obj.query('keyA',[90,100]));
+						// 	$rootScope.$digest();
+						// 	expect(result).toBeDefined();
+						// 	expect(failure).toBeDefined();
+						// });
 
 
-        //     });
-
-
-        // });
+        });
 
 
         /*Helpers*/
 
 
         function wrapPromise(promise) {
+            geoMngr(gfPath);
+            deferred.resolve(obj);
+            $rootScope.$digest();
             promise.then(function(_result_) {
                 status = 'resolved';
                 result = _result_;
@@ -229,11 +250,11 @@
             });
         }
 
-        function callback(callbackName, callIndex) {
-            callIndex = callIndex || 0; //assume the first call.
-            var argIndex = getArgIndex(callbackName);
-            return ref[callbackName].calls.argsFor(callIndex)[argIndex];
-        }
+        // function callback(callbackName, callIndex) {
+        //     callIndex = callIndex || 0; //assume the first call.
+        //     var argIndex = getArgIndex(callbackName);
+        //     return ref[callbackName].calls.argsFor(callIndex)[argIndex];
+        // }
 
         function getArgIndex(callbackName) {
             //In the firebase API, the completion callback is the second argument for all but a few functions.

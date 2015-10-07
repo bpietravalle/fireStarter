@@ -4,13 +4,46 @@
     /** @ngInject */
     function geoObjMockService(geoMngr, fbRef, $timeout) {
         var DEFAULT_ID = 'REC1';
+        var GFURL = "https://geofire.firebaseio.com";
         var vm = this;
 
         vm.initialData = {
-            "g": "geoKey",
-            "1": {
-                "0": 90,
-                "1": 100
+            "a": {
+                "g": "keyA",
+                "1": {
+                    "0": 90,
+                    "1": 50
+                }
+            },
+            "b": {
+                "g": "keyB",
+                "1": {
+                    "0": 30,
+                    "1": 60
+                }
+            },
+            "c": {
+                "g": "keyC",
+                "1": {
+                    "0": -70,
+                    "1": 150
+                }
+            }
+        };
+        vm.newData = {
+            "d": {
+                "g": "keyD",
+                "1": {
+                    "0": 20,
+                    "1": -180
+                }
+            },
+            "e": {
+                "g": "keyE",
+                "1": {
+                    "0": 40,
+                    "1": -100
+                }
             }
         };
 
@@ -22,10 +55,21 @@
             var mockPath = path.join('/');
             return new MockFirebase('Mock://').child(mockPath);
         };
+        vm.refWithData = function(path) {
+            var mockPath = path.join('/');
+            var mock = new MockFirebase('Mock://').child(mockPath);
+            mock.set(vm.initialData);
+            mock.flush();
+						return mock;
+        };
 
 
-        vm.make = function(path, initialData) {
-            var ref = vm.refWithPath(path);
+        vm.make = function(path, initialData, r) {
+            if (angular.isDefined(r)) {
+                var ref = r;
+            } else {
+                var ref = vm.refWithPath(path);
+            }
             spyOn(fbRef, "ref").and.returnValue(ref);
             var obj = geoMngr(path);
             if (angular.isDefined(initialData)) {
