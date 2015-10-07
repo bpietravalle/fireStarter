@@ -10,7 +10,6 @@
     function geoMngrFactory($q, $geofire, fbRef) {
 
         return function(path) {
-
             var gf = new GeoMngr($q, $geofire, fbRef, path);
             return gf.construct();
         };
@@ -42,6 +41,14 @@
             geo.remove = geofireRemove;
             geo.set = geofireSet;
 
+
+            // function angularGeoFireInstance() {
+            //     if (self._angularGeoFire) {
+            //         return self._angularGeoFire;
+            //     } else {
+            //         throw new Error("You haven't created the $geofire object yet");
+            //     }
+            // }
 
             function geofireDistance(loc1, loc2) {
                 return self._angularGeoFire

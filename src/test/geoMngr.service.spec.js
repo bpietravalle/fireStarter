@@ -2,7 +2,48 @@
     "use strict";
 
     describe("GeoMngr Service", function() {
-        var geo, geoExample, geoMock, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, mockObj, ref, obj, data, geoMngr, fbRef, key, field, coords, $geofire;
+        var geo, STUB_DATA, result, failure, successSpy, failureSpy, NEW_DATA, geoExample, geoMock, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, mockObj, ref, obj, data, geoMngr, fbRef, key, field, coords, $geofire;
+
+        STUB_DATA = {
+            "a": {
+                "g": "keyA",
+                "1": {
+                    "0": 90,
+                    "1": 50
+                }
+            },
+            "b": {
+                "g": "keyB",
+                "1": {
+                    "0": 30,
+                    "1": 60
+                }
+            },
+            "c": {
+                "g": "keyC",
+                "1": {
+                    "0": -70,
+                    "1": 150
+                }
+            }
+        };
+        NEW_DATA = {
+            "d": {
+                "g": "keyD",
+                "1": {
+                    "0": 20,
+                    "1": -180
+                }
+            },
+            "e": {
+                "g": "keyE",
+                "1": {
+                    "0": 40,
+                    "1": -100
+                }
+            }
+        };
+
 
         location = {
             a: [90, 150],
@@ -25,6 +66,7 @@
                 $geofire = _$geofire_;
                 geoMngr = _geoMngr_;
                 $q = _$q_;
+
             });
             key = "a_key";
             gfName = "feeders";
@@ -147,8 +189,64 @@
             });
 
         });
+        // describe("Testing return value", function() {
+        //     beforeEach(function() {
+        //         spyOn($q, "when").and.callFake(function() {
+        //             deferred = $q.defer();
+        //             return deferred.promise;
+        //         });
+        //         obj = geoMock.make(gfPath, STUB_DATA);
+        //         geoExample = geoMngr(gfPath);
+        //         successSpy = jasmine.createSpy("success");
+        //         failureSpy = jasmine.createSpy("failure");
+        //         deferred.resolve(obj);
+        //         $rootScope.$digest();
+        //     });
+
+        //     it("should work", function() {
+        //         wrapPromise(obj.get('keyA'));
+        //         $rootScope.$digest();
+        //         expect(obj).toEqual(geoExample);
+        //         expect(failure).toEqual("asdf");
 
 
+        //     });
+
+
+        // });
+
+
+        /*Helpers*/
+
+
+        function wrapPromise(promise) {
+            promise.then(function(_result_) {
+                status = 'resolved';
+                result = _result_;
+            }, function(_failure_) {
+                status = 'rejected';
+                failure = _failure_;
+            });
+        }
+
+        function callback(callbackName, callIndex) {
+            callIndex = callIndex || 0; //assume the first call.
+            var argIndex = getArgIndex(callbackName);
+            return ref[callbackName].calls.argsFor(callIndex)[argIndex];
+        }
+
+        function getArgIndex(callbackName) {
+            //In the firebase API, the completion callback is the second argument for all but a few functions.
+            switch (callbackName) {
+                case 'authAnonymously':
+                case 'onAuth':
+                    return 0;
+                case 'authWithOAuthToken':
+                    return 2;
+                default:
+                    return 1;
+            }
+        }
 
     });
 
