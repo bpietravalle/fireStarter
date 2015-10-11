@@ -131,14 +131,10 @@
         });
 				describe("Queries for realzies", function(){
 					beforeEach(function(){
-						geoMock.gfURL.set(geoMock.initialData);
-						geoMock.gfURL.flush();
 						test1 = $geofire(geoMock.gfURL);
-						$rootScope.$digest();
 					});
 					it("should work", function(){
-						var t = test1.$query(data).on("key_entered","SEARCH:KEY_ENTERED")
-						expect(t).toEqual("asdf");
+						expect(test1.query(data)).toEqual("asdf");
 					});
 				 
 

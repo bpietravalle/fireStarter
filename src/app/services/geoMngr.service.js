@@ -27,7 +27,7 @@
         }
         this._path = path;
         this._geofireRef = this._fbRef.ref(this._path);
-        this._angularGeoFire = this._q.when(this._geofire(this._geofireRef));
+        this._angularGeoFire = this._geofire(this._geofireRef);
     };
 
     GeoMngr.prototype = {
@@ -44,16 +44,8 @@
             geo.set = geofireSet;
 
 
-            // function angularGeoFireInstance() {
-            //     if (self._angularGeoFire) {
-            //         return self._angularGeoFire;
-            //     } else {
-            //         throw new Error("You haven't created the $geofire object yet");
-            //     }
-            // }
-
             function geofireDistance(loc1, loc2) {
-                return self._angularGeoFire
+                return self._q.when(self._angularGeoFire)
                     .then(calculateDistance)
                     .catch(standardError);
 
@@ -64,7 +56,7 @@
 
 
             function geofireGet(key) {
-                return self._angularGeoFire
+                return self._q.when(self._angularGeoFire)
                     .then(callGet)
                     .catch(standardError);
 
@@ -75,7 +67,7 @@
 
             function geofireQuery(data) {
 
-                return self._angularGeoFire
+                return self._q.when(self._angularGeoFire)
                     .then(completeQuery)
                     .catch(standardError);
 
@@ -94,7 +86,7 @@
 
 
             function geofireRemove(key) {
-                return self._angularGeoFire
+                return self._q.when(self._angularGeoFire)
                     .then(callRemove)
                     .catch(standardError);
 
@@ -104,7 +96,7 @@
             }
 
             function geofireSet(key, coords) {
-                return self._angularGeoFire
+                return self._q.when(self._angularGeoFire)
                     .then(callSet)
                     .catch(standardError);
 

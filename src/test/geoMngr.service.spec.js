@@ -102,8 +102,8 @@
             it("should call fbRef in the constructor", function() {
                 expect(fbRef.ref).toHaveBeenCalledWith(gfPath);
             });
-            it("should call $q.when once immediately", function() {
-                expect($q.when.calls.count()).toEqual(1);
+            it("should not call $q.when in constructor", function() {
+                expect($q.when.calls.count()).toEqual(0);
             });
             it("should call $log.info once with 'Constructing $geofire'", function() {
                 expect($log.info.calls.count()).toEqual(1);
@@ -113,22 +113,13 @@
                     geoMngr();
                 }).toThrow();
             });
-            it("should return a $geofire object wrapped in a promise", function() {
-                $rootScope.$digest();
-                expect($q.when.calls.argsFor(0)[0]).toEqual(jasmine.objectContaining({
-                    $get: jasmine.any(Function),
-                    $set: jasmine.any(Function),
-                    $remove: jasmine.any(Function),
-                    $distance: jasmine.any(Function),
-                    $query: jasmine.any(Function)
-                }));
-            });
         });
 
         describe("Properties that don't return a promise", function() {
             beforeEach(function() {
                 ref = geoMock.refWithPath(gfPath);
                 spyOn(fbRef, "ref").and.returnValue(ref);
+                spyOn($q, "when").and.callThrough();
                 geoExample = geoMngr(gfPath);
             });
 
@@ -150,7 +141,6 @@
         describe("$geofire Functions", function() {
             beforeEach(function() {
                 gfSpy = jasmine.createSpyObj("$geofire", ["$get", "$set", "$remove", "$query", "$distance"]);
-                // spyOn(fbRef, "ref").and.returnValue(ref);
                 spyOn($q, "when").and.callFake(function() {
                     deferred = $q.defer();
                     return deferred.promise;
@@ -204,32 +194,29 @@
         });
         describe("Testing return value", function() {
             beforeEach(function() {
-                spyOn($q, "when").and.callFake(function() {
-                    deferred = $q.defer();
-                    return deferred.promise;
-                });
+                spyOn($q, "when").and.callThrough();
                 obj = geoMock.make(gfPath, STUB_DATA);
             });
 
-            it("should call $q.when twice", function() {
-                geoMngr(gfPath);
-                deferred.resolve(obj);
-                $rootScope.$digest();
-                obj.query('keyA', [90, 180]);
-                $rootScope.$digest();
-                expect($q.when.calls.count()).toEqual(2);
+            it("should call $q.when once", function() {
+                obj.query(data);
+                expect($q.when.calls.count()).toEqual(1);
             });
             it("should be a promise", function() {
                 this.gf = geoMngr(["feederPath"]);
                 expect(this.gf.set()).toBeAPromise();
             });
-						// it("should wrap", function(){
-						// 	wrapPromise(obj.query('keyA',[90,100]));
-						// 	$rootScope.$digest();
-						// 	expect(result).toBeDefined();
-						// 	expect(failure).toBeDefined();
-						// });
 
+            it("should return a $geofire object wrapped in a promise", function() {
+                obj.query(data);
+                expect($q.when.calls.argsFor(0)[0]).toEqual(jasmine.objectContaining({
+                    $get: jasmine.any(Function),
+                    $set: jasmine.any(Function),
+                    $remove: jasmine.any(Function),
+                    $distance: jasmine.any(Function),
+                    $query: jasmine.any(Function)
+                }));
+            });
 
         });
 

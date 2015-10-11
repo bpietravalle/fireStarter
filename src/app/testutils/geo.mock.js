@@ -2,10 +2,10 @@
     "use strict";
 
     /** @ngInject */
-    function geoObjMockService(geoMngr, fbRef, $timeout) {
+    function geoObjMockService(geoMngr, $q, fbRef, $timeout) {
         var DEFAULT_ID = 'REC1';
-        var GFURL = "https://geofire.firebaseio.com";
         var vm = this;
+        vm.gfURL = new Firebase("https://geofire.firebaseio.com");
 
         vm.initialData = {
             "a": {
@@ -47,6 +47,31 @@
             }
         };
 
+        // vm.geoSpy = $q.when(jasmine.createSpyObj("geo", ["ref", "query", "get", "remove"]));
+				
+        vm.geoQuerySpy = jasmine.createSpyObj("geoQuery", ["updateCriteria", "center", "radius", "on", "cancel"]);
+        vm.refSpy = jasmine.createSpyObj("ref", ["orderByChild", "child"]);
+				vm.geoSpyObj = {
+					query: function(){
+						return vm.geoQuerySpy;
+					},
+					get: function(){
+						return jasmine.createSpy("get");
+					},
+					set: function(){
+						return jasmine.createSpy("set");
+					},
+					remove: function(){
+						return jasmine.createSpy("remove");
+					},
+					ref: function(){
+						return vm.stubRef();
+					}
+				};
+        vm.geoSpy = $q.when(vm.geoSpyObj);
+
+        vm.geoQueryRegSpy = jasmine.createSpyObj("geoQueryRegistration", ["on", "cancel"]);
+
         vm.stubRef = function() {
             return new MockFirebase('Mock://').child('data').child(DEFAULT_ID);
         };
@@ -60,7 +85,7 @@
             var mock = new MockFirebase('Mock://').child(mockPath);
             mock.set(vm.initialData);
             mock.flush();
-						return mock;
+            return mock;
         };
 
 
