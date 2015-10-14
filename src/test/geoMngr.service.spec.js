@@ -174,7 +174,6 @@
                 it("should call $query on the $geofire object with passed data object argument", function() {
                     geoExample.query(data);
                     // deferred.resolve(gfSpy);
-                    $rootScope.$digest();
                     expect(gfSpy.query).toHaveBeenCalledWith(data);
                 });
             });
@@ -232,25 +231,6 @@
                 status = 'rejected';
                 failure = _failure_;
             });
-        }
-
-        // function callback(callbackName, callIndex) {
-        //     callIndex = callIndex || 0; //assume the first call.
-        //     var argIndex = getArgIndex(callbackName);
-        //     return ref[callbackName].calls.argsFor(callIndex)[argIndex];
-        // }
-
-        function getArgIndex(callbackName) {
-            //In the firebase API, the completion callback is the second argument for all but a few functions.
-            switch (callbackName) {
-                case 'authAnonymously':
-                case 'onAuth':
-                    return 0;
-                case 'authWithOAuthToken':
-                    return 2;
-                default:
-                    return 1;
-            }
         }
 
     });

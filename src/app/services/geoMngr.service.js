@@ -7,17 +7,16 @@
         .factory("geoMngr", geoMngrFactory);
 
     /** @ngInject */
-    function geoMngrFactory($rootScope, $timeout, $q, fbRef, $log) {
+    function geoMngrFactory($timeout, $q, fbRef, $log) {
 
         return function(path) {
-            var gf = new GeoMngr($rootScope, $timeout, $q, fbRef, $log, path);
+            var gf = new GeoMngr( $timeout, $q, fbRef, $log, path);
             return gf.construct();
         };
 
     }
 
-    GeoMngr = function($rootScope, $timeout, $q, fbRef, $log, path) {
-        this._rootScope = $rootScope;
+    GeoMngr = function($timeout, $q, fbRef, $log, path) {
         this._timeout = $timeout;
         this._q = $q;
         this._fbRef = fbRef;
@@ -29,8 +28,6 @@
         this._path = path;
         this._geofireRef = this._fbRef.ref(this._path);
         this._geoFire = new GeoFire(this._geofireRef);
-        this._onPointsNearLocCallbacks = [];
-        this._onPointsNearId = [];
     };
 
     GeoMngr.prototype = {
@@ -45,17 +42,7 @@
             geo.ref = geofireRef;
             geo.remove = geofireRemove;
             geo.set = geofireSet;
-            geo.pointsNearCb = pointsNearCb;
-            geo.pointsNearId = pointsNearId;
 
-
-            function pointsNearCb() {
-                return self._onPointsNearLocCallbacks;
-            }
-
-            function pointsNearId() {
-                return self._onPointsNearId;
-            }
 
             function geofireDistance(loc1, loc2) {
                 return self._geoFire.distance(loc1, loc2);
@@ -90,9 +77,10 @@
                     updateCriteria: function(criteria) {
                         return geoQuery.updateCriteria(criteria);
                     },
-                    on: function(eventType, broadcastName) {
+                    on: function(eventType, cb, scope) {
                         return geoQuery.on(eventType, function(key, location, distance) {
-                            return self._rootScope.$broadcast(broadcastName, key, location, distance);
+                            return self._q.when(cb.call(scope, key, location, distance))
+                                .catch(standardError);
                         });
                     },
                     cancel: function() {
@@ -133,7 +121,9 @@
 
             }
 
-
+            function standardError(err) {
+                return self._q.reject(err);
+            }
 
             self._geo = geo;
             return self._geo
