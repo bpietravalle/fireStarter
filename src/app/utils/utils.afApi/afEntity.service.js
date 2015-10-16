@@ -18,9 +18,9 @@
 							//think this should be Object.proto.toString
                 return vm.wrap(type, setRef(path));
             } else {
-							//was allowing fbObjects to pass through here as well;
-							//not any longer
-                return path;
+							//in case a firebaseRef comes through
+							//wont work for arrays
+                return vm.wrap(type,path);
             }
         }
 
