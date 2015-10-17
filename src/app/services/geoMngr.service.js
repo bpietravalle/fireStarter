@@ -7,22 +7,21 @@
         .factory("geoMngr", geoMngrFactory);
 
     /** @ngInject */
-    function geoMngrFactory($timeout, $q, geoRef, $log) {
+    function geoMngrFactory($q, geoRef, $log) {
 
         return function(path) {
-            var gf = new GeoMngr( $timeout, $q, geoRef, $log, path);
+            var gf = new GeoMngr($q, geoRef, $log, path);
             return gf.construct();
         };
 
     }
 
-    GeoMngr = function($timeout, $q, geoRef, $log, path) {
-        this._timeout = $timeout;
+    GeoMngr = function($q, geoRef, $log, path) {
         this._q = $q;
         this._geoRef = geoRef;
         this._log = $log;
         this._path = path;
-        this._geoFire = this._geoRef(this._path);
+        this._geoFire = this._geoRef.ref(this._path);
     };
 
     GeoMngr.prototype = {
@@ -45,43 +44,56 @@
 
 
             function geofireGet(key) {
-                var deferred = self._q.defer();
-                self._timeout(function() {
-                    self._geoFire.get(key).then(function(location) {
-                        deferred.resolve(location);
-                    }).catch(function(error) {
-                        deferred.reject(error);
-                    });
-                });
-                return deferred.promise;
+                return self._q.when(self._geoFire)
+                    .then(completeAction)
+                    .catch(standardError);
+
+                function completeAction(res) {
+                    return res.get(key);
+                }
+
             }
 
             function geofireQuery(data) {
+                var geoQuery;
 
-                var geoQuery = self._geoFire.query({
-                    center: data.center,
-                    radius: data.radius
-                });
-                return {
-                    center: function() {
-                        return geoQuery.center();
-                    },
-                    radius: function() {
-                        return geoQuery.radius();
-                    },
-                    updateCriteria: function(criteria) {
-                        return geoQuery.updateCriteria(criteria);
-                    },
-                    on: function(eventType, cb, scope) {
-                        return geoQuery.on(eventType, function(key, location, distance) {
-                            return self._q.when(cb.call(scope, key, location, distance))
-                                .catch(standardError);
-                        });
-                    },
-                    cancel: function() {
-                        return geoQuery.cancel();
-                    }
-                };
+                return self._q.when(self._geoFire)
+                    .then(buildQuery)
+                    .then(extendQuery)
+                    .catch(standardError);
+
+                function buildQuery(res) {
+                    return self._q.when(res.query({
+                        center: data.center,
+                        radius: data.radius
+                    }));
+                }
+
+                function extendQuery(res) {
+                    geoQuery = {
+                        center: function() {
+                            return res.center();
+                        },
+                        radius: function() {
+                            return res.radius();
+                        },
+                        updateCriteria: function(criteria) {
+                            return res.updateCriteria(criteria);
+                        },
+                        on: function(eventType, cb, context) {
+                            return res.on(eventType, function(key, location, distance) {
+                                return self._q.when(cb.call(context, key, location, distance))
+                                    .catch(standardError);
+                            });
+                        },
+                        cancel: function() {
+                            return res.cancel();
+                        }
+                    };
+                    // return self._q.when(geoQuery);
+										return geoQuery;
+
+                }
 
             }
 
@@ -91,28 +103,24 @@
 
 
             function geofireRemove(key) {
-                var deferred = self._q.defer();
-                self._timeout(function() {
-                    self._geoFire.remove(key).then(function() {
-                        deferred.resolve(null);
-                    }).catch(function(error) {
-                        deferred.reject(error);
-                    });
-                });
-                return deferred.promise;
+                return self._q.when(self._geoFire)
+                    .then(completeAction)
+                    .catch(standardError);
+
+                function completeAction(res) {
+                    return res.remove(key);
+                }
 
             }
 
             function geofireSet(key, coords) {
-                var deferred = self._q.defer();
-                self._timeout(function() {
-                    self._geoFire.set(key, coords).then(function() {
-                        deferred.resolve(null);
-                    }).catch(function(error) {
-                        deferred.reject(error);
-                    });
-                });
-                return deferred.promise;
+                return self._q.when(self._geoFire)
+                    .then(completeAction)
+                    .catch(standardError);
+
+                function completeAction(res) {
+                    return res.set(key, coords);
+                }
 
             }
 

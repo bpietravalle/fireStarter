@@ -26,7 +26,7 @@
             expect(geoRef).toBeDefined();
         });
         it("should pass path to fbRef.ref()", function() {
-            geoRef(gfPath);
+            geoRef.ref(gfPath);
             expect(fbRef.ref.calls.argsFor(0)[0]).toEqual(gfPath);
         });
 				it("should throw an error if no path is provided", function(){

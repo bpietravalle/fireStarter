@@ -4,7 +4,14 @@
     /** @ngInject */
     function geoFireFactory(fbRef) {
 
-        return function(path) {
+			//TODO update specs
+        var geo = {
+            ref: ref
+        };
+        return geo;
+
+
+        function ref(path) {
             if (angular.isDefined(path)) {
                 return new GeoFire(fbRef.ref(path));
             } else {

@@ -2,7 +2,7 @@
     "use strict";
 
     describe("GeoMngr Service", function() {
-        var geo, STUB_DATA, $timeout, result, $log, failure, successSpy, failureSpy, NEW_DATA, geoExample, geoMock, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, mockObj, ref, obj, data, geoMngr, geoRef, key, field, coords;
+        var geo, angular, STUB_DATA, $timeout, result, $log, failure, successSpy, failureSpy, NEW_DATA, geoExample, geoMock, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, mockObj, ref, obj, data, geoMngr, geoRef, key, field, coords;
 
         STUB_DATA = {
             "a": {
@@ -61,19 +61,19 @@
             module("fireStarter.services");
             inject(function(_geoMngr_, _$q_, _$timeout_, _geoRef_, _$log_, _$rootScope_, _geoMock_) {
                 $rootScope = _$rootScope_;
-								geoRef = _geoRef_;
-								$timeout = _$timeout_;
+                geoRef = _geoRef_;
+                $timeout = _$timeout_;
                 $log = _$log_;
                 geoMock = _geoMock_;
                 geoMngr = _geoMngr_;
                 $q = _$q_;
             });
             key = "a_key";
-            gfName = "feeders";
             gfPath = ["geofield"];
 
             ref = geoMock.refWithPath(gfPath);
             spyOn($log, "info").and.callThrough();
+            spyOn($q, "reject").and.callThrough();
         });
 
         afterEach(function() {
@@ -85,13 +85,12 @@
         it("factory should be defined", function() {
             expect(geoMngr).toBeDefined();
         });
-        it(" factory instance should be defined", function() {
+        it("factory instance should be defined", function() {
             expect(geoMngr(gfPath)).toBeDefined();
         });
         describe("Constructor", function() {
             beforeEach(function() {
                 spyOn(geoRef, "ref").and.returnValue(ref);
-								spyOn($q,"defer")
                 geoMngr(gfPath);
             });
             it("should be defined", function() {
@@ -125,27 +124,34 @@
                 });
             });
         });
-        describe("$geofire Functions", function() {
+        describe("main geofire functions", function() {
             beforeEach(function() {
+                ref = geoMock.refWithPath(gfPath);
                 gfSpy = jasmine.createSpyObj("geofire", ["get", "set", "remove", "query", "distance"]);
-                spyOn($q, "when").and.returnValue(gfSpy);
+                spyOn($q, "when").and.callThrough();
+                spyOn(geoRef, "ref").and.returnValue(gfSpy);
                 geoExample = geoMngr(gfPath);
-
             });
 
             describe("set", function() {
                 it("should call set on the geofire object with passed key and coords arguments", function() {
                     geoExample.set(key, coords);
                     $rootScope.$digest();
-										$timeout.flush();
                     expect(gfSpy.set).toHaveBeenCalledWith(key, coords);
+                    expect($q.reject).not.toHaveBeenCalled();
+                });
+            });
+            describe("query", function() {
+                it("should call query on the geofire object with passed data object argument", function() {
+                    geoExample.query(data);
+                    $rootScope.$digest();
+                    expect(gfSpy.query).toHaveBeenCalledWith(data);
                 });
             });
             describe("remove", function() {
                 it("should call $remove on the $geofire object with passed key argument", function() {
                     geoExample.remove(key);
                     $rootScope.$digest();
-										$timeout.flush();
                     expect(gfSpy.remove).toHaveBeenCalledWith(key);
                 });
             });
@@ -153,14 +159,7 @@
                 it("should call $get on the $geofire object with passed key argument", function() {
                     geoExample.get(key);
                     $rootScope.$digest();
-										$timeout.flush();
                     expect(gfSpy.get).toHaveBeenCalledWith(key);
-                });
-            });
-            describe("query", function() {
-                it("should call $query on the $geofire object with passed data object argument", function() {
-                    geoExample.query(data);
-                    expect(gfSpy.query).toHaveBeenCalledWith(data);
                 });
             });
             describe("distance", function() {
@@ -171,8 +170,53 @@
                     expect(gfSpy.distance.calls.argsFor(0)[1]).toEqual(location.b);
                 });
             });
+        });
+        describe("geoQueries", function() {
+            beforeEach(function() {
+                // $rootScope.$digest();
+            });
+            describe("constructor", function() {
+                it("should return a geoQuery object", function() {
+                    ref = geoMock.refWithPath(gfPath);
+                    spyOn($q, "when").and.callThrough();
+                    spyOn(geoRef, "ref").and.returnValue(geoMock.geoSpyObj);
+                    geoExample = geoMngr(gfPath)
+                    geoExample.query(data);
+                    $rootScope.$digest();
+                    expect($q.when.calls.argsFor(1)[0]).toEqual(jasmine.objectContaining({
+                        center: jasmine.any(Function),
+                        radius: jasmine.any(Function),
+                        on: jasmine.any(Function),
+                        cancel: jasmine.any(Function),
+                        updateCriteria: jasmine.any(Function)
+                    }));
+                });
+            });
+            describe("geoQuery functions", function() {
+                function wrapQuery(d) {
+                    geoExample = geoMngr(gfPath)
+                    $rootScope.$digest();
+                    geoExample.query(d)
+                    $rootScope.$digest();
+                    $rootScope.$digest();
+                    return this;
+                }
+
+                beforeEach(function() {
+                    spyOn(geoRef, "ref").and.returnValue(geoMock.geoSpyObj);
+                    spyOn($q, "when").and.callThrough();
+                });
+                // it("should call center on the geoQueryObj", function() {
+                //     wrapQuery(data).center();
+                //     expect(geoQuerySpy.center).toHaveBeenCalled();
+                // });
+
+            });
+
 
         });
+
+
         // describe("Testing return value", function() {
         //     beforeEach(function() {
         //         spyOn($q, "when").and.callThrough();
@@ -185,7 +229,7 @@
         //             get: jasmine.any(Function),
         //             set: jasmine.any(Function),
         //             remove: jasmine.any(Function),
-										// ref: jasmine.any(Function),
+        // ref: jasmine.any(Function),
         //             query: jasmine.any(Function)
         //         }));
         //     });
@@ -193,7 +237,7 @@
         // });
 
 
-        /*Helpers*/
+        /*Helpers from angularFire*/
 
 
         function wrapPromise(promise) {
