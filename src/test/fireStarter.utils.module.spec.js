@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("fb.utils Module:", function() {
+    describe("fireStarter.utils Module:", function() {
         beforeEach(function() {
-            module = angular.module("fb.utils");
+            module = angular.module("fireStarter.utils");
         });
 
         it("should exist", function() {
@@ -15,13 +15,16 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('fb.utils').requires;
+                deps = module.value('fireStarter.utils').requires;
             });
             it("should depend on utils.jsApi", function() {
                 expect(hasModule('utils.jsApi')).toBeTruthy();
             });
             it("should depend on utils.afApi", function() {
                 expect(hasModule('utils.afApi')).toBeTruthy();
+            });
+            it("should depend on utils.gfApi", function() {
+                expect(hasModule('utils.gfApi')).toBeTruthy();
             });
         });
     });

@@ -2,7 +2,7 @@
     'use strict';
 
     angular
-        .module('fb')
+        .module('fireStarter')
         .config(config);
 
     /** @ngInject */

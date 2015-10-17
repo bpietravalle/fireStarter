@@ -1,21 +1,21 @@
 {
-  "name": "fb",
-  "version": "0.0.0",
+  "name": "fireStarter",
+  "version": "0.0.1",
   "license": "MIT",
-  "description": "angular services for Firebase",
+  "description": "Experimental wrapper for firebase",
   "dependencies": {
-    "AngularGeoFire": "angularGeoFire#~3.0.0",
     "angular": "~1.4.4",
-    "angular-local-storage": "~0.2.2",
     "angularfire": "~1.1.2",
-    "firebase": "~2.2.9"
+    "firebase": "~2.2.9",
+    "geofire": "~3.2.3"
   },
   "devDependencies": {
     "mockfirebase": "~0.11.0",
     "angular-mocks": "~1.4.0"
   },
   "resolutions": {
-    "angular": "~1.4.4"
+    "angular": "~1.4.4",
+    "rsvp": "3.1.x"
   },
   "repository": {
     "type": "git",

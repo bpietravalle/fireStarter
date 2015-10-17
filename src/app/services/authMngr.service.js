@@ -98,7 +98,7 @@
     }
 
 
-    angular.module('fb.services')
+    angular.module('fireStarter.services')
         .service('authMngr', AuthManager);
 
 

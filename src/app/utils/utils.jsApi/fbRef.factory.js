@@ -2,6 +2,7 @@
 (function(angular) {
     "use strict";
 
+		/** @ngInject */
     function fbRefFactory($window, FBURL) {
         var utils = {
             path: setPath,
@@ -43,7 +44,6 @@
         }
 
     }
-    fbRefFactory.$inject = ['$window', 'FBURL'];
 
     angular.module('utils.jsApi')
         .factory('fbRef', fbRefFactory);

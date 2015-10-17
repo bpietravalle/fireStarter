@@ -1,9 +1,9 @@
 (function(angular) {
     'use strict';
     var module;
-    describe("fb.services Module:", function() {
+    describe("fireStarter.services Module:", function() {
         beforeEach(function() {
-            module = angular.module("fb.services");
+            module = angular.module("fireStarter.services");
         });
 
         it("should exist", function() {
@@ -15,10 +15,10 @@
                 return deps.indexOf(m) >= 0;
             };
             beforeEach(function() {
-                deps = module.value('fb.services').requires;
+                deps = module.value('fireStarter.services').requires;
             });
-            it("should depend on fb.utils", function() {
-                expect(hasModule("fb.utils")).toBeTruthy();
+            it("should depend on fireStarter.utils", function() {
+                expect(hasModule("fireStarter.utils")).toBeTruthy();
             });
         });
     });

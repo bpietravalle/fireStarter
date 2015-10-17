@@ -18,7 +18,7 @@
         };
 
         beforeEach(function() {
-            module('fb.services');
+            module('fireStarter.services');
             module("fbMocks");
             recId = 123;
             path = ["users", recId];

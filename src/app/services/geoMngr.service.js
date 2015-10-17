@@ -3,31 +3,26 @@
     var GeoMngr;
 
 
-    angular.module("fb.services")
+    angular.module("fireStarter.services")
         .factory("geoMngr", geoMngrFactory);
 
     /** @ngInject */
-    function geoMngrFactory($timeout, $q, fbRef, $log) {
+    function geoMngrFactory($timeout, $q, geoRef, $log) {
 
         return function(path) {
-            var gf = new GeoMngr( $timeout, $q, fbRef, $log, path);
+            var gf = new GeoMngr( $timeout, $q, geoRef, $log, path);
             return gf.construct();
         };
 
     }
 
-    GeoMngr = function($timeout, $q, fbRef, $log, path) {
+    GeoMngr = function($timeout, $q, geoRef, $log, path) {
         this._timeout = $timeout;
         this._q = $q;
-        this._fbRef = fbRef;
+        this._geoRef = geoRef;
         this._log = $log;
-        if (!path) {
-            throw new Error("You must define a path to build a GeoFire object: " + path);
-
-        }
         this._path = path;
-        this._geofireRef = this._fbRef.ref(this._path);
-        this._geoFire = new GeoFire(this._geofireRef);
+        this._geoFire = this._geoRef(this._path);
     };
 
     GeoMngr.prototype = {

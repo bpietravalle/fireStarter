@@ -62,7 +62,7 @@
 
         }
 
-				/*not worth the abstraction*/
+        /*not worth the abstraction*/
         function getRecord(path, key) {
             return vm.build(path)
                 .then(completeFn)
@@ -281,7 +281,7 @@
 
     }
 
-    angular.module("fb.services")
-        .service("arrMngr", arrMngrService);
+    angular.module("fireStarter.services")
+    .service("arrMngr", arrMngrService);
 
 })(angular);

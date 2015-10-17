@@ -5,7 +5,7 @@
 
 //         beforeEach(function() {
 //             MockFirebase.override();
-            // module('fb.services');
+            // module('fireStarter.services');
 //             module("fbMocks");
 //             inject(function(_authMngr_, _$rootScope_, _mockAuth_) {
 //                 $rootScope = _$rootScope_;

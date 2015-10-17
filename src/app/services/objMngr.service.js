@@ -248,7 +248,7 @@
 
     }
 
-    angular.module("fb.services")
+    angular.module("fireStarter.services")
         .service("objMngr", objMngrService);
 
 

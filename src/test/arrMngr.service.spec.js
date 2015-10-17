@@ -37,7 +37,7 @@
         };
 
         beforeEach(function() {
-            module('fb.services');
+            module('fireStarter.services');
             module('fbMocks');
             module('testutils');
             path = ["users", "1", "phones"];

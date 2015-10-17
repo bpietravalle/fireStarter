@@ -4,7 +4,6 @@
     describe('fbRef', function() {
         var fbRef, FBURL;
         beforeEach(function() {
-            MockFirebase.override();
             module('utils.jsApi');
         });
         beforeEach(inject(function(_fbRef_, _FBURL_) {
