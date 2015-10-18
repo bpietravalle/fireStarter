@@ -10,13 +10,14 @@
             '$createUser', '$changePassword', '$changeEmail', '$removeUser', '$resetPassword'
         ]);
         this.ref = function() {
-            var ref = jasmine.createSpyObj('ref', ['authWithCustomToken',
-                'authAnonymously', 'authWithPassword',
-                'authWithOAuthPopup', 'authWithOAuthRedirect', 'authWithOAuthToken',
-                'unauth', 'getAuth', 'onAuth', 'offAuth',
-                'createUser', 'changePassword', 'changeEmail', 'removeUser', 'resetPassword'
-            ]);
-            return ref;
+            return new MockFirebase('Mock://');
+            // var ref = jasmine.createSpyObj('ref', ['authWithCustomToken',
+            //     'authAnonymously', 'authWithPassword',
+            //     'authWithOAuthPopup', 'authWithOAuthRedirect', 'authWithOAuthToken',
+            //     'unauth', 'getAuth', 'onAuth', 'offAuth',
+            //     'createUser', 'changePassword', 'changeEmail', 'removeUser', 'resetPassword'
+            // ]);
+            // return ref;
         };
 
         this.authData = function() {
@@ -29,9 +30,9 @@
         };
         this.makeAuth = function(ref) {
             if (!ref) {
-                this.ref();
+                this.authObj();
             }
-            var auth = afEntity.set("auth", ref);
+            var auth = afEntity.wrap("auth", ref);
             return auth;
         };
     }

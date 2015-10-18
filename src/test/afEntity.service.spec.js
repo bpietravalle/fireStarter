@@ -101,7 +101,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = afEntity.set();
+                    entity = afEntity.set("auth");
                     val = y[1];
                     meth = y[0];
                     expect(typeof entity[meth]).toEqual(val);

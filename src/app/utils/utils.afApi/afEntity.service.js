@@ -13,7 +13,7 @@
 
         function set(type, path) {
 
-            if (arguments.length === 0) {
+            if (type === 'auth' && !path) {
                 return afWrap('auth', fbRef.root());
             } else if (Array.isArray(path)) {
 							//think this should be Object.proto.toString
