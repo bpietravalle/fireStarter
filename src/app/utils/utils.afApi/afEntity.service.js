@@ -1,6 +1,7 @@
 (function(angular) {
     "use strict";
 
+		/** @ngInject */
     function afEntityService($firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
         var vm = this;
         vm.set = set;
@@ -34,8 +35,6 @@
             }
         }
     }
-
-    afEntityService.$inject = ['$firebaseObject', '$firebaseArray', '$firebaseAuth', 'fbRef'];
 
     angular.module('utils.afApi')
         .service('afEntity', afEntityService);

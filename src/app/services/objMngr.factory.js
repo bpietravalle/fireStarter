@@ -3,10 +3,10 @@
     var ObjMngr;
 
     angular.module("fireStarter.services")
-        .factory("objMngr", objMngrFactory);
+        .factory("objMngr", ObjMngrFactory);
 
     /** @ngInject */
-    function objMngrFactory($q, afEntity, $log) {
+    function ObjMngrFactory($q, afEntity, $log) {
 
 
         return function(path) {
@@ -45,8 +45,6 @@
             obj.priority = priority;
             obj.timestamp = timestamp;
             obj.value = value;
-            obj.updateRecord = updateRecord;
-
 
             function bindTo(s, v) {
                 return self._firebaseObject
@@ -75,7 +73,7 @@
                     .catch(standardError);
 
                 function returnId(res) {
-                    return res.$id();
+                    return res.$id;
                 }
             }
 
@@ -146,79 +144,6 @@
 
             }
 
-
-            //TODO: if property doesn't exist than separate key/value pair and try to save separately
-            function updateRecord(path, data) {
-                if (angular.isDefined(data)) {
-                    return updateRecordWithDataObj(path, data);
-                } else {
-                    return obj.save(path);
-                }
-
-            }
-
-            function updateRecordWithDataObj(path, data) {
-                return setupForUpdate()
-                    .then(iterateOverData)
-                    .then(iterateSuccess)
-                    .catch(standardError);
-
-
-                function setupForUpdate() {
-                    return $q.all([loadObject(path), buildKeys(data)])
-
-                }
-
-                function loadObject(res) {
-                    return vm
-                        .loaded(res);
-                }
-
-                function buildKeys(res) {
-                    var obj = {
-                        keys: Object.keys(res),
-                        data: res
-                    }
-
-                    return $q.when(obj);
-                    //TODO test code below for older browsers; from coderwall.com
-                    // if (!Object.keys) Object.keys = function(o) {
-                    //     if (o !== Object(o))
-                    //         throw new TypeError('Object.keys called on a non-object');
-                    //     var k = [],
-                    //         p;
-                    //     for (p in o)
-                    //         if (Object.prototype.hasOwnProperty.call(o, p)) k.push(p);
-                    //     return k;
-                    // };
-
-                }
-
-
-                //TODO: change it back to how fn appears in arrMngr
-                function iterateOverData(res) {
-                    var obj, str, keys, dataSet;
-
-                    keys = res[1].keys;
-                    dataSet = res[1].data;
-                    obj = res[0];
-
-                    return $q.all(keys.map(function(key) {
-                            str = key.toString();
-                            obj[str] = dataSet[str];
-                        }))
-                        .then(returnObj);
-
-                    function returnObj(res) {
-                        return obj;
-                    }
-                }
-
-                function iterateSuccess(res) {
-                    return obj.save(res);
-
-                }
-            }
 
             /* Helper functions
              */

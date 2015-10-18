@@ -1,4 +1,4 @@
-(function(angular) {
+(function() {
     "use strict";
 
 		/** @ngInject */
@@ -20,6 +20,8 @@
 					//TODO: use $q.when and add then to below
             return afEntity.set();
         }());
+
+				// return vm;
 
         function authWithPassword(creds) {
             return vm.authObj
@@ -102,4 +104,4 @@
         .service('authMngr', AuthManager);
 
 
-})(angular);
+})();
