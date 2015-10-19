@@ -6,19 +6,20 @@
         .factory('authMngr', AuthMngrFactory);
 
     /** @ngInject */
-    function AuthMngrFactory(afEntity, $q, $log) {
+    function AuthMngrFactory($timeout, afEntity, $q, $log) {
 
         return function() {
-            var fb = new AuthMngr(afEntity, $q, $log);
+            var fb = new AuthMngr($timeout, afEntity, $q, $log);
             return fb.construct();
         };
     }
 
-    AuthMngr = function(afEntity, $q, $log) {
+    AuthMngr = function($timeout, afEntity, $q, $log) {
+        this._timeout = $timeout;
         this._q = $q;
         this._afEntity = afEntity;
         this._log = $log;
-        this._firebaseAuth = this._q.when(this._afEntity.set("auth"));
+        this._firebaseAuth = this._afEntity.set("auth");
     };
 
     AuthMngr.prototype = {
@@ -39,17 +40,27 @@
             auth.unauth = unauth;
 
             function authWithPassword(creds) {
-                return self._firebaseAuth
-                    .then(completeAction)
-                    .catch(standardError);
+                // return self._firebaseAuth
+                //     .then(completeAction)
 
-                function completeAction(res) {
-                    return res.$authWithPassword({
-                        email: creds.email,
-                        password: creds.password
-                    });
-                }
+                // function completeAction(res) {
+                var deferred = self._q.defer();
+                self._timeout(function() {
+                    self._firebaseAuth.$authWithPassword({
+                            email: creds.email,
+                            password: creds.password
+                        })
+                        .then(function(res) {
+                            deferred.resolve(res);
+                        }).catch(function(err) {
+                            deferred.reject(err);
+                        });
+                });
+                self._log.info(deferred.promise);
+                return deferred.promise;
             }
+
+
 
             function authWithOAuthPopup(provider) {
                 var options = {
@@ -167,6 +178,7 @@
                     return res.$unauth();
                 }
             }
+
             function standardError(err) {
                 return self._q.reject(err);
             }

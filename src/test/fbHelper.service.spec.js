@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe("fbHelper", function() {
-        var fbHelper, objTest, scope, varName, recId, $q, newData, userData, newObj, path, afEntity, error, mockObj, obj, deferred, ref, $rootScope;
+        var fbHelper, objTest, arrTest, objMngr, arrMngr, scope, varName, recId, $q, newData, userData, newObj, path, afEntity, error, mockObj, obj, deferred, ref, $rootScope;
         var FIXTURE_DATA = {
             aString: 'alpha',
             aNumber: 1,
@@ -22,8 +22,10 @@
             module("fbMocks");
             recId = 123;
             path = ["users", recId];
-            inject(function(_mockObj_, _$q_, _fbHelper_, _afEntity_, _$rootScope_) {
+            inject(function(_mockObj_, _$q_, _objMngr_, _arrMngr_, _fbHelper_, _afEntity_, _$rootScope_) {
                 afEntity = _afEntity_;
+                arrMngr = _arrMngr_;
+                objMngr = _objMngr_;
                 fbHelper = _fbHelper_;
                 $q = _$q_;
                 $rootScope = _$rootScope_;
@@ -32,20 +34,34 @@
 
             });
             obj = mockObj.makeObject(FIXTURE_DATA, ref);
-            spyOn($q, "when").and.callFake(function() {
-                deferred = $q.defer();
-                return deferred.promise;
-            });
+            spyOn($q, "when").and.callThrough();
+            // Fake(function() {
+            // deferred = $q.defer();
+            // return deferred.promise;
+            // });
 
-            spyOn(afEntity, "set").and.returnValue(obj);
+            spyOn(afEntity, "set").and.returnValue(ref);
             spyOn($q, "reject");
-            objTest = fbHelper(path);
+            arrTest = arrMngr(path);
+            objTest = objMngr(path);
         });
         afterEach(function() {
             obj = null;
             ref = null;
             objTest = null;
         });
+        it("objMngr constructor should not be a promise", function() {
+            expect(objTest).not.toBeAPromise();
+        });
+        it("arrMngr constructor should not be a promise", function() {
+            expect(arrTest).not.toBeAPromise();
+        });
+				it("calling fn on objMngr returns a promise", function(){
+            expect(objTest.save(userData)).toBeAPromise();
+				});
+				it("calling fn on arrMngr returns a promise", function(){
+            expect(arrTest.save(userData)).toBeAPromise();
+				});
         // describe("build() Rejected: ", function() {
         //     beforeEach(function() {
         //         fbHelper.loaded();
@@ -123,10 +139,10 @@
 
         // });
 
-				/*
-				 *
-				 * arrMngr tests
-				 */
+        /*
+         *
+         * arrMngr tests
+         */
         // describe("Added functions", function() {
         //     describe("GetNestedKey", function() {
         //         beforeEach(function() {

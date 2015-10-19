@@ -219,69 +219,6 @@
                 expect(obj.$loaded).toHaveBeenCalled();
             });
         });
-        // });
-
-
-        // describe("Added functions", function() {
-        //     describe("UpdateRecord", function() {
-        //         beforeEach(function() {
-        //             spyOn(objMngr, "loaded").and.callFake(function() {
-        //                 deferred = $q.defer();
-        //                 return deferred.promise;
-        //             });
-        //             obj = mockObj.makeObject(userData, ref);
-        //             newData = {
-        //                 email: "NEWEMAIL@email.com",
-        //                 phone: '123-456-7890'
-        //             };
-        //         });
-        // describe("Implementing build()", function() {
-        //     beforeEach(function() {
-        //         objMngr.updateRecord(path, newData);
-        //     });
-        //     it("should call loaded with path", function() {
-        //         expect(objMngr.loaded.calls.argsFor(0)[0]).toEqual(path);
-        //     });
-        // });
-        // describe("build() Resolved: ", function() {
-        //     beforeEach(function() {
-        //         spyOn(objMngr, "save");
-        //         objMngr.updateRecord(path, newData);
-        //         deferred.resolve(obj);
-        //         $rootScope.$digest();
-        //         $rootScope.$digest();
-        //     });
-
-        //     it("should return the correct record wrapped in a promise", function() {
-        //         expect(deferred.promise.$$state.value).toEqual(obj);
-        //     });
-        //     it("should call objMngr.save with updated record and path", function() {
-        //         expect(objMngr.save).toHaveBeenCalledWith(obj);
-        //         expect(deferred.promise.$$state.value.phone).toEqual("123-456-7890");
-        //         expect(deferred.promise.$$state.value.email).toEqual("NEWEMAIL@email.com");
-        //     });
-        //     it("should not call $q.reject", function() {
-        //         expect($q.reject).not.toHaveBeenCalled();
-        //     });
-        // });
-        // describe("build() Rejected: ", function() {
-        //     beforeEach(function() {
-        //         error = "Error!";
-        //         objMngr.updateRecord(path, newData);
-        //         deferred.reject(error);
-        //         $rootScope.$digest();
-        //     });
-        //     it('should return correct error wrapped in a promise', function() {
-        //         expect(deferred.promise.$$state.value).toEqual(error);
-        //     });
-        //     it("should call $q.reject", function() {
-        //         expect($q.reject).toHaveBeenCalledWith(error);
-        //     });
-        // });
-        // });
-
-        // });
-
 
     });
 })();
