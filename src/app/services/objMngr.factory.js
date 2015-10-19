@@ -6,11 +6,11 @@
         .factory("objMngr", ObjMngrFactory);
 
     /** @ngInject */
-    function ObjMngrFactory($q, afEntity, $log) {
+    function ObjMngrFactory($firebaseObject, fbRef, fbHelper, $q, $log) {
 
 
         return function(path) {
-            var fb = new ObjMngr($q, afEntity, $log, path);
+            var fb = new ObjMngr($firebaseObject, fbRef, fbHelper, $q, $log, path);
             return fb.construct();
 
         };
@@ -22,12 +22,15 @@
      * @return Promise($firebaseObject)
      */
 
-    ObjMngr = function($q, afEntity, $log, path) {
+    ObjMngr = function($firebaseObject, fbRef, fbHelper, $q, $log, path) {
+        this._$firebase = $firebaseObject;
+        this._fbHelper = fbHelper;
+        this._fbRef = fbRef;
         this._q = $q;
-        this._afEntity = afEntity;
         this._log = $log;
         this._path = path;
-        this._firebaseObject = this._q.when(this._afEntity.set("object", this._path));
+        this._objectRef = this._fbRef.ref(this._path);
+        this._firebaseObject = this._$firebase(this._objectRef);
     };
 
     ObjMngr.prototype = {
@@ -42,119 +45,64 @@
             obj.ref = ref;
             obj.remove = remove;
             obj.save = save;
+            obj.path = path;
             obj.priority = priority;
             obj.timestamp = timestamp;
             obj.value = value;
 
             function bindTo(s, v) {
-                return self._firebaseObject
-                    .then(buildForBind)
-                    .catch(standardError);
-
-                function buildForBind(res) {
-                    return res.$bindTo(s, v);
-                }
+                return self._firebaseObject.$bindTo(s, v)
             }
 
             function destroy() {
-                return self._firebaseObject
-                    .then(destroySuccess)
-                    .catch(standardError);
-
-                function destroySuccess(res) {
-                    return res.$destroy();
-                }
+                return self._firebaseObject.$destroy();
 
             }
 
             function id() {
-                return self._firebaseObject
-                    .then(returnId)
-                    .catch(standardError);
+                return self._firebaseObject.$id;
+            }
 
-                function returnId(res) {
-                    return res.$id;
-                }
+            function loaded() {
+                return self._firebaseObject.$loaded()
             }
 
 
-            function loaded() {
-                return self._firebaseObject
-                    .then(completeLoad)
-                    .catch(standardError);
-
-                function completeLoad(res) {
-                    return res.$loaded();
-                }
-
+            function path() {
+                return self._path;
             }
 
             function priority() {
-                return self._firebaseObject
-                    .then(checkPriority)
-                    .catch(standardError);
-
-                function checkPriority(res) {
-                    return res.$priority;
-                }
+                return self._firebaseObject.$priority;
 
             }
 
-
             function ref() {
-                return self._firebaseObject
-                    .then(returnRef)
-                    .catch(standardError);
-
-                function returnRef(res) {
-                    return res.$ref();
-                }
+                // return self._firebaseObject.$ref();
+                return self._objectRef;
             }
 
             function remove() {
-                return self._firebaseObject
-                    .then(attemptRemove)
-                    .catch(standardError);
-
-                function attemptRemove(res) {
-                    return res.$remove();
-                }
-
+                return self._firebaseObject.$remove()
             }
 
 
             function save() {
-                return self._firebaseObject
-                    .then(attemptSave)
-                    .catch(standardError);
-
-                function attemptSave(res) {
-                    return res.$save();
-                }
+                return self._firebaseObject.$save()
             }
 
             function value() {
-                return self._firebaseObject
-                    .then(buildForValue)
-                    .catch(standardError);
-
-                function buildForValue(res) {
-                    return res.$value;
-                }
+                return self._firebaseObject.$value
 
             }
 
 
             /* Helper functions
              */
-            function standardError(err) {
-                // $log.error(err);
-                return self._q.reject(err);
-            }
 
             //TODO: add test
             function timestamp() {
-                return Firebase.ServerValue.TIMESTAMP;
+                return self._fbHelper.timestamp();
             }
 
             self._obj = obj;

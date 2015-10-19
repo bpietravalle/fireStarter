@@ -8,9 +8,15 @@
             return new MockFirebase('Mock://').child('data').child(DEFAULT_ID);
         };
 
-        this.refWithPath = function(path) {
+        this.refWithPath = function(path, initialData) {
             var mockPath = path.join('/'); //afEntity changes array to string
-            return new MockFirebase('Mock://').child(mockPath);
+            var ref = new MockFirebase('Mock://').child(mockPath);
+            if (angular.isDefined(initialData)) {
+                ref.ref().set(initialData);
+                ref.flush();
+                $timeout.flush();
+            }
+            return ref;
         };
 
         this.makeObject = function(initialData, ref) {

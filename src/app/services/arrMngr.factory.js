@@ -6,9 +6,9 @@
         .factory("arrMngr", ArrMngrFactory);
 
     /** @ngInject */
-    function ArrMngrFactory($q, afEntity, $log) {
+    function ArrMngrFactory($firebaseArray, fbRef, fbHelper, $q, $log) {
         return function(path) {
-            var fb = new ArrMngr($q, afEntity, $log, path);
+            var fb = new ArrMngr($firebaseArray, fbRef, fbHelper, $q, $log, path);
             return fb.construct();
         };
     }
@@ -18,12 +18,15 @@
      * @return {$firebaseArray}
      */
 
-    ArrMngr = function($q, afEntity, $log, path) {
+    ArrMngr = function($firebaseArray, fbRef, fbHelper, $q, $log, path) {
+        this._$firebase = $firebaseArray;
+        this._fbRef = fbRef;
+        this._fbHelper = fbHelper;
         this._q = $q;
-        this._afEntity = afEntity;
         this._log = $log;
         this._path = path;
-        this._firebaseArray = this._q.when(this._afEntity.set("array", this._path));
+        this._arrayRef = this._fbRef.ref(this._path);
+        this._firebaseArray = this._$firebase(this._arrayRef);
     };
 
     ArrMngr.prototype = {
@@ -40,105 +43,50 @@
             arr.ref = ref;
             arr.remove = remove;
             arr.save = save;
+						arr.timestamp = timestamp;
 
             function add(obj) {
-                return self._firebaseArray
-                    .then(attemptAdd)
-                    .catch(standardError);
-
-                function attemptAdd(res) {
-                    return res.$add(obj);
-                }
+                return self._firebaseArray.$add(obj);
             }
 
             function destroy() {
-                return self._firebaseArray
-                    .then(attemptDestroy)
-                    .catch(standardError);
-
-                function attemptDestroy(res) {
-                    return res.$destroy();
-                }
+                return self._firebaseArray.$destroy();
             }
 
             function getRecord(key) {
-                return self._firebaseArray
-                    .then(completeAction)
-                    .catch(standardError);
-
-                function completeAction(res) {
-                    return res.$getRecord(key);
-
-                }
+                return self._firebaseArray.$getRecord(key);
             }
 
             function indexFor(val) {
-                return self._firebaseArray
-                    .then(getIndex)
-                    .catch(standardError);
-
-                function getIndex(res) {
-                    return res.$indexFor(val);
-                }
+                return self._firebaseArray.$indexFor(val);
             }
 
 
             function keyAt(rec) {
-                return self._firebaseArray
-                    .then(getKey)
-                    .catch(standardError);
-
-                function getKey(res) {
-                    return res.$keyAt(rec);
-                }
+                return self._firebaseArray.$keyAt(rec);
             }
 
             function loaded() {
-                return self._firebaseArray
-                    .then(attemptLoad)
-                    .catch(standardError);
-
-                function attemptLoad(res) {
-                    return res.$loaded();
-                }
+                return self._firebaseArray.$loaded();
             }
 
             function ref() {
-                return self._firebaseArray
-                    .then(getRef)
-                    .catch(standardError);
-
-                function getRef(res) {
-                    return res.$ref();
-                }
+                // return self._firebaseArray.$ref();
+                return self._arrayRef;
             }
 
 
             function remove(rec) {
-                return self._firebaseArray
-                    .then(attemptRemove)
-                    .catch(standardError);
-
-                function attemptRemove(res) {
-                    return res.$remove(rec);
-                }
+                return self._firebaseArray.$remove();
 
             }
-
 
             function save(rec) {
-                return self._firebaseArray
-                    .then(attemptSave)
-                    .catch(standardError);
-
-                function attemptSave(res) {
-                    return res.$save(rec);
-                }
-
+                return self._firebaseArray.$save(rec);
             }
 
-            function standardError(err) {
-                return self._q.reject(err);
+            function timestamp() {
+                return self._fbHelper.timestamp();
             }
 
 
