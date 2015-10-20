@@ -6,20 +6,20 @@
         .factory('authMngr', AuthMngrFactory);
 
     /** @ngInject */
-    function AuthMngrFactory($timeout, afEntity, $q, $log) {
+    function AuthMngrFactory($timeout, baseBuilder, $q, $log) {
 
         return function() {
-            var fb = new AuthMngr($timeout, afEntity, $q, $log);
+            var fb = new AuthMngr($timeout, baseBuilder, $q, $log);
             return fb.construct();
         };
     }
 
-    AuthMngr = function($timeout, afEntity, $q, $log) {
+    AuthMngr = function($timeout, baseBuilder, $q, $log) {
         this._timeout = $timeout;
         this._q = $q;
-        this._afEntity = afEntity;
+        this._baseBuilder = baseBuilder;
         this._log = $log;
-        this._firebaseAuth = this._afEntity.set("auth");
+        this._firebaseAuth = this._baseBuilder.set("auth");
     };
 
     AuthMngr.prototype = {

@@ -1,23 +1,23 @@
 (function() {
     "use strict";
     describe("Auth Manager", function() {
-        var $log, $timeout, credentials, authTest, deferred, $q, auth, authMngr, afEntity, ref, $rootScope, mockAuth;
+        var $log, $timeout, credentials, authTest, deferred, $q, auth, authMngr, baseBuilder, ref, $rootScope, mockAuth;
 
         beforeEach(function() {
             module('fireStarter.services');
             module("fbMocks");
-            inject(function(_$log_, _$timeout_, _authMngr_, _$rootScope_, _$q_, _afEntity_, _mockAuth_) {
+            inject(function(_$log_, _$timeout_, _authMngr_, _$rootScope_, _$q_, _baseBuilder_, _mockAuth_) {
                 $timeout = _$timeout_;
                 $q = _$q_;
                 $log = _$log_;
-                afEntity = _afEntity_;
+                baseBuilder = _baseBuilder_;
                 $rootScope = _$rootScope_;
                 authMngr = _authMngr_;
                 mockAuth = _mockAuth_;
             });
             ref = mockAuth.ref();
             auth = mockAuth.makeAuth(ref);
-            spyOn(afEntity, "set").and.returnValue(auth);
+            spyOn(baseBuilder, "set").and.returnValue(auth);
             spyOn($q, "when").and.callFake(function() {
                 deferred = $q.defer();
                 return deferred.promise;
@@ -28,17 +28,17 @@
             ref = null;
             authMngr = null;
             mockAuth = null;
-            afEntity = null;
+            baseBuilder = null;
         });
         describe("Constructor", function() {
             it("should be an object", function() {
                 expect(authTest).toBeDefined();
             });
-            it("should call afEntity.set 1 time", function() {
-                expect(afEntity.set.calls.count()).toEqual(1);
+            it("should call baseBuilder.set 1 time", function() {
+                expect(baseBuilder.set.calls.count()).toEqual(1);
             });
-            it("should call afEntity.set with type === auth", function() {
-                expect(afEntity.set.calls.argsFor(0)[0]).toEqual("auth");
+            it("should call baseBuilder.set with type === auth", function() {
+                expect(baseBuilder.set.calls.argsFor(0)[0]).toEqual("auth");
             });
             // it('should call $q.when with correct auth obj', function() {
             //     expect($q.when).toHaveBeenCalledWith(auth);

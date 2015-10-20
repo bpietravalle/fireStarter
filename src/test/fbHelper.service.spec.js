@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe("fbHelper", function() {
-        var fbHelper, objTest, arrTest, objMngr, arrMngr, scope, varName, recId, $q, newData, userData, newObj, path, afEntity, error, mockObj, obj, deferred, ref, $rootScope;
+        var fbHelper, objTest, arrTest, objMngr, arrMngr, scope, varName, recId, $q, newData, userData, newObj, path, baseBuilder, error, mockObj, obj, deferred, ref, $rootScope;
         var FIXTURE_DATA = {
             aString: 'alpha',
             aNumber: 1,
@@ -22,8 +22,8 @@
             module("fbMocks");
             recId = 123;
             path = ["users", recId];
-            inject(function(_mockObj_, _$q_, _objMngr_, _arrMngr_, _fbHelper_, _afEntity_, _$rootScope_) {
-                afEntity = _afEntity_;
+            inject(function(_mockObj_, _$q_, _objMngr_, _arrMngr_, _fbHelper_, _baseBuilder_, _$rootScope_) {
+                baseBuilder = _baseBuilder_;
                 arrMngr = _arrMngr_;
                 objMngr = _objMngr_;
                 fbHelper = _fbHelper_;
@@ -40,7 +40,7 @@
             // return deferred.promise;
             // });
 
-            spyOn(afEntity, "set").and.returnValue(ref);
+            spyOn(baseBuilder, "set").and.returnValue(ref);
             spyOn($q, "reject");
             arrTest = arrMngr(path);
             objTest = objMngr(path);

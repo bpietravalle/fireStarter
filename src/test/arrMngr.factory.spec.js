@@ -1,7 +1,7 @@
 // (function() {
 //     "use strict";
 //     describe('arrMngr', function() {
-//         var arr, arrTest, afEntity, error, path, fkey, col, mockRecord, recId, data, $log, $q, deferred1, deferred, $rootScope, newData, newArr, ref, mockArr, arrMngr;
+//         var arr, arrTest, baseBuilder, error, path, fkey, col, mockRecord, recId, data, $log, $q, deferred1, deferred, $rootScope, newData, newArr, ref, mockArr, arrMngr;
 
 //         var STUB_DATA = {
 //             'a': {
@@ -41,8 +41,8 @@
 //             module('fbMocks');
 //             module('testutils');
 //             path = ["users", "1", "phones"];
-//             inject(function(_$log_, _$q_, _afEntity_, _$rootScope_, _arrMngr_, _mockArr_) {
-//                 afEntity = _afEntity_;
+//             inject(function(_$log_, _$q_, _baseBuilder_, _$rootScope_, _arrMngr_, _mockArr_) {
+//                 baseBuilder = _baseBuilder_;
 //                 $q = _$q_;
 //                 $rootScope = _$rootScope_;
 //                 $log = _$log_;
@@ -52,7 +52,7 @@
 //             });
 //             arr = mockArr.stubArray(STUB_DATA, ref);
 //             mockRecord = mockArr.mockRecord(arr, recId);
-//             spyOn(afEntity, "set").and.returnValue(arr);
+//             spyOn(baseBuilder, "set").and.returnValue(arr);
 //             spyOn($q, "when").and.callFake(function() {
 //                 deferred = $q.defer();
 //                 return deferred.promise;
@@ -68,9 +68,9 @@
 //         });
 
 //         describe('Constructor', function() {
-//             it("should call afEntity with path", function() {
-//                 expect(afEntity.set.calls.argsFor(0)[1]).toEqual(path);
-//                 expect(afEntity.set.calls.argsFor(0)[0]).toEqual("array");
+//             it("should call baseBuilder with path", function() {
+//                 expect(baseBuilder.set.calls.argsFor(0)[1]).toEqual(path);
+//                 expect(baseBuilder.set.calls.argsFor(0)[0]).toEqual("array");
 //             });
 //             it('should call $q.when with correct array', function() {
 //                 expect($q.when).toHaveBeenCalledWith(arr);

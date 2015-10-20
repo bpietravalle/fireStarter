@@ -1,7 +1,7 @@
 (function(angular) {
     "use strict";
 
-    function fbAuthMockService(afEntity) {
+    function fbAuthMockService(baseBuilder) {
 
         this.authObj = jasmine.createSpyObj('authObj', ['$authWithCustomToken',
             '$authAnonymously', '$authWithPassword',
@@ -32,11 +32,11 @@
             if (!ref) {
                 this.authObj();
             }
-            var auth = afEntity.wrap("auth", ref);
+            var auth = baseBuilder.wrap("auth", ref);
             return auth;
         };
     }
-    fbAuthMockService.$inject = ['afEntity'];
+    fbAuthMockService.$inject = ['baseBuilder'];
     angular.module('fbMocks')
         .service('mockAuth', fbAuthMockService);
 

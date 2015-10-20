@@ -1,7 +1,7 @@
 // (function() {
 //     "use strict";
 //     describe("objMngr", function() {
-//         var objMngr, objTest, scope, varName, recId, $q, newData, userData, newObj, path, afEntity, error, mockObj, obj, deferred, ref, $rootScope;
+//         var objMngr, objTest, scope, varName, recId, $q, newData, userData, newObj, path, baseBuilder, error, mockObj, obj, deferred, ref, $rootScope;
 //         var FIXTURE_DATA = {
 //             aString: 'alpha',
 //             aNumber: 1,
@@ -22,8 +22,8 @@
 //             module("fbMocks");
 //             recId = 123;
 //             path = ["users", recId];
-//             inject(function(_mockObj_, _$q_, _objMngr_, _afEntity_, _$rootScope_) {
-//                 afEntity = _afEntity_;
+//             inject(function(_mockObj_, _$q_, _objMngr_, _baseBuilder_, _$rootScope_) {
+//                 baseBuilder = _baseBuilder_;
 //                 objMngr = _objMngr_;
 //                 $q = _$q_;
 //                 $rootScope = _$rootScope_;
@@ -37,7 +37,7 @@
 //                 return deferred.promise;
 //             });
 
-//             spyOn(afEntity, "set").and.returnValue(obj);
+//             spyOn(baseBuilder, "set").and.returnValue(obj);
 //             spyOn($q, "reject");
 //             objTest = objMngr(path);
 //         });
@@ -52,9 +52,9 @@
 //                 it('should call $q.when 1 time', function() {
 //                     expect($q.when.calls.count()).toEqual(1);
 //                 });
-//                 it("should call afEntity with 'object' and path", function() {
-//                     expect(afEntity.set.calls.argsFor(0)[1]).toEqual(path);
-//                     expect(afEntity.set.calls.argsFor(0)[0]).toEqual('object');
+//                 it("should call baseBuilder with 'object' and path", function() {
+//                     expect(baseBuilder.set.calls.argsFor(0)[1]).toEqual(path);
+//                     expect(baseBuilder.set.calls.argsFor(0)[0]).toEqual('object');
 //                 });
 //                 it('should call $q.when with correct object', function() {
 //                     expect($q.when).toHaveBeenCalledWith(obj);
