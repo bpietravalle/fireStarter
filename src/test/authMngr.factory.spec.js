@@ -81,7 +81,6 @@
                 var test = authTest.authWithPassword(credentials);
                 // deferred.resolve(auth);
                 $rootScope.$digest();
-                expect($log.info).toHaveBeenCalledWith("asd");
                 expect(test).toBeAPromise();
             });
         });

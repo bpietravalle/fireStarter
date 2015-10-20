@@ -1,20 +1,52 @@
 (function() {
     "use strict";
     describe('afUtils Service', function() {
-        var afEntity, root;
+        var afEntity, $rootScope, deferred, root, $q, $timeout;
 
 
         beforeEach(function() {
             MockFirebase.override();
             module('fbMocks');
-						module('fb.constant');
+            module('fb.constant');
             module('utils.afApi');
-            inject(function(_afEntity_, _FBURL_) {
+            inject(function(_afEntity_, _$rootScope_, _$q_, _$timeout_, _FBURL_) {
+                $timeout = _$timeout_;
+								$rootScope = _$rootScope_;
+                $q = _$q_;
                 root = _FBURL_;
                 afEntity = _afEntity_;
+								deferred = $q.defer();
             });
         });
 
+        describe("build", function() {
+					beforeEach(function(){
+						spyOn(deferred,"resolve").and.callThrough();
+						spyOn(deferred,"reject").and.callThrough();
+						spyOn($q,"when").and.callThrough();
+					});
+					it("build", function(){
+						this.test = afEntity.build("object",["tips"]);
+						$rootScope.$digest();
+						$rootScope.$digest();
+						$timeout.flush();
+						expect(this.test).toBeAPromise();
+						expect(this.test).toEqual(1);
+					});
+					it("set", function(){
+						this.test = afEntity.set("object",["tips"]);
+						$rootScope.$digest();
+						expect(this.test).toEqual(1);
+					});
+					// it("should resolve the promise", function(){
+					// 	afEntity.build("object",["tips"]);
+					// 	$rootScope.$digest();
+					// 	$timeout.flush();
+					// 	expect(deferred.resolve.calls.count()).toEqual(1);
+					// 	expect(deferred.reject.calls.count()).toEqual(0);
+					// });
+
+        });
 
         describe("objects", function() {
 

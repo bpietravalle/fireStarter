@@ -1,17 +1,17 @@
 (function() {
     "use strict";
-    var ObjMngr;
+    var FireStarter;
 
     angular.module("fireStarter.services")
-        .factory("objMngr", ObjMngrFactory);
+        .factory("fireStarter", FireStarterFactory);
 
     /** @ngInject */
-    function ObjMngrFactory($timeout, $firebaseObject, fbRef, fbHelper, $q, $log) {
+    function FireStarterFactory($timeout, afEntity, fbHelper, $q, $log) {
 
 
         return function(path, flag) {
-            var fb = new ObjMngr($timeout, $firebaseObject, fbRef, fbHelper, $q, $log, path, flag);
-            return fb.construct();
+            var fb = new FireStarter($timeout, afEntity, $q, $log, path, type, flag);
+            return fb.construct(type);
 
         };
 
@@ -22,25 +22,19 @@
      * @return Promise($firebaseObject)
      */
 
-    ObjMngr = function($timeout, $firebaseObject, fbRef, fbHelper, $q, $log, path, flag) {
+    FireStarter = function($timeout, afEntity, $q, $log, path, type, flag) {
         this._timeout = $timeout;
-        this._firebase = $firebaseObject;
-        this._fbHelper = fbHelper;
+        this._afEntity = afEntity;
+        this._type = type;
         this._flag = flag;
-        this._fbRef = fbRef;
         this._q = $q;
         this._log = $log;
         this._path = path;
-        if (this._flag === true) {
-            this._objectRef = this._path;
-        } else {
-            this._objectRef = this._fbRef.ref(this._path);
-        }
-        this._firebaseObject = this._firebase(this._objectRef);
+        this._firebase = this._afEntity.set(this._type, this._path, this._flag)
     };
 
-    ObjMngr.prototype = {
-        construct: function() {
+    FireStarter.prototype = {
+        construct: function(type) {
             var self = this;
             var obj = {};
 
@@ -51,9 +45,6 @@
             obj.ref = ref;
             obj.remove = remove;
             obj.save = save;
-            obj.path = path;
-            obj.priority = priority;
-            obj.timestamp = timestamp;
             obj.value = value;
 
             function bindTo(s, v) {
@@ -108,11 +99,11 @@
 
             //TODO: add test
             function timestamp() {
-                return self._fbHelper.timestamp();
+                return Firebase.SERVER_VALUE.timestamp;
             }
 
-            self._obj = obj;
-            return self._obj;
+            self._firebase = firebase;
+            return self._firebase;
         }
 
 
