@@ -34,8 +34,8 @@
 							// 	$ref: function(){
 							// 	return "boom"}
 							// });
-							$timeout.flush();
-							$rootScope.$digest();
+							// $timeout.flush();
+							// $rootScope.$digest();
 							expect(baseBuilder.build.calls.count()).toEqual(1);
 							// expect(test.test()).toEqual(1);
 							// expect(test.()).toEqual(1);
@@ -91,7 +91,7 @@
                         });
                     }
                     defined.forEach(defineTests);
-                    promises.forEach(promiseTests);
+                    // promises.forEach(promiseTests);
                 });
             }
 

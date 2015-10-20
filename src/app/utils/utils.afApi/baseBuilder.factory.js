@@ -50,13 +50,13 @@
 
         function checkType(t) {
             if (t !== "auth" && t !== "array" && t !== "object" && t !== "geo") {
-                throw new Error("Invalid type.  Please enter auth,object,array, or geo");
+                throw new Error("Invalid type: " + t + ".  Please enter 'auth','object','array', or 'geo'");
             }
         }
 
         function checkFlag(f) {
             if (angular.isObject(f) && f !== true) {
-                throw new Error("Invalid flag. Please enter 'true' if you wish to bypass creating a firebase Reference");
+                throw new Error("Invalid flag: " + f + ". Please enter 'true' if you wish to bypass creating a firebase Reference");
             }
 
         }
@@ -64,7 +64,7 @@
         function checkPath(p, f) {
 
             if (Array.isArray(p) && isPath(p) && angular.isObject(f)) {
-                throw new Error("Invalid flag.  Please leave flag argument null if you wish to create a firebase Reference");
+                throw new Error("Invalid flag: " + f + " for path: " + p + ".  Please leave flag argument null if you wish to create a firebase Reference");
             }
 
             function isPath(p) {
@@ -83,13 +83,10 @@
 
         function wrap(type, entity) {
             if (type === 'object') {
-                $log.info(entity);
                 return $firebaseObject(entity);
             } else if (type === 'array') {
-                $log.info(entity);
                 return $firebaseArray(entity);
             } else if (type === 'auth') {
-                $log.info(entity);
                 return $firebaseAuth(entity);
             } else if (type === 'geo') {
                 return new GeoFire(entity);

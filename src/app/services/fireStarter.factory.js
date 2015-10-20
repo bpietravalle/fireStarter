@@ -30,12 +30,12 @@
         this._log = $log;
         this._path = path;
         this._firebase = this._baseBuilder.build(this._type, this._path, this._flag)
-        // this._base = this._baseBuilder.build(this._type, this._path, this._flag)
-        // this._firebase = this._base.then(function(result) {
-        //     return result;
-        // }).catch(function(error) {
-        //     return self._q.reject(error);
-        // });
+            // this._base = this._baseBuilder.build(this._type, this._path, this._flag)
+            // this._firebase = this._base.then(function(result) {
+            //     return result;
+            // }).catch(function(error) {
+            //     return self._q.reject(error);
+            // });
     };
 
 
@@ -46,11 +46,6 @@
 
             fire.path = path;
             fire.timestamp = timestamp;
-            fire.test = test;
-
-            function test() {
-                return self._firebase;
-            }
 
             function path() {
                 return self._path;
@@ -89,24 +84,10 @@
                 fire.unauth = unauth;
 
                 function authWithPassword(creds) {
-                    // return self._firebase
-                    //     .then(completeAction)
-
-                    // function completeAction(res) {
-                    var deferred = self._q.defer();
-                    self._timeout(function() {
-                        self._firebase.$authWithPassword({
-                                email: creds.email,
-                                password: creds.password
-                            })
-                            .then(function(res) {
-                                deferred.resolve(res);
-                            }).catch(function(err) {
-                                deferred.reject(err);
-                            });
-                    });
-                    self._log.info(deferred.promise);
-                    return deferred.promise;
+                    return self._firebase.$authWithPassword({
+                        email: creds.email,
+                        password: creds.password
+                    })
                 }
 
 
@@ -116,111 +97,54 @@
                         remember: true,
                         scope: "email"
                     };
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
 
-                    function completeAction(res) {
-                        return res.$authWithOAuthPopup(provider, options);
-                    }
+                    return self._firebase.$authWithOAuthPopup(provider, options);
                 }
 
                 function changeEmail(creds) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
 
-                    function completeAction(res) {
-                        return res.$changeEmail({
-                            oldEmail: creds.oldEmail,
-                            newEmail: creds.newEmail,
-                            password: creds.password
-                        });
-                    }
+                    return self._firebase.$changeEmail({
+                        oldEmail: creds.oldEmail,
+                        newEmail: creds.newEmail,
+                        password: creds.password
+                    });
                 }
 
                 function changePassword(creds) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$changePassword({
-                            email: creds.email,
-                            oldPassword: creds.oldPassword,
-                            newPassword: creds.newPassword
-                        });
-                    }
+                    return self._firebase.$changePassword({
+                        oldPassword: creds.oldPassword,
+                        newPassword: creds.newPassword
+                    });
                 }
 
                 function createUser(creds) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$createUser({
-                            email: creds.email,
-                            password: creds.password
-                        });
-                    }
+                    return self._firebase.$createUser({
+                        password: creds.password
+                    });
                 }
 
 
                 function getAuth() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$getAuth();
-                    }
+                    return self._firebase.$getAuth();
                 }
 
                 function removeUser(creds) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$removeUser({
-                            email: creds.email,
-                            password: creds.password
-                        });
-                    }
+                    return self._firebase.$removeUser({
+                        password: creds.password
+                    });
                 }
 
                 function requireAuth() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$requireAuth();
-                    }
+                    return self._firebase.$requireAuth();
                 }
 
                 function resetPassword(creds) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$resetPassword({
-                            email: creds.email,
-                        });
-                    }
+                    return self._firebase.$resetPassword({});
                 }
 
 
                 function unauth() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$unauth();
-                    }
+                    return self._firebase.$unauth();
                 }
 
                 self._fire = fire;
@@ -237,23 +161,16 @@
                 fire.set = geofireSet;
 
                 function geofireDistance(loc1, loc2) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.distance(loc1, loc2);
-                    }
+                    return self._firebase.distance(loc1, loc2);
                 }
 
-
                 function geofireGet(key) {
-                    return self._firebase
+                    return self._q.when(self._firebase)
                         .then(completeAction)
                         .catch(standardError);
 
                     function completeAction(res) {
-                        return res.get(key);
+                        return self._firebase.get(key);
                     }
 
                 }
@@ -261,37 +178,36 @@
                 function geofireQuery(data) {
                     var geoQuery;
 
-                    return self._firebase
-                        .then(buildQuery)
+                    return buildQuery(data)
                         .then(extendQuery)
                         .catch(standardError);
 
                     function buildQuery(res) {
-                        return self._q.when(res.query({
-                            center: data.center,
-                            radius: data.radius
+                        return self._q.when(self._firebase.query({
+                            center: res.center,
+                            radius: res.radius
                         }));
                     }
 
                     function extendQuery(res) {
                         geoQuery = {
                             center: function() {
-                                return res.center();
+                                return self._firebase.center();
                             },
                             radius: function() {
-                                return res.radius();
+                                return self._firebase.radius();
                             },
                             updateCriteria: function(criteria) {
-                                return res.updateCriteria(criteria);
+                                return self._firebase.updateCriteria(criteria);
                             },
                             on: function(eventType, cb, context) {
-                                return res.on(eventType, function(key, location, distance) {
+                                return self._firebase.on(eventType, function(key, location, distance) {
                                     return self._q.when(cb.call(context, key, location, distance))
                                         .catch(standardError);
                                 });
                             },
                             cancel: function() {
-                                return res.cancel();
+                                return self._firebase.cancel();
                             }
                         };
                         return geoQuery;
@@ -301,34 +217,28 @@
                 }
 
                 function geofireRef() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.ref();
-                    }
+                    return self._firebase.ref();
                 }
 
 
                 function geofireRemove(key) {
-                    return self._firebase
+                    return self._q.when(self._firebase)
                         .then(completeAction)
                         .catch(standardError);
 
                     function completeAction(res) {
-                        return res.remove(key);
+                        return self._firebase.remove(key);
                     }
 
                 }
 
                 function geofireSet(key, coords) {
-                    return self._firebase
+                    return self._q.when(self._firebase)
                         .then(completeAction)
                         .catch(standardError);
 
                     function completeAction(res) {
-                        return res.set(key, coords);
+                        return self._firebase.set(key, coords);
                     }
 
                 }
@@ -350,96 +260,42 @@
                 fire.save = save;
 
                 function add(rec) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$add(rec);
-                    }
+                    return self._firebase.$add(rec);
                 }
 
                 function destroy() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$destroy();
-                    }
+                    return self._firebase.$destroy();
                 }
 
                 function getRecord(key) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$getRecord(key);
-                    }
+                    return self._firebase.$getRecord(key);
                 }
 
                 function indexFor(val) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$indexFor(val);
-                    }
+                    return self._firebase.$indexFor(val);
                 }
 
 
                 function keyAt(rec) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$keyAt(rec);
-                    }
+                    return self._firebase.$keyAt(rec);
                 }
 
                 function loaded() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$loaded();
-                    }
+                    return self._firebase.$loaded();
                 }
 
                 function ref() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$ref();
-                    }
+                    return self._firebase.$ref();
                 }
 
 
                 function remove(rec) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$remove();
-                    }
+                    return self._firebase.$remove();
 
                 }
 
                 function save(rec) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$save(rec);
-                    }
+                    return self._firebase.$save(rec);
                 }
 
                 self._fire = fire;
@@ -457,100 +313,60 @@
                 fire.save = save;
                 fire.priority = priority;
                 fire.value = value;
+                fire.watch = watch;
 
                 function bindTo(s, v) {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$bindTo(s, v)
-                    }
+                    return self._firebase.$bindTo(s, v)
                 }
 
                 function destroy() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$destroy();
-                    }
+                    return self._firebase.$destroy();
 
                 }
 
                 function id() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$id;
-                    }
+                    return self._firebase.$id;
                 }
 
                 function loaded() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
+                    return self._firebase.$loaded()
+										.then(completeAction)
+										.catch(standardError);
 
-                    function completeAction(res) {
-                        return res.$loaded()
-                    }
+										function completeAction(res){
+											fire = res;
+											return fire;
+										}
                 }
 
 
                 function priority() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$priority;
-                    }
+                    return self._firebase.$priority;
 
                 }
 
                 function ref() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.$ref();
-                    }
+                    return self._firebase.$ref();
                 }
 
                 function remove() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
 
-                    function completeAction(res) {
-                        return res.$remove()
-                    }
+                    return self._firebase.$remove();
                 }
 
 
                 function save() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
 
-                    function completeAction(res) {
-                        return res.$save()
-                    }
+                    return self._firebase.$save()
                 }
 
                 function value() {
-                    return self._firebase
-                        .then(completeAction)
-                        .catch(standardError);
+                    return self._firebase.$value;
 
-                    function completeAction(res) {
-                        return res.$value
-                    }
+                }
 
+                function watch(cb, context) {
+                    return self._firebase.$watch(cb, context);
                 }
                 self._fire = fire;
                 return self._fire;
