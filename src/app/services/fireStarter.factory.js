@@ -28,7 +28,7 @@
         this._q = $q;
         this._log = $log;
         this._path = path;
-        this._firebase = this._baseBuilder.build(this._type, this._path, this._flag);
+        this._firebase = this._baseBuilder.init(this._type, this._path, this._flag);
     };
 
 
@@ -42,11 +42,17 @@
             fire.timestamp = timestamp;
 
             function base() {
+                //I'm lazy and until I find a better way to return the firebase
                 return self._firebase;
             }
 
             function path() {
-                return self._path;
+                if (self._flag === true) {
+                    return self._path.path;
+                } else {
+                    return self._path;
+                }
+
             }
 
             function timestamp() {
@@ -71,25 +77,35 @@
             function FirebaseAuth(auth) {
 
                 return angular.extend(auth, {
+                    authAnonymously: authAnonymously,
+                    authWithCustomToken: authWithCustomToken,
                     authWithPassword: authWithPassword,
                     authWithOAuthPopup: authWithOAuthPopup,
                     changePassword: changePassword,
                     changeEmail: changeEmail,
                     createUser: createUser,
                     getAuth: getAuth,
+                    onAuth: onAuth,
                     removeUser: removeUser,
                     requireAuth: requireAuth,
                     resetPassword: resetPassword,
-                    unauth: unauth
+                    unauth: unauth,
+                    waitForAuth: waitForAuth
                 });
 
-                function authWithPassword(creds) {
-                    return self._firebase.$authWithPassword({
-                        email: creds.email,
-                        password: creds.password
-                    })
+
+                function authAnonymously(options) {
+                    return self._firebase.$authAnonymously(options);
                 }
 
+                function authWithCustomToken(token, options) {
+                    return self._firebase.$authWithCustomToken(token, options);
+                }
+
+                function authWithPassword(creds, options) {
+                    return self._firebase.$authWithPassword(creds, options);
+
+                }
 
 
                 function authWithOAuthPopup(provider) {
@@ -103,24 +119,15 @@
 
                 function changeEmail(creds) {
 
-                    return self._firebase.$changeEmail({
-                        oldEmail: creds.oldEmail,
-                        newEmail: creds.newEmail,
-                        password: creds.password
-                    });
+                    return self._firebase.$changeEmail(creds);
                 }
 
                 function changePassword(creds) {
-                    return self._firebase.$changePassword({
-                        oldPassword: creds.oldPassword,
-                        newPassword: creds.newPassword
-                    });
+                    return self._firebase.$changePassword(creds);
                 }
 
                 function createUser(creds) {
-                    return self._firebase.$createUser({
-                        password: creds.password
-                    });
+                    return self._firebase.$createUser(creds);
                 }
 
 
@@ -128,10 +135,12 @@
                     return self._firebase.$getAuth();
                 }
 
+                function onAuth(cb, context) {
+                    return self._firebase.$onAuth(cb, context);
+                }
+
                 function removeUser(creds) {
-                    return self._firebase.$removeUser({
-                        password: creds.password
-                    });
+                    return self._firebase.$removeUser(creds);
                 }
 
                 function requireAuth() {
@@ -139,13 +148,18 @@
                 }
 
                 function resetPassword(creds) {
-                    return self._firebase.$resetPassword({});
+                    return self._firebase.$resetPassword(creds);
                 }
 
 
                 function unauth() {
                     return self._firebase.$unauth();
                 }
+
+                function waitForAuth() {
+                    return self._firebase.$waitForAuth();
+                }
+
 
             }
 
@@ -162,11 +176,11 @@
                 });
 
                 function geofireDistance(loc1, loc2) {
-                    return self._firebase.distance(loc1, loc2);
+                    return geo.base().distance(loc1, loc2);
                 }
 
                 function geofireGet(key) {
-                    return self._q.when(self._firebase)
+                    return self._q.when(geo.base())
                         .then(completeAction)
                         .catch(standardError);
 
@@ -184,7 +198,7 @@
                         .catch(standardError);
 
                     function buildQuery(res) {
-                        return self._q.when(self._firebase.query({
+                        return self._q.when(geo.base().query({
                             center: res.center,
                             radius: res.radius
                         }));
@@ -218,28 +232,28 @@
                 }
 
                 function geofireRef() {
-                    return self._firebase.ref();
+                    return geo.base().ref();
                 }
 
 
                 function geofireRemove(key) {
-                    return self._q.when(self._firebase)
+                    return self._q.when(geo.base())
                         .then(completeAction)
                         .catch(standardError);
 
                     function completeAction(res) {
-                        return self._firebase.remove(key);
+                        return res.remove(key);
                     }
 
                 }
 
                 function geofireSet(key, coords) {
-                    return self._q.when(self._firebase)
+                    return self._q.when(geo.base())
                         .then(completeAction)
                         .catch(standardError);
 
                     function completeAction(res) {
-                        return self._firebase.set(key, coords);
+                        return res.set(key, coords);
                     }
 
                 }
@@ -257,7 +271,8 @@
                     loaded: loaded,
                     ref: ref,
                     remove: remove,
-                    save: save
+                    save: save,
+                    watch: watch
                 });
 
 
@@ -282,8 +297,8 @@
                     return self._firebase.$keyAt(rec);
                 }
 
-                function loaded() {
-                    return self._firebase.$loaded();
+                function loaded(s, f) {
+                    return self._firebase.$loaded(s, f);
                 }
 
                 function ref() {
@@ -292,12 +307,16 @@
 
 
                 function remove(rec) {
-                    return self._firebase.$remove();
+                    return self._firebase.$remove(rec);
 
                 }
 
                 function save(rec) {
                     return self._firebase.$save(rec);
+                }
+
+                function watch(cb, context) {
+                    return self._firebase.$watch(cb, context);
                 }
 
             }
@@ -368,10 +387,8 @@
                 }
 
                 function watch(cb, context) {
-                        return self._firebase.$watch(cb, context);
-                    }
-                    // self._fire = fire;
-                    // return self._fire;
+                    return self._firebase.$watch(cb, context);
+                }
             }
 
             function standardError(err) {

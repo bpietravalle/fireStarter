@@ -6,7 +6,7 @@
         var utils = {
             set: set,
             wrap: wrap,
-            build: build
+            init: build
         };
         return utils;
 
@@ -14,15 +14,6 @@
 
         function build(type, path, flag) {
             return set(type, path, flag);
-            // var deferred = $q.defer();
-            // $timeout(function() {
-            //     $q.when(set(type, path, flag)).then(function(result) {
-            //         deferred.resolve(result);
-            //     }).catch(function(error) {
-            //         deferred.reject(error);
-            //     });
-            // });
-            // return deferred.promise;
         }
 
         //TODO: checkparams as $q.all

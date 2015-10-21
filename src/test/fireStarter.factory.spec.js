@@ -21,7 +21,7 @@
         });
         describe("constructor", function() {
             beforeEach(function() {
-                spyOn(baseBuilder, 'build').and.callThrough(); //Fake(function(){
+                spyOn(baseBuilder, 'init').and.callThrough(); //Fake(function(){
 									// return deferred.promise;
 								// });
                 test = fireStarter("object", path);
@@ -36,7 +36,7 @@
 							// });
 							// $timeout.flush();
 							// $rootScope.$digest();
-							expect(baseBuilder.build.calls.count()).toEqual(1);
+							expect(baseBuilder.init.calls.count()).toEqual(1);
 							// expect(test.test()).toEqual(1);
 							// expect(test.()).toEqual(1);
 
