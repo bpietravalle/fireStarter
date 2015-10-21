@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    describe('afUtils Service', function() {
+    describe('baseBuilder Service', function() {
         var baseBuilder, $rootScope, $log, deferred, root, $q, $timeout;
 
 
@@ -23,7 +23,7 @@
             spyOn($q, "when").and.callThrough();
         });
 
-        describe("build", function() {
+        describe("init", function() {
             beforeEach(function() {
                 spyOn(deferred, "resolve").and.callThrough();
                 spyOn(deferred, "reject").and.callThrough();

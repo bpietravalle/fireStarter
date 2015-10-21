@@ -23,9 +23,6 @@
             it("should depend on utils.afApi", function() {
                 expect(hasModule('utils.afApi')).toBeTruthy();
             });
-            it("should depend on utils.gfApi", function() {
-                expect(hasModule('utils.gfApi')).toBeTruthy();
-            });
         });
     });
 })(angular);

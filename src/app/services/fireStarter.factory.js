@@ -6,7 +6,7 @@
         .factory("fireStarter", FireStarterFactory);
 
     /** @ngInject */
-    function FireStarterFactory(baseBuilder, fbHelper, $q, $log) {
+    function FireStarterFactory(baseBuilder, $q, $log) {
 
         return function(type, path, flag) {
             var fb = new FireStarter(baseBuilder, $q, $log, type, path, flag);
@@ -42,7 +42,7 @@
             fire.timestamp = timestamp;
 
             function base() {
-                //I'm lazy and until I find a better way to return the firebase
+                //I'm lazy and until I find a better way to return the firebase when needed
                 return self._firebase;
             }
 
@@ -176,11 +176,11 @@
                 });
 
                 function geofireDistance(loc1, loc2) {
-                    return geo.base().distance(loc1, loc2);
+                    return self._firebase.distance(loc1, loc2);
                 }
 
                 function geofireGet(key) {
-                    return self._q.when(geo.base())
+                    return self._q.when(self._firebase)
                         .then(completeAction)
                         .catch(standardError);
 
@@ -193,51 +193,42 @@
                 function geofireQuery(data) {
                     var geoQuery;
 
-                    return buildQuery(data)
-                        .then(extendQuery)
-                        .catch(standardError);
+                    geoQuery = self._q.when(self._firebase.query(data));
 
-                    function buildQuery(res) {
-                        return self._q.when(geo.base().query({
-                            center: res.center,
-                            radius: res.radius
-                        }));
-                    }
+                    return {
+                        center: function() {
+                            return geoQuery.center();
+                        },
+                        radius: function() {
+                            return geoQuery.radius();
+                        },
+                        updateCriteria: function(criteria) {
+                            return geoQuery.updateCriteria(criteria);
+                        },
+                        on: function(eventType, cb, context) {
+                            return geoQuery.on(eventType, function(key, location, distance) {
+                                return self._q.when(cb.call(context, key, location, distance))
+                                    .catch(standardError);
+                            });
+                        },
+                        cancel: function() {
+                            return geoQuery.cancel();
+                        },
+                        remove: function() {
+                            return geoQuery.remove();
+                        }
+                    };
 
-                    function extendQuery(res) {
-                        geoQuery = {
-                            center: function() {
-                                return res.center();
-                            },
-                            radius: function() {
-                                return res.radius();
-                            },
-                            updateCriteria: function(criteria) {
-                                return res.updateCriteria(criteria);
-                            },
-                            on: function(eventType, cb, context) {
-                                return res.on(eventType, function(key, location, distance) {
-                                    return self._q.when(cb.call(context, key, location, distance))
-                                        .catch(standardError);
-                                });
-                            },
-                            cancel: function() {
-                                return res.cancel();
-                            }
-                        };
-                        return geoQuery;
-
-                    }
 
                 }
 
                 function geofireRef() {
-                    return geo.base().ref();
+                    return self._firebase.ref();
                 }
 
 
                 function geofireRemove(key) {
-                    return self._q.when(geo.base())
+                    return self._q.when(self._firebase)
                         .then(completeAction)
                         .catch(standardError);
 
@@ -248,7 +239,7 @@
                 }
 
                 function geofireSet(key, coords) {
-                    return self._q.when(geo.base())
+                    return self._q.when(self._firebase)
                         .then(completeAction)
                         .catch(standardError);
 
