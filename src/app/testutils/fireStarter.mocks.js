@@ -3,15 +3,17 @@
 
     /** @ngInject */
 
-    function fireStarterMocks(baseBuilder, $timeout, fireStarter) {
-        var utils = {
-            arrData: recArrayData,
-						auth: auth,
-            ref: stubRef,
-            array: stubArray,
-            object: makeObject
+    function fireStarterMocks(baseBuilder, $q, $timeout, fireStarter) {
+        var vm = this;
 
-        }
+        vm.array = stubArray;
+        vm.arrData = recArrayData;
+        vm.auth = auth;
+        vm.authRef = authRef;
+        vm.object = makeObject;
+        vm.makeGeo = makeGeo;
+        vm.ref = stubRef;
+
 
         function makeObject(initialData, path, flag) {
 
@@ -29,15 +31,40 @@
             return obj;
         }
 
+        function makeGeo(initialData, path, flag) {
 
+            if (!path) {
+                path = stubRef();
+                flag = true;
+            }
 
-        function stubRef() {
-            return new MockFirebase('Mock://').child('data/REC1');
+            var geo = fireStarter("geo", path, flag);
+
+            if (initialData) {
+                geo.ref().set(initialData);
+                geo.ref().flush();
+                // $timeout.flush();
+            }
+            return geo;
         }
 
-				function auth(){
-					return fireStarter("auth", authRef(), true);
-				}
+
+
+        function stubRef(path) {
+            if (!path) {
+                return new MockFirebase('Mock://').child('data/REC1');
+            } else
+                var mockPath = path.join('/'); //baseBuilder changes array to string
+            return new MockFirebase('Mock://').child(mockPath);
+        }
+
+
+        function auth(ref) {
+            if (!ref) {
+                ref = authRef();
+            }
+            return fireStarter("auth", ref, true);
+        }
 
         function authRef() {
             return jasmine.createSpyObj('ref', ['authWithCustomToken', 'authAnonymously', 'authWithPassword',
@@ -93,9 +120,70 @@
             };
         }
 
+        function geoQuerySpy() {
+            return jasmine.createSpyObj("geoQuery", ["updateCriteria", "center", "remove","radius", "on", "cancel"]);
+        }
+        vm.geoSpyObj = {
+            query: function() {
+                return vm.geoQuerySpy;
+            },
+            get: function() {
+                return jasmine.createSpy("get");
+            },
+            set: function() {
+                return jasmine.createSpy("set");
+            },
+            remove: function() {
+                return jasmine.createSpy("remove");
+            },
+            ref: function() {
+                return vm.stubRef();
+            }
+        };
+        vm.geoSpy = $q.when(vm.geoSpyObj);
+
+        vm.geoData = {
+            "a": {
+                "g": "keyA",
+                "1": {
+                    "0": 90,
+                    "1": 50
+                }
+            },
+            "b": {
+                "g": "keyB",
+                "1": {
+                    "0": 30,
+                    "1": 60
+                }
+            },
+            "c": {
+                "g": "keyC",
+                "1": {
+                    "0": -70,
+                    "1": 150
+                }
+            }
+        };
+        vm.newGeoData = {
+            "d": {
+                "g": "keyD",
+                "1": {
+                    "0": 20,
+                    "1": -180
+                }
+            },
+            "e": {
+                "g": "keyE",
+                "1": {
+                    "0": 40,
+                    "1": -100
+                }
+            }
+        };
     }
 
     angular.module('fbMocks')
-        .factory('fireStarterMocks', fireStarterMocks);
+        .service('fsMocks', fireStarterMocks);
 
 })(angular);

@@ -2,7 +2,7 @@
     "use strict";
 
     /** @ngInject */
-    function geoObjMockService(geoMngr, $q, fbRef, $timeout) {
+    function geoObjMockService($q, fbRef, $timeout) {
         var DEFAULT_ID = 'REC1';
         var vm = this;
         vm.gfURL = new Firebase("https://geofire.firebaseio.com");
