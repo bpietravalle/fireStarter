@@ -1,3 +1,6 @@
+//angularFire tests
+//replaced $fbObject with fireStarter
+//need to change value/priority so can set; not sure its working
 describe('$firebaseObject', function() {
     'use strict';
     var fireStarter, $firebaseObject, $utils, fbRef, $rootScope, $timeout, obj, testutils, $interval, log;
@@ -111,19 +114,23 @@ describe('$firebaseObject', function() {
             }));
         });
 
-        // it('should work on a query', function() {
-        //   var ref = stubRef();
-        //   ref.set({foo: 'baz'});
-        // ref.flush();
-        //   var spy = spyOn(ref, 'update');
-        //   var query = ref.limit(3);
-        //   var obj = fireStarter("object",query, true);
-        //   flushAll(query);
-        //   obj.foo = 'bar';
-        //   obj.save();
-        //   flushAll(query);
-        //   expect(spy).toHaveBeenCalledWith({foo: 'bar'}, jasmine.any(Function));
-        // });
+        it('should work on a query', function() {
+            var ref = stubRef();
+            ref.set({
+                foo: 'baz'
+            });
+            ref.flush();
+            var spy = spyOn(ref, 'update');
+            var query = ref.limit(3);
+            var obj = makeObject(undefined, query, true);
+            flushAll(query);
+            obj.base().foo = 'bar'; //added base()  for setting values use base
+            obj.save();
+            flushAll(query);
+            expect(spy).toHaveBeenCalledWith({
+                foo: 'bar'
+            }, jasmine.any(Function));
+        });
     });
 
     describe('loaded', function() {
@@ -138,20 +145,22 @@ describe('$firebaseObject', function() {
             obj.loaded().then(whiteSpy, blackSpy);
             obj.ref().flush();
             flushAll();
-            expect(whiteSpy).toHaveBeenCalledWith(obj);
+            expect(whiteSpy).toHaveBeenCalledWith(obj.base());
             expect(blackSpy).not.toHaveBeenCalled();
         });
 
         it('should reject if the ready promise is rejected', function() {
             var whiteSpy = jasmine.createSpy('resolve');
             var blackSpy = jasmine.createSpy('reject');
-            var ref = stubRef();
             var err = new Error('test_fail');
+            var ref = stubRef();
             ref.failNext('once', err);
-            var obj = makeObject(null, ref, true);
+            var obj = makeObject(null, ref, true); //doesn't pass if null changed to undefined
             obj.loaded().then(whiteSpy, blackSpy);
-            flushAll();
+            ref.flush()
+            $rootScope.$digest();
             expect(whiteSpy).not.toHaveBeenCalled();
+            // expect(obj.ref()).toEqual("as");
             expect(blackSpy).toHaveBeenCalledWith(err);
         });
 
@@ -159,12 +168,14 @@ describe('$firebaseObject', function() {
             var spy = jasmine.createSpy('loaded');
             obj.loaded().then(spy);
             flushAll();
-            expect(spy).toHaveBeenCalledWith(obj);
+            expect(spy).toHaveBeenCalledWith(obj.base());
         });
 
         it('should contain all data at the time loaded is called', function() {
-            var obj = makeObject();
+            var ref = stubRef();
+            var obj = makeObject(undefined, ref, true);
             var spy = jasmine.createSpy('loaded').and.callFake(function(data) {
+                $rootScope.$digest(); //had to add this to get it to pass;
                 expect(data).toEqual(jasmine.objectContaining(FIXTURE_DATA));
             });
             obj.loaded(spy);
@@ -195,7 +206,7 @@ describe('$firebaseObject', function() {
             var spy = jasmine.createSpy('loaded');
             obj.loaded(spy);
             flushAll();
-            expect(spy).toHaveBeenCalledWith(obj);
+            expect(spy).toHaveBeenCalledWith(obj.base()); //had to add base()
         });
 
         it('should reject properly if function passed directly into loaded', function() {
@@ -207,365 +218,419 @@ describe('$firebaseObject', function() {
             var obj = makeObject(undefined, ref, true);
             obj.loaded(whiteSpy, blackSpy);
             ref.flush();
-            $timeout.flush();
+            $rootScope.$digest(); //had to add
             expect(whiteSpy).not.toHaveBeenCalled();
             expect(blackSpy).toHaveBeenCalledWith(err);
         });
     });
 
-    // describe('$ref', function () {
-    //   it('should return the Firebase instance that created it', function () {
-    //     var ref = stubRef();
-    //     var obj = $firebaseObject(ref);
-    //     expect(obj.ref()).toBe(ref);
-    //   });
-    // });
+    describe('ref', function() {
+        it('should return the Firebase instance that created it', function() {
+            var ref = stubRef();
+            var obj = makeObject(null, ref, true);
+            expect(obj.ref()).toBe(ref);
+        });
+    });
 
-    // describe('bindTo', function () {
-    //   it('should return a promise', function () {
-    //     var res = obj.bindTo($rootScope.$new(), 'test');
-    //     expect(res).toBeAPromise();
-    //   });
+    describe('bindTo', function() {
 
-    //   it('should resolve to an off function', function () {
-    //     var spy = jasmine.createSpy('resolve').and.callFake(function (off) {
-    //       expect(off).toBeA('function');
-    //     });
-    //     obj.bindTo($rootScope.$new(), 'test').then(spy, function() { console.error(arguments); });
-    //     flushAll();
-    //     expect(spy).toHaveBeenCalled();
-    //   });
+        it('should return a promise', function() {
+            var res = obj.bindTo($rootScope.$new(), 'test');
+            expect(res).toBeAPromise();
+        });
 
-    //   it('should have data when it resolves', function () {
-    //     var spy = jasmine.createSpy('resolve').and.callFake(function () {
-    //       expect(obj).toEqual(jasmine.objectContaining(FIXTURE_DATA));
-    //     });
-    //     obj.bindTo($rootScope.$new(), 'test').then(spy);
-    //     flushAll();
-    //     expect(spy).toHaveBeenCalled();
-    //   });
+        it('should resolve to an off function', function() {
+            var spy = jasmine.createSpy('resolve').and.callFake(function(off) {
+                expect(off).toBeA('function');
+            });
+            obj.bindTo($rootScope.$new(), 'test').then(spy, function() {
+                console.error(arguments);
+            });
+            flushAll();
+            expect(spy).toHaveBeenCalled();
+        });
 
-    //   it('should have data in $scope when resolved', function() {
-    //     var spy = jasmine.createSpy('resolve').and.callFake(function () {
-    //       expect($scope.test).toEqual($utils.parseScopeData(obj));
-    //       expect($scope.test.$id).toBe(obj.$id);
-    //     });
-    //     var $scope = $rootScope.$new();
-    //     obj.bindTo($scope, 'test').then(spy);
-    //     flushAll();
-    //     expect(spy).toHaveBeenCalled();
-    //   });
+        it('should have data when it resolves', function() {
+            var spy = jasmine.createSpy('resolve').and.callFake(function() {
+                $rootScope.$digest(); //had to add
+                expect(obj).toEqual(jasmine.objectContaining(FIXTURE_DATA));
+            });
+            obj.bindTo($rootScope.$new(), 'test').then(spy);
+            flushAll();
+            expect(spy).toHaveBeenCalled();
+        });
 
-    //   it('should send local changes to $firebase.$set', function () {
-    //     spyOn(obj.ref(), 'set');
-    //     var $scope = $rootScope.$new();
-    //     obj.bindTo($scope, 'test');
-    //     flushAll();
-    //     obj.ref().set.calls.reset();
-    //     $scope.$apply(function () {
-    //       $scope.test.bar = 'baz';
-    //     });
-    //     $timeout.flush();
-    //     expect(obj.ref().set).toHaveBeenCalledWith(jasmine.objectContaining({bar: 'baz'}), jasmine.any(Function));
-    //   });
+        it('should have data in $scope when resolved', function() {
+            var spy = jasmine.createSpy('resolve').and.callFake(function() {
+                $rootScope.$digest(); //had to add
+                expect($scope.test).toEqual($utils.parseScopeData(obj));
+                expect($scope.test.$id).toBe(obj.id());
+            });
+            var $scope = $rootScope.$new();
+            obj.bindTo($scope, 'test').then(spy);
+            flushAll();
+            expect(spy).toHaveBeenCalled();
+        });
 
-    //   it('should allow data to be set inside promise callback', function () {
-    //     var ref = obj.ref();
-    //     spyOn(ref, 'set');
-    //     var $scope = $rootScope.$new();
-    //     var newData = { 'bar': 'foo' };
-    //     var spy = jasmine.createSpy('resolve').and.callFake(function () {
-    //       $scope.test = newData;
-    //     });
-    //     obj.bindTo($scope, 'test').then(spy);
-    //     flushAll(); // for loaded
-    //     flushAll(); // for $watch timeout
-    //     expect(spy).toHaveBeenCalled();
-    //     expect($scope.test).toEqual(jasmine.objectContaining(newData));
-    //     expect(ref.set).toHaveBeenCalledWith(newData, jasmine.any(Function));
-    //   });
+        it('should send local changes to $firebase.$set', function() {
+            spyOn(obj.ref(), 'set');
+            var $scope = $rootScope.$new();
+            obj.bindTo($scope, 'test');
+            flushAll();
+            obj.ref().set.calls.reset();
+            $scope.$apply(function() {
+                $scope.test.bar = 'baz';
+            });
+            $timeout.flush();
+            expect(obj.ref().set).toHaveBeenCalledWith(jasmine.objectContaining({
+                bar: 'baz'
+            }), jasmine.any(Function));
+        });
 
-    //   it('should apply server changes to scope variable', function () {
-    //     var $scope = $rootScope.$new();
-    //     obj.bindTo($scope, 'test');
-    //     $timeout.flush();
-    //     obj.$$updated(fakeSnap({foo: 'bar'}));
-    //     obj.$$notify();
-    //     flushAll();
-    //     expect($scope.test).toEqual({foo: 'bar', $id: obj.$id, $priority: obj.$priority});
-    //   });
+        it('should allow data to be set inside promise callback', function() {
+            var ref = obj.ref();
+            spyOn(ref, 'set');
+            var $scope = $rootScope.$new();
+            var newData = {
+                'bar': 'foo'
+            };
+            var spy = jasmine.createSpy('resolve').and.callFake(function() {
+                $scope.test = newData;
+            });
+            obj.bindTo($scope, 'test').then(spy);
+            flushAll(); // for loaded
+            flushAll(); // for $watch timeout
+            expect(spy).toHaveBeenCalled();
+            expect($scope.test).toEqual(jasmine.objectContaining(newData));
+            expect(ref.set).toHaveBeenCalledWith(newData, jasmine.any(Function));
+        });
 
-    //   it('will replace the object on scope if new server value is not deeply equal', function () {
-    //     var $scope = $rootScope.$new();
-    //     obj.bindTo($scope, 'test');
-    //     $timeout.flush();
-    //     obj.$$updated(fakeSnap({foo: 'bar'}));
-    //     obj.$$notify();
-    //     flushAll();
-    //     var oldTest = $scope.test;
-    //     obj.$$updated(fakeSnap({foo: 'baz'}));
-    //     obj.$$notify();
-    //     expect($scope.test === oldTest).toBe(false);
-    //   });
+        it('should apply server changes to scope variable', function() {
+            var $scope = $rootScope.$new();
+            obj.bindTo($scope, 'test');
+            $timeout.flush();
+            obj.base().$$updated(fakeSnap({ //added base()
+                foo: 'bar'
+            }));
+            obj.base().$$notify(); //added base()
+            flushAll();
+            expect($scope.test).toEqual({
+                foo: 'bar',
+                $id: obj.id(),
+                $priority: obj.priority()
+            });
+        });
 
-    //   it('will leave the scope value alone if new server value is deeply equal', function () {
-    //     var $scope = $rootScope.$new();
-    //     obj.bindTo($scope, 'test');
-    //     $timeout.flush();
-    //     obj.$$updated(fakeSnap({foo: 'bar'}));
-    //     obj.$$notify();
-    //     flushAll();
-    //     var oldTest = $scope.test;
-    //     obj.$$updated(fakeSnap({foo: 'bar'}));
-    //     obj.$$notify();
-    //     expect($scope.test === oldTest).toBe(true);
-    //   });
+        it('will replace the object on scope if new server value is not deeply equal', function() {
+            var $scope = $rootScope.$new();
+            obj.bindTo($scope, 'test');
+            $timeout.flush();
+            obj.base().$$updated(fakeSnap({
+                foo: 'bar'
+            })); //added base()
+            obj.base().$$notify(); //added base()
+            flushAll();
+            var oldTest = $scope.test;
+            obj.base().$$updated(fakeSnap({
+                foo: 'baz'
+            })); //added base()
+            obj.base().$$notify(); //added base()
+            expect($scope.test === oldTest).toBe(false);
+        });
 
-    //   it('should stop binding when off function is called', function () {
-    //     var origData = $utils.scopeData(obj);
-    //     var $scope = $rootScope.$new();
-    //     var spy = jasmine.createSpy('bindTo').and.callFake(function (off) {
-    //       expect($scope.obj).toEqual(origData);
-    //       off();
-    //     });
-    //     obj.bindTo($scope, 'obj').then(spy);
-    //     flushAll();
-    //     obj.$$updated(fakeSnap({foo: 'bar'}));
-    //     flushAll();
-    //     expect(spy).toHaveBeenCalled();
-    //     expect($scope.obj).toEqual(origData);
-    //   });
+        it('will leave the scope value alone if new server value is deeply equal', function() {
+            var $scope = $rootScope.$new();
+            obj.bindTo($scope, 'test');
+            $timeout.flush();
+            obj.base().$$updated(fakeSnap({
+                foo: 'bar'
+            })); //added base()
+            obj.base().$$notify(); //added base()
+            flushAll();
+            var oldTest = $scope.test;
+            obj.base().$$updated(fakeSnap({
+                foo: 'bar'
+            })); //added base()
+            obj.base().$$notify(); //added base()
+            expect($scope.test === oldTest).toBe(true);
+        });
 
-    //   it('should not destroy remote data if local is pre-set', function () {
-    //     var origValue = $utils.scopeData(obj);
-    //     var $scope = $rootScope.$new();
-    //     $scope.test = {foo: true};
-    //     obj.bindTo($scope, 'test');
-    //     flushAll();
-    //     expect($utils.scopeData(obj)).toEqual(origValue);
-    //   });
+        it('should stop binding when off function is called', function() {
+            var origData = $utils.scopeData(obj.base()); //added base()
+            var $scope = $rootScope.$new();
+            var spy = jasmine.createSpy('bindTo').and.callFake(function(off) {
+                $rootScope.$digest();
+                expect($scope.obj).toEqual(origData);
+                off();
+            });
+            obj.bindTo($scope, 'obj').then(spy);
+            flushAll();
+            obj.base().$$updated(fakeSnap({
+                foo: 'bar'
+            })); //added base()
+            flushAll();
+            expect(spy).toHaveBeenCalled();
+            expect($scope.obj).toEqual(origData);
+        });
 
-    //   it('should not fail if remote data is null', function () {
-    //     var $scope = $rootScope.$new();
-    //     var obj = makeObject();
-    //     obj.bindTo($scope, 'test');
-    //     obj.ref().set(null);
-    //     flushAll(obj.ref());
-    //     expect($scope.test).toEqual({$value: null, $id: obj.$id, $priority: obj.$priority});
-    //   });
+        it('should not destroy remote data if local is pre-set', function() {
+            var origValue = $utils.scopeData(obj);
+            var $scope = $rootScope.$new();
+            $scope.test = {
+                foo: true
+            };
+            obj.bindTo($scope, 'test');
+            flushAll();
+            expect($utils.scopeData(obj)).toEqual(origValue);
+        });
 
-    //   it('should delete $value if set to an object', function () {
-    //     var $scope = $rootScope.$new();
-    //     var obj = makeObject();
-    //     obj.bindTo($scope, 'test');
-    //     flushAll(obj.ref());
-    //     expect($scope.test).toEqual({$value: null, $id: obj.$id, $priority: obj.$priority});
-    //     $scope.$apply(function() {
-    //       $scope.test.text = 'hello';
-    //     });
-    //     flushAll();
-    //     obj.ref().flush();
-    //     flushAll();
-    //     expect($scope.test).toEqual({text: 'hello', $id: obj.$id, $priority: obj.$priority});
-    //   });
+        it('should not fail if remote data is null', function() {
+            var $scope = $rootScope.$new();
+            var obj = makeObject(null);
+            obj.bindTo($scope, 'test');
+            obj.ref().set(null);
+            flushAll(obj.ref());
+            expect($scope.test).toEqual({
+                $value: null,
+                $id: obj.id(),
+                $priority: obj.priority()
+            });
+        });
 
-    //   it('should update $priority if $priority changed in $scope', function () {
-    //     var $scope = $rootScope.$new();
-    //     var spy = spyOn(obj.ref(), 'set');
-    //     obj.bindTo($scope, 'test');
-    //     $timeout.flush();
-    //     $scope.$apply(function() {
-    //       $scope.test.$priority = 999;
-    //     });
-    //     $interval.flush(500);
-    //     $timeout.flush();
-    //     expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.priority': 999}), jasmine.any(Function));
-    //   });
+        it('should delete $value if set to an object', function() {
+            var $scope = $rootScope.$new();
+            var obj = makeObject();
+            obj.bindTo($scope, 'test');
+            flushAll(obj.ref());
+            expect($scope.test).toEqual({
+                $value: null,
+                $id: obj.id(),
+                $priority: obj.priority()
+            });
+            $scope.$apply(function() {
+                $scope.test.text = 'hello';
+            });
+            flushAll();
+            obj.ref().flush();
+            flushAll();
+            expect($scope.test).toEqual({
+                text: 'hello',
+                $id: obj.id(),
+                $priority: obj.priority()
+            });
+        });
 
-    //   it('should update $value if $value changed in $scope', function () {
-    //     var $scope = $rootScope.$new();
-    //     var ref = stubRef();
-    //     var obj = $firebaseObject(ref);
-    //     ref.flush();
-    //     obj.$$updated(testutils.refSnap(ref, 'foo', null));
-    //     expect(obj.$value).toBe('foo');
-    //     var spy = spyOn(ref, 'set');
-    //     obj.bindTo($scope, 'test');
-    //     flushAll();
-    //     $scope.$apply(function() {
-    //       $scope.test.$value = 'bar';
-    //     });
-    //     $interval.flush(500);
-    //     $timeout.flush();
-    //     expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.value': 'bar'}), jasmine.any(Function));
-    //   });
+        it('should update $priority if $priority changed in $scope', function() {
+            var $scope = $rootScope.$new();
+            var spy = spyOn(obj.ref(), 'set');
+            obj.bindTo($scope, 'test');
+            $timeout.flush();
+            $scope.$apply(function() {
+                $scope.test.$priority = 999;
+            });
+            $interval.flush(500);
+            $timeout.flush();
+            expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({
+                '.priority': 999
+            }), jasmine.any(Function));
+        });
 
-    //   it('should only call $$scopeUpdated once if both metaVars and properties change in the same $digest',function(){
-    //     var $scope = $rootScope.$new();
-    //     var ref = stubRef();
-    //     ref.autoFlush(true);
-    //     ref.setWithPriority({text:'hello'},3);
-    //     var obj = $firebaseObject(ref);
-    //     flushAll();
-    //     flushAll();
-    //     obj.bindTo($scope, 'test');
-    //     $scope.$apply();
-    //     expect($scope.test).toEqual({text:'hello', $id: obj.$id, $priority: 3});
-    //     var callCount = 0;
-    //     var old$scopeUpdated = obj.$$scopeUpdated;
-    //     obj.$$scopeUpdated = function(){
-    //       callCount++;
-    //       return old$scopeUpdated.apply(this,arguments);
-    //     };
-    //     $scope.$apply(function(){
-    //       $scope.test.text='goodbye';
-    //       $scope.test.$priority=4;
-    //     });
-    //     flushAll();
-    //     flushAll();
-    //     flushAll();
-    //     flushAll();
-    //     expect(callCount).toEqual(1);
-    //   });
+        it('should update $value if $value changed in $scope', function() {
+            var $scope = $rootScope.$new();
+            var ref = stubRef();
+            var obj = makeObject(null, ref, true);
+            ref.flush(); //no deferred tasks
+            obj.base().$$updated(testutils.refSnap(ref, 'foo', null)); //added base()
+            expect(obj.value()).toBe('foo');
+            var spy = spyOn(ref, 'set');
+            obj.bindTo($scope, 'test');
+            flushAll();
+            $scope.$apply(function() {
+                $scope.test.$value = 'bar';
+            });
+            $interval.flush(500);
+            $timeout.flush();
+            expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({
+                '.value': 'bar'
+            }), jasmine.any(Function));
+        });
 
-    //   it('should throw error if double bound', function() {
-    //     var $scope = $rootScope.$new();
-    //     var aSpy = jasmine.createSpy('firstBind');
-    //     var bResolve = jasmine.createSpy('secondBindResolve');
-    //     var bReject = jasmine.createSpy('secondBindReject');
-    //     obj.bindTo($scope, 'a').then(aSpy);
-    //     flushAll();
-    //     expect(aSpy).toHaveBeenCalled();
-    //     obj.bindTo($scope, 'b').then(bResolve, bReject);
-    //     flushAll();
-    //     expect(bResolve).not.toHaveBeenCalled();
-    //     expect(bReject).toHaveBeenCalled();
-    //   });
+        it('should only call $$scopeUpdated once if both metaVars and properties change in the same $digest', function() {
+            var $scope = $rootScope.$new();
+            var ref = stubRef();
+            ref.autoFlush(true); //no deferred tasks
+            ref.setWithPriority({
+                text: 'hello'
+            }, 3);
+            var obj = makeObject(null, ref, true);
+            obj.bindTo($scope, 'test');
+            $scope.$apply();
+            // priority updates but not the value
+            expect($scope.test).toEqual({
+                text: 'hello',
+                $id: obj.id(),
+                $priority: 3
+            });
+            var callCount = 0;
+            var old$scopeUpdated = obj.base().$$scopeUpdated;
+            obj.base().$$scopeUpdated = function() {
+                callCount++;
+                return old$scopeUpdated.apply(this, arguments);
+            };
+            $scope.$apply(function() {
+                $scope.test.text = 'goodbye';
+                $scope.test.$priority = 4;
+            });
+            flushAll();
+            flushAll();
+            flushAll();
+            flushAll();
+            expect(callCount).toEqual(1);
+        });
 
-    //   it('should accept another binding after off is called', function() {
-    //     var $scope = $rootScope.$new();
-    //     var aSpy = jasmine.createSpy('firstResolve').and.callFake(function(unbind) {
-    //       unbind();
-    //       var bSpy = jasmine.createSpy('secondResolve');
-    //       var bFail = jasmine.createSpy('secondReject');
-    //       obj.bindTo($scope, 'b').then(bSpy, bFail);
-    //       $scope.$digest();
-    //       expect(bSpy).toHaveBeenCalled();
-    //       expect(bFail).not.toHaveBeenCalled();
-    //     });
-    //     obj.bindTo($scope, 'a').then(aSpy);
-    //     flushAll();
-    //     expect(aSpy).toHaveBeenCalled();
-    //   });
-    // });
+        it('should throw error if double bound', function() {
+            var $scope = $rootScope.$new();
+            var aSpy = jasmine.createSpy('firstBind');
+            var bResolve = jasmine.createSpy('secondBindResolve');
+            var bReject = jasmine.createSpy('secondBindReject');
+            obj.bindTo($scope, 'a').then(aSpy);
+            flushAll();
+            expect(aSpy).toHaveBeenCalled();
+            obj.bindTo($scope, 'b').then(bResolve, bReject);
+            flushAll();
+            expect(bResolve).not.toHaveBeenCalled();
+            expect(bReject).toHaveBeenCalled();
+        });
 
-    // describe('$watch', function(){
-    //   it('should return a deregistration function',function(){
-    //     var spy = jasmine.createSpy('$watch');
-    //     var off = obj.$watch(spy);
-    //     obj.foo = 'watchtest';
-    //     obj.save();
-    //     flushAll();
-    //     expect(spy).toHaveBeenCalled();
-    //     spy.calls.reset();
-    //     off();
-    //     expect(spy).not.toHaveBeenCalled();
-    //   });
+        it('should accept another binding after off is called', function() {
+            var $scope = $rootScope.$new();
+            var aSpy = jasmine.createSpy('firstResolve').and.callFake(function(unbind) {
+                unbind();
+                var bSpy = jasmine.createSpy('secondResolve');
+                var bFail = jasmine.createSpy('secondReject');
+                obj.bindTo($scope, 'b').then(bSpy, bFail);
+                $scope.$digest();
+                expect(bSpy).toHaveBeenCalled();
+                expect(bFail).not.toHaveBeenCalled();
+            });
+            obj.bindTo($scope, 'a').then(aSpy);
+            flushAll();
+            expect(aSpy).toHaveBeenCalled();
+        });
+    });
 
-    //   it('additional calls to the deregistration function should be silently ignored',function(){
-    //     var spy = jasmine.createSpy('$watch');
-    //     var off = obj.$watch(spy);
-    //     off();
-    //     off();
-    //     obj.foo = 'watchtest';
-    //     obj.save();
-    //     flushAll();
-    //     expect(spy).not.toHaveBeenCalled();
-    //   });
-    // });
+    describe('watch', function() {
+        it('should return a deregistration function', function() {
+            var spy = jasmine.createSpy('watch');
+            var off = obj.watch(spy);
+            obj.foo = 'watchtest';
+            obj.save();
+            flushAll();
+            expect(spy).toHaveBeenCalled();
+            spy.calls.reset();
+            off();
+            expect(spy).not.toHaveBeenCalled();
+        });
 
-    // describe('$remove', function() {
-    //   it('should return a promise', function() {
-    //     expect(obj.$remove()).toBeAPromise();
-    //   });
+        it('additional calls to the deregistration function should be silently ignored', function() {
+            var spy = jasmine.createSpy('watch');
+            var off = obj.watch(spy);
+            off();
+            off();
+            obj.foo = 'watchtest';
+            obj.save();
+            flushAll();
+            expect(spy).not.toHaveBeenCalled();
+        });
+    });
 
-    //   it('should set $value to null and remove any local keys', function() {
-    //     expect($utils.dataKeys(obj).sort()).toEqual($utils.dataKeys(FIXTURE_DATA).sort());
-    //     obj.$remove();
-    //     flushAll();
-    //     expect($utils.dataKeys(obj)).toEqual([]);
-    //   });
+    describe('remove', function() {
+        it('should return a promise', function() {
+            expect(obj.remove()).toBeAPromise();
+        });
 
-    //   it('should call remove on the Firebase ref', function() {
-    //     var spy = spyOn(obj.ref(), 'remove');
-    //     expect(spy).not.toHaveBeenCalled();
-    //     obj.$remove();
-    //     flushAll();
-    //     expect(spy).toHaveBeenCalled(); // should not pass a key
-    //   });
+        it('should set $value to null and remove any local keys', function() {
+            expect($utils.dataKeys(obj.base()).sort()).toEqual($utils.dataKeys(FIXTURE_DATA).sort());
+            obj.remove();
+            flushAll();
+            expect($utils.dataKeys(obj.base())).toEqual([]);
+        });
 
-    //   it('should delete a primitive value', function() {
-    //     var snap = fakeSnap('foo');
-    //     obj.$$updated(snap);
-    //     flushAll();
-    //     expect(obj.$value).toBe('foo');
-    //     obj.$remove();
-    //     flushAll();
-    //     expect(obj.$value).toBe(null);
-    //   });
+        it('should call remove on the Firebase ref', function() {
+            var spy = spyOn(obj.ref(), 'remove');
+            expect(spy).not.toHaveBeenCalled();
+            obj.remove();
+            flushAll();
+            expect(spy).toHaveBeenCalled(); // should not pass a key
+        });
 
-    //   it('should trigger a value event for $watch listeners', function() {
-    //     var spy = jasmine.createSpy('$watch listener');
-    //     obj.$watch(spy);
-    //     obj.$remove();
-    //     flushAll();
-    //     expect(spy).toHaveBeenCalledWith({ event: 'value', key: obj.$id });
-    //   });
+        it('should delete a primitive value', function() {
+            var snap = fakeSnap('foo');
+            obj.base().$$updated(snap);
+            flushAll();
+            expect(obj.value()).toBe('foo');
+            obj.remove();
+            flushAll();
+            expect(obj.value()).toBe(null);
+        });
 
-    //   it('should work on a query', function() {
-    //     var ref = stubRef();
-    //     ref.set({foo: 'bar'});
-    //     ref.flush();
-    //     var query = ref.limit(3);
-    //     var obj = $firebaseObject(query);
-    //     flushAll(query);
-    //     expect(obj.foo).toBe('bar');
-    //     obj.$remove();
-    //     flushAll(query);
-    //     expect(obj.$value).toBe(null);
-    //   });
-    // });
+        it('should trigger a value event for $watch listeners', function() {
+            var spy = jasmine.createSpy('watch listener');
+            obj.watch(spy);
+            obj.remove();
+            flushAll();
+            expect(spy).toHaveBeenCalledWith({
+                event: 'value',
+                key: obj.id()
+            });
+        });
 
-    // describe('$destroy', function () {
-    //   it('should call off on Firebase ref', function () {
-    //     var spy = spyOn(obj.ref(), 'off');
-    //     obj.$destroy();
-    //     expect(spy).toHaveBeenCalled();
-    //   });
+        it('should work on a query', function() {
+            var ref = stubRef();
+            ref.set({
+                foo: 'bar'
+            });
+            ref.flush();
+            var query = ref.limit(3);
+            var obj = makeObject(undefined, query, true);
+            flushAll(query);
+            expect(obj.base().foo).toBe('bar'); //added base()
+            obj.remove();
+            flushAll(query);
+            expect(obj.value()).toBe(null);
+        });
+    });
 
-    //   it('should dispose of any bound instance', function () {
-    //     var $scope = $rootScope.$new();
-    //     spyOnWatch($scope);
-    //     // now bind to scope and destroy to see what happens
-    //     obj.bindTo($scope, 'foo');
-    //     flushAll();
-    //     expect($scope.$watch).toHaveBeenCalled();
-    //     obj.$destroy();
-    //     flushAll();
-    //     expect($scope.$watch.$$$offSpy).toHaveBeenCalled();
-    //   });
+    describe('destroy', function() {
+        it('should call off on Firebase ref', function() {
+            var spy = spyOn(obj.ref(), 'off');
+            obj.destroy();
+            expect(spy).toHaveBeenCalled();
+        });
 
-    //   it('should unbind if scope is destroyed', function () {
-    //     var $scope = $rootScope.$new();
-    //     spyOnWatch($scope);
-    //     obj.bindTo($scope, 'foo');
-    //     flushAll();
-    //     expect($scope.$watch).toHaveBeenCalled();
-    //     $scope.$emit('$destroy');
-    //     flushAll();
-    //     expect($scope.$watch.$$$offSpy).toHaveBeenCalled();
-    //   });
-    // });
+        it('should dispose of any bound instance', function() {
+            var $scope = $rootScope.$new();
+            spyOnWatch($scope);
+            // now bind to scope and destroy to see what happens
+            obj.bindTo($scope, 'foo');
+            flushAll();
+            expect($scope.$watch).toHaveBeenCalled();
+            obj.destroy();
+            flushAll();
+            expect($scope.$watch.$$$offSpy).toHaveBeenCalled();
+        });
+
+        it('should unbind if scope is destroyed', function() {
+            var $scope = $rootScope.$new();
+            spyOnWatch($scope);
+            obj.bindTo($scope, 'foo');
+            flushAll();
+            expect($scope.$watch).toHaveBeenCalled();
+            $scope.$emit('$destroy');
+            flushAll();
+            expect($scope.$watch.$$$offSpy).toHaveBeenCalled();
+        });
+    });
 
     // describe('$extend', function () {
     //   it('should preserve child prototype', function () {
@@ -713,13 +778,13 @@ describe('$firebaseObject', function() {
 
     function makeObject(initialData, path, flag) {
 
-			
+
         if (!path) {
             path = stubRef();
-						flag = true;
+            flag = true;
         }
         var obj = fireStarter("object", path, flag);
-        if (angular.isDefined(initialData)) {
+        if (initialData) {
             obj.ref().set(initialData);
             obj.ref().flush();
             $timeout.flush();

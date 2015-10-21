@@ -6,11 +6,11 @@
         .factory("fireStarter", FireStarterFactory);
 
     /** @ngInject */
-    function FireStarterFactory($timeout, baseBuilder, fbHelper, $q, $log) {
+    function FireStarterFactory(baseBuilder, fbHelper, $q, $log) {
 
         return function(type, path, flag) {
-            var fb = new FireStarter($timeout, baseBuilder, $q, $log, type, path, flag);
-            return fb.construct(type);
+            var fb = new FireStarter(baseBuilder, $q, $log, type, path, flag);
+            return fb.construct();
 
         };
 
@@ -21,31 +21,29 @@
      * @return Promise($firebase)
      */
 
-    FireStarter = function($timeout, baseBuilder, $q, $log, type, path, flag) {
-        this._timeout = $timeout;
+    FireStarter = function(baseBuilder, $q, $log, type, path, flag) {
         this._baseBuilder = baseBuilder;
         this._type = type;
         this._flag = flag;
         this._q = $q;
         this._log = $log;
         this._path = path;
-        this._firebase = this._baseBuilder.build(this._type, this._path, this._flag)
-            // this._base = this._baseBuilder.build(this._type, this._path, this._flag)
-            // this._firebase = this._base.then(function(result) {
-            //     return result;
-            // }).catch(function(error) {
-            //     return self._q.reject(error);
-            // });
+        this._firebase = this._baseBuilder.build(this._type, this._path, this._flag);
     };
 
 
     FireStarter.prototype = {
         construct: function() {
             var self = this;
-            var fire = {}
+            var fire = {};
 
+            fire.base = base;
             fire.path = path;
             fire.timestamp = timestamp;
+
+            function base() {
+                return self._firebase;
+            }
 
             function path() {
                 return self._path;
@@ -57,31 +55,33 @@
 
             switch (self._type) {
                 case "object":
-                    return FirebaseObject();
+                    return FirebaseObject(fire);
                     break;
                 case "array":
-                    return FirebaseArray();
+                    return FirebaseArray(fire);
                     break;
                 case "auth":
-                    return FirebaseAuth();
+                    return FirebaseAuth(fire);
                     break;
                 case "geo":
-                    return Geofire();
+                    return Geofire(fire);
                     break;
             }
 
-            function FirebaseAuth() {
+            function FirebaseAuth(auth) {
 
-                fire.authWithPassword = authWithPassword;
-                fire.authWithOAuthPopup = authWithOAuthPopup;
-                fire.changePassword = changePassword;
-                fire.changeEmail = changeEmail;
-                fire.createUser = createUser;
-                fire.getAuth = getAuth;
-                fire.removeUser = removeUser;
-                fire.requireAuth = requireAuth;
-                fire.resetPassword = resetPassword;
-                fire.unauth = unauth;
+                return angular.extend(auth, {
+                    authWithPassword: authWithPassword,
+                    authWithOAuthPopup: authWithOAuthPopup,
+                    changePassword: changePassword,
+                    changeEmail: changeEmail,
+                    createUser: createUser,
+                    getAuth: getAuth,
+                    removeUser: removeUser,
+                    requireAuth: requireAuth,
+                    resetPassword: resetPassword,
+                    unauth: unauth
+                });
 
                 function authWithPassword(creds) {
                     return self._firebase.$authWithPassword({
@@ -147,18 +147,19 @@
                     return self._firebase.$unauth();
                 }
 
-                self._fire = fire;
-                return self._fire;
             }
 
-            function Geofire() {
+            function Geofire(geo) {
 
-                fire.distance = geofireDistance;
-                fire.get = geofireGet;
-                fire.query = geofireQuery;
-                fire.ref = geofireRef;
-                fire.remove = geofireRemove;
-                fire.set = geofireSet;
+                return angular.extend(geo, {
+
+                    distance: geofireDistance,
+                    get: geofireGet,
+                    query: geofireQuery,
+                    ref: geofireRef,
+                    remove: geofireRemove,
+                    set: geofireSet,
+                });
 
                 function geofireDistance(loc1, loc2) {
                     return self._firebase.distance(loc1, loc2);
@@ -170,7 +171,7 @@
                         .catch(standardError);
 
                     function completeAction(res) {
-                        return self._firebase.get(key);
+                        return res.get(key);
                     }
 
                 }
@@ -192,22 +193,22 @@
                     function extendQuery(res) {
                         geoQuery = {
                             center: function() {
-                                return self._firebase.center();
+                                return res.center();
                             },
                             radius: function() {
-                                return self._firebase.radius();
+                                return res.radius();
                             },
                             updateCriteria: function(criteria) {
-                                return self._firebase.updateCriteria(criteria);
+                                return res.updateCriteria(criteria);
                             },
                             on: function(eventType, cb, context) {
-                                return self._firebase.on(eventType, function(key, location, distance) {
+                                return res.on(eventType, function(key, location, distance) {
                                     return self._q.when(cb.call(context, key, location, distance))
                                         .catch(standardError);
                                 });
                             },
                             cancel: function() {
-                                return self._firebase.cancel();
+                                return res.cancel();
                             }
                         };
                         return geoQuery;
@@ -242,22 +243,23 @@
                     }
 
                 }
-                self._fire = fire;
-                return self._fire;
 
             }
 
-            function FirebaseArray() {
+            function FirebaseArray(arr) {
 
-                fire.add = add;
-                fire.destroy = destroy;
-                fire.getRecord = getRecord;
-                fire.keyAt = keyAt;
-                fire.indexFor = indexFor;
-                fire.loaded = loaded;
-                fire.ref = ref;
-                fire.remove = remove;
-                fire.save = save;
+                return angular.extend(arr, {
+                    add: add,
+                    destroy: destroy,
+                    getRecord: getRecord,
+                    keyAt: keyAt,
+                    indexFor: indexFor,
+                    loaded: loaded,
+                    ref: ref,
+                    remove: remove,
+                    save: save
+                });
+
 
                 function add(rec) {
                     return self._firebase.$add(rec);
@@ -298,22 +300,22 @@
                     return self._firebase.$save(rec);
                 }
 
-                self._fire = fire;
-                return self._fire;
             }
 
-            function FirebaseObject() {
+            function FirebaseObject(obj) {
 
-                fire.bindTo = bindTo;
-                fire.destroy = destroy;
-                fire.id = id;
-                fire.loaded = loaded;
-                fire.ref = ref;
-                fire.remove = remove;
-                fire.save = save;
-                fire.priority = priority;
-                fire.value = value;
-                fire.watch = watch;
+                return angular.extend(obj, {
+                    bindTo: bindTo,
+                    destroy: destroy,
+                    id: id,
+                    loaded: loaded,
+                    ref: ref,
+                    remove: remove,
+                    save: save,
+                    priority: priority,
+                    value: value,
+                    watch: watch
+                });
 
                 function bindTo(s, v) {
                     return self._firebase.$bindTo(s, v)
@@ -328,17 +330,9 @@
                     return self._firebase.$id;
                 }
 
-                function loaded() {
-                    return self._firebase.$loaded()
-										.then(completeAction)
-										.catch(standardError);
-
-										function completeAction(res){
-											fire = res;
-											return fire;
-										}
+                function loaded(s, f) {
+                    return self._firebase.$loaded(s, f);
                 }
-
 
                 function priority() {
                     return self._firebase.$priority;
@@ -350,26 +344,34 @@
                 }
 
                 function remove() {
-
                     return self._firebase.$remove();
                 }
 
 
                 function save() {
-
                     return self._firebase.$save()
                 }
 
-                function value() {
-                    return self._firebase.$value;
+                function value(val) {
+                    //mmm...not so sure'bout this
+                    if (!val) {
+                        return self._firebase.$value;
+                    } else {
+                        return setValue(val);
+                    }
 
+                }
+
+                function setValue(val) {
+                    self._firebase.$value = val;
+                    return self._firebase.$value;
                 }
 
                 function watch(cb, context) {
-                    return self._firebase.$watch(cb, context);
-                }
-                self._fire = fire;
-                return self._fire;
+                        return self._firebase.$watch(cb, context);
+                    }
+                    // self._fire = fire;
+                    // return self._fire;
             }
 
             function standardError(err) {
@@ -377,7 +379,7 @@
             }
 
             self._fire = fire;
-            return self._fire;
+            return self;
         }
 
     };
