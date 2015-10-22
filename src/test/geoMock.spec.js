@@ -1,28 +1,27 @@
 (function() {
     "use strict";
 
-    describe("GeoMock", function() {
-        var geo, test, geoExample, test1, $geofire, geoMock, feederGPS, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, obj, data, fbRef, key, field, coords;
+    describe("GeoMocks", function() {
+        var geo, test, geoExample, test1, fsMocks, feederGPS, location, radius, $rootScope, $q, gfPath, gfSpy, gfName, deferred, $provide, obj, data, fbRef, key, field, coords;
 
         key = "a_string";
         radius = 0.1;
-						coords = [90,150];
+        coords = [90, 150];
         data = {
             center: coords,
             radius: radius
         };
         beforeEach(function() {
             module("fbMocks");
-            inject(function(_$q_, _$rootScope_, _$geofire_, _geoMock_) {
+            inject(function(_$q_, _$rootScope_, _fsMocks_) {
                 $rootScope = _$rootScope_;
-								$geofire = _$geofire_;
-                geoMock = _geoMock_;
+                fsMocks = _fsMocks_;
                 $q = _$q_;
             });
             key = "a_key";
             gfName = "feeders";
             gfPath = ["geofield"];
-            test = geoMock.make(["feeder", "path"]);
+            test = fsMocks.makeGeo(fsMocks.geoData);
         });
 
         afterEach(function() {
@@ -30,119 +29,100 @@
             test1 = null;
         });
 
-        // it("mock constructor", function() {
-        //     expect(test).toBeDefined();
-        // });
+        describe("constructor", function() {
+            it("with data and without path hould be defined", function() {
+                expect(test).toBeDefined();
+            });
+            it("without data should be defined", function() {
+                test = fsMocks.makeGeo();
+                expect(test).toBeDefined();
+            });
+            it("without data but with ref should work", function() {
+                var ref = fsMocks.stubRef();
+                test = fsMocks.makeGeo(null, ref, true);
+                expect(test).toBeDefined();
+            });
+        });
+
         // it("geoQuerySpy should be defined", function() {
-        //     expect(geoMock.geoQuerySpy).toBeDefined();
+        //     expect(fsMocks.geoQuerySpy).toBeDefined();
         // });
         // it("geoQueryRegSpy should be defined", function() {
-        //     expect(geoMock.geoQueryRegSpy).toBeDefined();
+        //     expect(fsMocks.geoQueryRegSpy).toBeDefined();
         // });
         // it("refSpy should be defined", function() {
-        //     expect(geoMock.refSpy).toBeDefined();
+        //     expect(fsMocks.refSpy).toBeDefined();
         // });
-        // describe("GeoMock functions", function() {
+        describe("Geofire functions", function() {
+            var definedfns = ["path", "ref",
+                "get", "distance", "query", "remove", "set"
+            ];
+            var promisefns = ["get", "set", "remove"];
 
-        //     var definedfns = ["path", "ref",
-        //         "get", "distance", "query", "remove", "set"
-        //     ];
+            function testPromise(y) {
+                it("the " + y + " function should return a promise", function() {
+                    expect(test[y]()).toBeAPromise();
+                });
+            }
 
-        //     var promisefns = ["get", "set",
-        //         "distance", "query", "remove"
-        //     ];
+            function testDefined(y) {
+                it("the " + y + " function should be defined", function() {
+                    expect(test[y]).toBeDefined();
+                });
+            }
+            promisefns.forEach(testPromise);
+            definedfns.forEach(testDefined);
+        });
 
-        //     function testPromise(y) {
-        //         it("the " + y + " function should return a promise", function() {
-        //             expect(test[y]()).toBeAPromise();
-        //         });
-        //     }
-
-        //     function testDefined(y) {
-        //         it("the " + y + " function should be defined", function() {
-        //             expect(test[y]).toBeDefined();
-        //         });
-        //     }
-
-        //     promisefns.forEach(testPromise);
-        //     definedfns.forEach(testDefined);
-        // });
-
-        // describe("geoSpyObj", function() {
-        //     it("should be defined", function() {
-        //         expect(geoMock.geoSpyObj).toBeDefined();
-        //     });
-        //     it("should have a query() method", function() {
-        //         expect(geoMock.geoSpyObj.query()).toBeDefined();
-        //     });
-        //     it("should have a ref() method", function() {
-        //         expect(geoMock.geoSpyObj.ref()).toBeDefined();
-        //     });
-        //     it("query() should = geoQuerySpy", function() {
-        //         expect(geoMock.geoSpyObj.query()).toEqual(geoMock.geoQuerySpy);
-        //     });
-        //     it("ref() should = refSpy", function() {
-        //         expect(geoMock.geoSpyObj.ref()).toEqual(geoMock.stubRef());
-        //     });
-        //     it("get() should be defined()", function() {
-        //         expect(geoMock.geoSpyObj.get()).toBeDefined();
-        //     });
-        //     it("set() should be defined()", function() {
-        //         expect(geoMock.geoSpyObj.set()).toBeDefined();
-        //     });
-        //     it("remove() should be defined()", function() {
-        //         expect(geoMock.geoSpyObj.remove()).toBeDefined();
-        //     });
-
-        // });
-        // describe("GeoSpy", function() {
-        //     it("should be defined", function() {
-        //         expect(geoMock.geoSpy).toBeDefined();
-        //     });
-        //     it("should be a promise", function() {
-        //         expect(geoMock.geoSpy).toBeAPromise();
-        //     });
-        //     describe("After resolving the promise", function() {
-        //         beforeEach(function() {
-        //             spyOn($q, "when").and.callThrough();
-        //             geoMock.geoSpy.then(function(res) {
-        //                 test = res;
-        //                 return test;
-        //             });
-        //             $rootScope.$digest();
-        //         });
-        //         it("query() should return a geoQuerySpyOby", function() {
-        //             expect(test.query()).toEqual(geoMock.geoQuerySpy);
-								// });
-								// it("ref() should return a refSpy", function(){
-        //             expect(test.ref()).toEqual(geoMock.stubRef());
-        //         });
-								// it("get() should be defined", function(){
-									// expect(test.get()).toBeDefined();
-								// });
-								// it("set() should be defined", function(){
-									// expect(test.set()).toBeDefined();
-								// });
-								// it("remove() should be defined", function(){
-									// expect(test.remove()).toBeDefined();
-								// });
-        //     });
-
-        // });
-				describe("Queries for realzies", function(){
-					beforeEach(function(){
-						geoMock.gfURL.set(geoMock.initialData);
-						geoMock.gfURL.flush();
-						test1 = $geofire(geoMock.gfURL);
-						$rootScope.$digest();
-					});
-					// it("should work", function(){
-					// 	var t = test1.$query(data).on("key_entered","SEARCH:KEY_ENTERED")
-					// 	expect(t).toEqual("asdf");
-					// });
-				 
-
-				});
+        describe("geoSpyObj", function() {
+            it("should be defined", function() {
+                expect(fsMocks.geoSpyObj).toBeDefined();
+            });
+            it("should have a query() method", function() {
+                expect(fsMocks.geoSpyObj.query()).toBeDefined();
+            });
+            it("should have a ref() method", function() {
+                expect(fsMocks.geoSpyObj.ref()).toBeDefined();
+            });
+            it("query() should = geoQuerySpy", function() {
+                expect(fsMocks.geoSpyObj.query()).toEqual(fsMocks.geoQuerySpy);
+            });
+            it("ref() should = refSpy", function() {
+                expect(fsMocks.geoSpyObj.ref()).toEqual(fsMocks.stubRef());
+            });
+            it("get() should be defined()", function() {
+                expect(fsMocks.geoSpyObj.get()).toBeDefined();
+            });
+            it("set() should be defined()", function() {
+                expect(fsMocks.geoSpyObj.set()).toBeDefined();
+            });
+            it("remove() should be defined()", function() {
+                expect(fsMocks.geoSpyObj.remove()).toBeDefined();
+            });
+        });
+        describe("geoQuerySpy", function() {
+            it("should be defined", function() {
+                expect(fsMocks.geoQuerySpy).toBeDefined();
+            });
+            it("updateCriteria() should be defined()", function() {
+                expect(fsMocks.geoQuerySpy.updateCriteria).toBeDefined();
+            });
+            it("on() should be defined()", function() {
+                expect(fsMocks.geoQuerySpy.on).toBeDefined();
+            });
+            it("remove() should be defined()", function() {
+                expect(fsMocks.geoQuerySpy.remove).toBeDefined();
+            });
+            it("center() should be defined()", function() {
+                expect(fsMocks.geoQuerySpy.center).toBeDefined();
+            });
+            it("radius() should be defined()", function() {
+                expect(fsMocks.geoQuerySpy.radius).toBeDefined();
+            });
+            it("cancel() should be defined()", function() {
+                expect(fsMocks.geoQuerySpy.cancel).toBeDefined();
+            });
+        });
 
     });
 

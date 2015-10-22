@@ -192,7 +192,6 @@
 
                 function geofireQuery(data) {
                     var geoQuery;
-
                     geoQuery = self._q.when(self._firebase.query(data));
 
                     return {

@@ -30,34 +30,14 @@
             return obj;
         }
 
-        function makeGeo(initialData, path, flag) {
-
-            if (!path) {
-                path = stubRef();
-                flag = true;
-            }
-
-            var geo = fireStarter("geo", path, flag);
-
-            if (initialData) {
-                geo.ref().set(initialData);
-                geo.ref().flush();
-                // $timeout.flush();
-            } else {
-                geo.ref().set(vm.geoData);
-                geo.ref().flush();
-                $timeout.flush();
-                return geo;
-            }
-        }
-
 
 
         function stubRef(path) {
             if (!path) {
                 return new MockFirebase('Mock://').child('data/REC1');
-            } else
-                var mockPath = path.join('/'); //baseBuilder changes array to string
+            } else {
+                var mockPath = path.join('/'); 
+						}
             return new MockFirebase('Mock://').child(mockPath);
         }
 
@@ -183,6 +163,23 @@
                 }
             }
         };
+
+        function makeGeo(initialData, path, flag) {
+
+            if (!path) {
+                path = stubRef();
+                flag = true;
+            }
+
+            var geo = fireStarter("geo", path, flag);
+
+            if (initialData) {
+                geo.ref().set(initialData);
+                geo.ref().flush();
+            }
+            return geo;
+        }
+
     }
 
     angular.module('fbMocks')
