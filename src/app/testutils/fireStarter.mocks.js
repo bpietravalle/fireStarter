@@ -12,11 +12,10 @@
         vm.authRef = authRef;
         vm.object = makeObject;
         vm.makeGeo = makeGeo;
-        vm.ref = stubRef;
+        vm.stubRef = stubRef;
 
 
         function makeObject(initialData, path, flag) {
-
 
             if (!path) {
                 path = stubRef();
@@ -44,8 +43,12 @@
                 geo.ref().set(initialData);
                 geo.ref().flush();
                 // $timeout.flush();
+            } else {
+                geo.ref().set(vm.geoData);
+                geo.ref().flush();
+                $timeout.flush();
+                return geo;
             }
-            return geo;
         }
 
 
@@ -120,9 +123,8 @@
             };
         }
 
-        function geoQuerySpy() {
-            return jasmine.createSpyObj("geoQuery", ["updateCriteria", "center", "remove","radius", "on", "cancel"]);
-        }
+        vm.geoQuerySpy = jasmine.createSpyObj("geoQuery", ["updateCriteria", "center", "remove", "radius", "on", "cancel"]);
+
         vm.geoSpyObj = {
             query: function() {
                 return vm.geoQuerySpy;
@@ -137,7 +139,7 @@
                 return jasmine.createSpy("remove");
             },
             ref: function() {
-                return vm.stubRef();
+                return stubRef();
             }
         };
         vm.geoSpy = $q.when(vm.geoSpyObj);
