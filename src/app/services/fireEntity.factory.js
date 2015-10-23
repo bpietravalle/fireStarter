@@ -31,6 +31,8 @@
         this._pathMaster = this._firePath(this._path, this._firePathOptions);
     };
 
+    //TODO add options hash to determine if saving to user, geofire, etc.
+    //
 
     FireEntity.prototype = {
         construct: function() {
@@ -39,8 +41,12 @@
 
             entity.buildObject = buildObject;
             entity.buildArray = buildArray;
+            entity.mainArray = mainArray;
+            entity.mainRecord = mainRecord;
+            entity.nestedArray = nestedArray;
+            entity.nestedRecord = nestedRecord;
 
-						/* general fireStarter */
+            /* general fireStarter */
             function buildObject(path) {
                 return self._fireStarter("object", path);
             }
@@ -48,6 +54,39 @@
             function buildArray(path) {
                 return self._fireStarter("array", path);
             }
+
+            /* Registering firebase refs */
+
+            function mainArray() {
+                return self._fireStarter("array", self._pathMaster.mainArray());
+            }
+
+            function mainRecord(id) {
+                return self._fireStarter("array", self._pathMaster.mainRecord(id));
+            }
+
+            function nestedArray(id, name) {
+                return self._fireStarter("array", self._pathMaster.nestedArray(id, name));
+            }
+
+            function nestedRecord(id, name, id) {
+                return self._fireStarter("array", self._pathMaster.nestedRecord(id, name, id));
+            }
+
+            /* CRUD Operations 
+             * load
+             * save
+             * add to array
+             * add to nested array
+             * create
+             * remove
+             * update
+             *
+             * with location data?
+             * with userRecord index? do same thing as session in firePath
+             */
+
+
 
 
             self._entity = entity;
