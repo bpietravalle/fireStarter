@@ -2,7 +2,7 @@
     "use strict";
 
     describe("FireEntity Factory", function() {
-        var firePath, $injector, fsType, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+        var firePath, $injector, inflector, fsType, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
         beforeEach(function() {
             module("fireStarter.services",
@@ -39,7 +39,8 @@
                             }
                         });
                 });
-            inject(function(_firePath_, _fireEntity_, _fireStarter_, _$q_, _$log_) {
+            inject(function(_firePath_, _fireEntity_, _inflector_, _fireStarter_, _$q_, _$log_) {
+                inflector = _inflector_;
                 firePath = _firePath_;
                 fireEntity = _fireEntity_;
                 fireStarter = _fireStarter_;
@@ -77,9 +78,9 @@
                     expect(fbArray).not.toBeDefined();
                     subject.buildArray(["path"]);
                     expect(fbArray).toBeDefined();
+                    expect(fbArray).toBeDefined();
                 });
             });
-
         });
         describe("Registering firebase refs", function() {
             var recId = 1;
@@ -126,7 +127,6 @@
                 });
             }
             fpMethods.forEach(testMethods);
-
         });
         describe("Registering CRUD operations", function() {
             describe("Query Methods", function() {
@@ -154,62 +154,68 @@
                 });
 
             });
-
         });
         describe("Options", function() {
             beforeEach(function() {
+							spyOn($log,"info").and.callThrough();
                 options = {
-                    nestedArrays: ["phones"]
+                    nestedArrays: ["phone"]
                 };
                 subject = fireEntity("path", options);
+            });
 
-                describe("Geofire", function() {
-                    /* geofire node
-                     * dynamically add functions add, remove,
-                     *
-                     */
+            describe("Geofire", function() {
+                /* geofire node
+                 * dynamically add functions add, remove,
+                 *
+                 */
 
+            });
+            describe("User", function() {
+                /* user service
+                 * user method names
+                 *
+                 *
+                 */
+            });
+            describe("Nested Arrays", function() {
+
+                it("should define a new method for the array", function() {
+                    // expect(subject.phones()).toBeDefined();
                 });
-                describe("User", function() {
-                    /* user service
-                     * user method names
-                     *
-                     *
-                     */
+                it("should define a new method for records of the array", function() {
+                    expect($log.info.calls.argsFor(0)[0]).toEqual("as");
                 });
-                describe("Nested Arrays", function() {
-                    it("should throw error if option isn't an error", function() {
-                        options = {
-                            nestedArrays: "blah",
-                        };
-                        subject = fireEntity("path", options);
-                        expect(function() {
-                            subject
-                        }).toThrow();
-                    });
 
-                    it("should define a new method", function() {
-                        expect(subject.phones()).toBeDefined();
-                    });
-
-                    it("should pass an id and the array name to firePath", function() {
-                        subject.phones(1);
-												expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
-                    });
-                    it("should call 'array' on fireStarter", function() {
-                        subject.phones(1);
-												expect(fbType).toEqual("array");
-												expect(fbArray).toBeDefined();
-                    });
-
+                // it("should pass an id and the pluaralized array name to firePath", function() {
+                //     subject.phones(1);
+                //     expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
+                // });
+                // it("won't change array name if passed plural name to firePath", function() {
+                //     options = {
+                //         nestedArrays: ["phones"]
+                //     };
+                //     subject = fireEntity("path", options);
+                //     subject.phones(1);
+                //     expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
+                // });
+                // it("should call 'array' on fireStarter", function() {
+                //     subject.phones(1);
+                //     expect(fbType).toEqual("array");
+                //     expect(fbArray).toBeDefined();
+                // });
+                it("should throw error if option isn't an array", function() {
+                    options = {
+                        nestedArrays: "blah",
+                    };
+                    expect(function() {
+                        fireEntity("path", options);
+                    }).toThrow();
                 });
 
             });
+
         });
-
-
-
-
 
     });
 

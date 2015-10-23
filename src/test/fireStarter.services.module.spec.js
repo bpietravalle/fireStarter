@@ -17,6 +17,9 @@
             beforeEach(function() {
                 deps = module.value('fireStarter.services').requires;
             });
+            it("should depend on platanus.inflector", function() {
+                expect(hasModule("platanus.inflector")).toBeTruthy();
+            });
             it("should depend on fireStarter.utils", function() {
                 expect(hasModule("fireStarter.utils")).toBeTruthy();
             });
