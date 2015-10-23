@@ -2,12 +2,19 @@
     "use strict";
 
     describe("FirePath factory", function() {
-        var path, spy, options, firePath, $rootScope, $q, $log;
+        var path, serviceMock, spy, options, firePath, $rootScope, $q, $log, $injector;
 
         beforeEach(function() {
+            angular.module("fireStarter.services")
+                .factory("serviceMock", function() {
+                    serviceMock = jasmine.createSpyObj("serviceMock", ["getId", "findId"]);
+										return serviceMock;
+                });
             module("fireStarter.services");
-            inject(function(_firePath_, _$rootScope_, _$q_, _$log_) {
+            inject(function(_firePath_, _$rootScope_, _$q_, _$log_, _$injector_,_serviceMock_) {
+							serviceMock = _serviceMock_;
                 $rootScope = _$rootScope_;
+                $injector = _$injector_;
                 firePath = _firePath_;
                 $q = _$q_;
                 $log = _$log_;
@@ -55,7 +62,7 @@
                     expect(path.nestedArray(1, "nested")).toEqual(["path", 1, "nested"]);
                 });
                 it("nestedRecord()", function() {
-                    expect(path.nestedRecord(1, "nested", 5)).toEqual(["path", 1, "nested", 5]);
+                    expect(path.nestedRecord("nested", 5)).toEqual(["nested", 5]);
                 });
                 it("makeNested() works when parent path is an array", function() {
                     expect(path.makeNested(["path"], "nested")).toEqual(["path", "nested"]);
@@ -100,9 +107,8 @@
 
                     describe("choosing a different storageLocation", function() {
                         beforeEach(function() {
-                            spy = jasmine.createSpyObj("sessionLocation", ["getId", "getEmail"]);
                             options = {
-                                sessionLocation: spy,
+                                sessionLocation: "serviceMock",
                                 sessionAccess: true
                             };
                             path = firePath("path", options);
@@ -110,7 +116,7 @@
 
                         });
                         it("should call new session location", function() {
-                            expect(spy.getId).toHaveBeenCalled();
+                            expect(serviceMock.getId).toHaveBeenCalled();
                         });
                         it("should not call $rootScope.sesion", function() {
                             expect($rootScope.session.getId).not.toHaveBeenCalled();
@@ -120,10 +126,9 @@
                     });
                     describe("choosing a different storageLocation", function() {
                         beforeEach(function() {
-                            spy = jasmine.createSpyObj("sessionLocation", ["getId", "findId"]);
                             options = {
                                 sessionIdMethod: "findId",
-                                sessionLocation: spy,
+                                sessionLocation: "serviceMock",
                                 sessionAccess: true
                             };
                             path = firePath("path", options);
@@ -131,10 +136,10 @@
 
                         });
                         it("should call new session location with findId()", function() {
-                            expect(spy.findId).toHaveBeenCalled();
+                            expect(serviceMock.findId).toHaveBeenCalled();
                         });
                         it("should call new session location not with getId()", function() {
-                            expect(spy.getId).not.toHaveBeenCalled();
+                            expect(serviceMock.getId).not.toHaveBeenCalled();
                         });
                         it("should not call $rootScope.sesion", function() {
                             expect($rootScope.session.getId).not.toHaveBeenCalled();

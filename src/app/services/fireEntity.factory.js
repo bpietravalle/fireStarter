@@ -27,6 +27,11 @@
         if (this._options) {
             this._geofire = false || this._options.geofire;
             this._firePathOptions = null || this._options.firePath;
+            if (this._options.nestedArrays && !Array.isArray(this._options.nestedArrays)) {
+                throw new Error("Nested Arrays argument must be an array");
+            } else {
+                this._nestedArrays = [] || this._options.nestedArrays;
+            }
         }
         this._pathMaster = this._firePath(this._path, this._firePathOptions);
     };
@@ -41,18 +46,25 @@
 
             entity.buildObject = buildObject;
             entity.buildArray = buildArray;
+
             entity.mainArray = mainArray;
             entity.mainRecord = mainRecord;
             entity.nestedArray = nestedArray;
             entity.nestedRecord = nestedRecord;
 
-            /* general fireStarter */
-            function buildObject(path) {
-                return self._fireStarter("object", path);
+            entity.findById = findById;
+            entity.loadById = loadById;
+
+
+
+
+            /* Access to fireStarter */
+            function buildObject(path, flag) {
+                return self._fireStarter("object", path, flag);
             }
 
-            function buildArray(path) {
-                return self._fireStarter("array", path);
+            function buildArray(path, flag) {
+                return self._fireStarter("array", path, flag);
             }
 
             /* Registering firebase refs */
@@ -62,16 +74,45 @@
             }
 
             function mainRecord(id) {
-                return self._fireStarter("array", self._pathMaster.mainRecord(id));
+                return self._fireStarter("object", self._pathMaster.mainRecord(id));
             }
 
             function nestedArray(id, name) {
                 return self._fireStarter("array", self._pathMaster.nestedArray(id, name));
             }
 
-            function nestedRecord(id, name, id) {
-                return self._fireStarter("array", self._pathMaster.nestedRecord(id, name, id));
+            function nestedRecord(nestedArr, id) {
+                return self._fireStarter("object", self._pathMaster.nestedRecord(nestedArr, id));
             }
+
+
+            /*Query Functions*/
+
+            function findById(id) {
+                return mainRecord(id);
+            }
+
+
+            function loadById(id) {
+                return findById(id)
+                    .loaded();
+            }
+
+						function addRecord(arr, data){
+							return arr.add(data);
+						}
+
+						function updateRecord(arr,obj){
+							return arr.save(obj);
+						}
+
+						function loadRecord(obj, data){
+							return obj.load(data);
+						}
+
+
+            /*Command Functions*/
+
 
             /* CRUD Operations 
              * load
@@ -86,6 +127,16 @@
              * with userRecord index? do same thing as session in firePath
              */
 
+            function createNestedArrays(arrName) {
+                entity["arrName"] = new Function("id",
+                    "return nestedArray('id','arrName');");
+                entity["load'+ 'arrName'"] = new Function("id",
+                    "return nestedArray('id','arrName');");
+            }
+
+            if (self._nestedArrays && self._nestedArrays.length > 0) {
+                return self._nestedArrays.forEach(createNestedArrays);
+            }
 
 
 

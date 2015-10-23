@@ -6,27 +6,33 @@
         .factory("firePath", firePathFactory);
 
     /** @ngInject */
-    function firePathFactory($rootScope, $q, $log) {
+    function firePathFactory($rootScope, $q, $log, $injector) {
 
         return function(path, options) {
-            var fb = new FirePath($rootScope, $q, $log, path, options);
+            var fb = new FirePath($rootScope, $q, $log, $injector, path, options);
             return fb.construct();
 
         };
 
     }
 
-    FirePath = function($rootScope, $q, $log, path, options) {
+    FirePath = function($rootScope, $q, $log, $injector, path, options) {
         this._rootScope = $rootScope;
         this._q = $q;
         this._log = $log;
+        this._injector = $injector;
         this._path = path;
         this._options = options;
         if (this._options) {
             this._sessionAccess = this._options.sessionAccess || false;
         }
         if (this._sessionAccess === true) {
-            this._sessionStorage = this._options.sessionLocation || this._rootScope.session;
+            if (this._options.sessionLocation) {
+                this._sessionStorage = this._injector.get(this._options.sessionLocation);
+            } else {
+                //TODO: what about different location in rootScope - this is too restrictive
+                this._sessionStorage = this._rootScope.session;
+            }
             this._sessionIdMethod = this._options.sessionIdMethod || "getId";
         }
     };
@@ -41,7 +47,7 @@
             fire.mainRecord = mainRecord;
             fire.nestedArray = nestedArray;
             fire.nestedRecord = nestedRecord;
-            fire.makeNested = makeNested;
+            fire.makeNested = makeNested; //make private?
             if (self._sessionAccess === true) {
                 fire.currentUser = currentUser;
                 fire.session = session;
@@ -56,7 +62,7 @@
                 return "go to your session and get the id";
             }
 
-						//would prefer to remove this
+            //would prefer to remove this
             function session() {
                 return self._sessionStorage;
             }
@@ -73,15 +79,12 @@
                 return extendPath(mainRecord(recId), name);
             }
 
-						//remove
-            function nestedRecord(arrId, name, recId) {
-                return extendPath(nestedArray(arrId, name), recId);
+            function nestedRecord(arrName, recId) {
+                return makeNested(arrName, recId);
             }
 
             function makeNested(parent, child) {
-                parent = checkParam(parent);
-                parent.push(child);
-                return parent;
+                return extendPath(checkParam(parent), child);
             }
 
             function extendPath(arr, id) {
