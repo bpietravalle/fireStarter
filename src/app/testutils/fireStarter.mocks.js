@@ -32,12 +32,19 @@
 
 
 
+        vm.fbArraySpy = jasmine.createSpyObj("fbArray", ["timestamp", "ref", "path", "add", "destroy",
+            "getRecord", "keyAt", "indexFor", "loaded", "remove", "save", "watch"
+        ]);
+        vm.fbObjectSpy = jasmine.createSpyObj("fbObject", ["timestamp", "ref", "path", "bindTo", "destroy",
+            "id", "priority", "value", "loaded", "remove", "save", "watch"
+        ]);
+
         function stubRef(path) {
             if (!path) {
                 return new MockFirebase('Mock://').child('data/REC1');
             } else {
-                var mockPath = path.join('/'); 
-						}
+                var mockPath = path.join('/');
+            }
             return new MockFirebase('Mock://').child(mockPath);
         }
 

@@ -386,7 +386,7 @@
             }
 
             self._fire = fire;
-            return self;
+            return self._fire;
         }
 
     };
