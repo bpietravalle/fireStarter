@@ -32,18 +32,8 @@
             this._firePathOptions = null || this._options.firePath;
             this._geofire = false || this._options.geofire;
             if (this._geofire === true) {
-                if (this._options.locations) {
-                    if (this._options.locations === true) {
-                        this._locationObject = this._injector.get("location");
-                    } else {
-                        this._locationObject = this._injector.get(this._options.locations);
-                    }
-                }
-                if (this._options.geofireLocation) {
-                    this._geofireObject = this._injector.get(this._options.geofireLocation);
-                } else {
-                    this._geofireObject = this._injector.get("geo");
-                }
+                this._locationObject = this._injector.get("location");
+                this._geofireObject = this._injector.get("geo");
             }
             if (this._options.nestedArrays) {
                 if (!Array.isArray(this._options.nestedArrays)) {
@@ -54,11 +44,7 @@
             }
             this._user = this._options.user || false;
             if (this._user === true) {
-                if (this._options.userLocation) {
-                    this._userObject = this._injector.get(this._options.userLocation);
-                } else {
-                    this._userObject = this._injector.get("user");
-                }
+                this._userObject = this._injector.get("user");
             }
         }
 
@@ -279,17 +265,32 @@
                 case false:
                     break;
                 default:
-                    return addNested(entity, self._nestedArrays);
+                    return addNested(entity, self._nestedArrays)
+
+
             }
+            switch (self._geofire) {
+                case false:
+                    break;
+                default:
+									break;
+                    return addGeofire(entity);
+
+            }
+
 
             function addNested(obj, arr) {
+                var newProperties = {};
 
-                return self._q.all(arr.map(function(item) {
-                    var b = addNestedArray(obj, item);
-                    self._log.info(b);
-                }));
 
+                self._q.all(arr.map(function(item) {
+                    angular.extend(newProperties, addNestedArray(obj, item));
+                }))
+
+                return angular.extend(obj, newProperties);
             }
+
+
 
             function addNestedArray(obj, arr) {
                 var arrName = self._inflector.pluralize(arr);
@@ -297,18 +298,38 @@
                 var newProp = {};
 
                 newProp[arrName] = function(id) {
-                    return self._pathMaster.nestedArray(id, arrName);
+                    return self._fireStarter("array", self._pathMaster.nestedArray(id, arrName));
                 }
 
                 newProp[recName] = function(mainRecId, nestedRecId) {
                     return self._fireStarter("object", self._pathMaster.nestedRecord(mainRecId, arrName, nestedRecId));
-                    // return self._pathMaster.nestedArray(id, arrName);
                 }
 
-
-                return angular.extend(obj, newProp);
+                return newProp;
             }
 
+            function addGeofire(obj) {
+                //* add nested array called locations
+                return addNested(obj, ["locations"]);
+                //create methods to add geofire
+
+
+                //* create method to send location object
+                // function saveLocation(data) {
+                //     return self._locationObject
+                //         .createMainRecord(data);
+                // }
+
+                // function addGeofireMeth(key, data) {
+                //     return self._geofireObject.add(self._path, key, data);
+
+                // }
+            }
+
+
+            function standardError(err) {
+                return self._q.reject(err);
+            }
 
             self._entity = entity;
             return self._entity;

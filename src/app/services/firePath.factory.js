@@ -30,7 +30,6 @@
             if (this._options.sessionLocation) {
                 this._sessionStorage = this._injector.get(this._options.sessionLocation);
             } else {
-                //TODO: what about different location in rootScope - this is too restrictive
                 this._sessionStorage = this._rootScope.session;
             }
             if (this._options.sessionIdMethod) {

@@ -2,21 +2,17 @@
     "use strict";
 
     describe("FireEntity Factory", function() {
-        var firePath, data, user, $injector, inflector, fsType, geoFireMock, accountMock, userMock, geoMock, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+        var firePath, geo, $rootScope, data, user, location, locationMock, $injector, inflector, fsType, userMock, geoMock, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
         beforeEach(function() {
             angular.module("fireStarter.services")
-                .factory("geoFire", function() {
-                    geoFireMock = jasmine.createSpyObj("geoFireMock", ["getId", "findId"]);
-                    return geoFireMock;
+                .factory("location", function() {
+                    locationMock = jasmine.createSpyObj("locationMock", ["getId", "findId"]);
+                    return locationMock;
                 })
                 .factory("geo", function() {
                     geoMock = jasmine.createSpyObj("geoMock", ["getId", "findId"]);
                     return geoMock;
-                })
-                .factory("account", function() {
-                    accountMock = jasmine.createSpyObj("accountMock", ["getId", "findId"]);
-                    return accountMock;
                 })
                 .factory("user", function() {
                     userMock = jasmine.createSpyObj("userMock", ["getId", "findId"]);
@@ -56,7 +52,10 @@
                             }
                         });
                 });
-            inject(function(_firePath_, _fireEntity_, _inflector_, _fireStarter_, _$q_, _$log_, _user_) {
+            inject(function(_firePath_, _location_,_geo_,_$rootScope_, _fireEntity_, _inflector_, _fireStarter_, _$q_, _$log_, _user_) {
+                $rootScope = _$rootScope_;
+								location = _location_;
+								geo = _geo_;
                 user = _user_;
                 inflector = _inflector_;
                 firePath = _firePath_;
@@ -206,7 +205,7 @@
             beforeEach(function() {
                 spyOn($log, "info").and.callThrough();
                 options = {
-                    nestedArrays: ["phone"],
+                    nestedArrays: ["phone", "email"],
                     geofire: true,
                     user: true,
 
@@ -215,11 +214,9 @@
             });
 
             describe("Geofire", function() {
-                /* geofire node
-                 * dynamically add functions add, remove,
-                 *
-                 */
+							it("should add new method for location",function(){
 
+							});
             });
             describe("User", function() {
                 /* user service
@@ -229,62 +226,67 @@
                  */
             });
             describe("Nested Arrays", function() {
-							beforeEach(function(){
-								spyOn($q,"all").and.callThrough();
-								$rootScope.$digest();
-							});
-							it("q all",function(){
-								expect($log.info.calls.allArgs()).toEqual("asd");
-								expect($q.all.calls.allArgs()).toEqual("asd");
-							});
+                beforeEach(function() {
+                    spyOn($q, "all").and.callThrough();
+                    spyOn($q, "reject").and.callThrough();
+                    $rootScope.$digest();
+                    $rootScope.$digest();
+                });
+                it("shouldnt call q reject", function() {
+                    expect($q.reject.calls.count()).toEqual(0);
+                });
+                it("should define a new method for the array", function() {
+                    expect(subject.emails).toBeDefined();
+                    expect(subject.phones).toBeDefined();
+                });
 
-            //     it("should define a new method for records of the array", function() {
-            //         expect(subject.phone).toBeDefined();
-            //     });
-            //     it("should define a new method for the array", function() {
-            //         expect(subject.phones).toBeDefined();
-            //     });
-
-            //     it("should pass an id and the pluaralized array name to firePath", function() {
-            //         subject.phones(1);
-            //         expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
-            //     });
-            //     it("won't change array name if passed plural name to firePath", function() {
-            //         options = {
-            //             nestedArrays: ["phones"]
-            //         };
-            //         subject = fireEntity("path", options);
-            //         subject.phones(1);
-            //         expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
-            //     });
-            //     it("should call 'array' on fireStarter", function() {
-            //         subject.phones(1);
-            //         expect(fsType).toEqual("array");
-            //         expect(fbArray).toBeDefined();
-            //     });
-            //     it("should pass an id and the pluaralized array name to firePath", function() {
-            //         subject.phone(1, 1);
-            //         expect(pathSpy.nestedRecord).toHaveBeenCalledWith(1, "phones", 1);
-            //     });
-
-            //     it("should throw error if option isn't an array", function() {
-            //         options = {
-            //             nestedArrays: "blah",
-            //         };
-            //         expect(function() {
-            //             fireEntity("path", options);
-            //         }).toThrow();
-            //     });
-
+                it("should pass an id and the pluaralized array name to firePath", function() {
+                    subject.phones(1);
+                    expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
+                    subject.emails(1);
+                    expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "emails");
+                });
+                it("won't change array name if passed plural name to firePath", function() {
+                    options = {
+                        nestedArrays: ["phones"]
+                    };
+                    subject = fireEntity("path", options);
+                    subject.phones(1);
+                    expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
+                });
+                it("should call 'array' on fireStarter", function() {
+                    subject.buildObject("path");
+                    subject.phones(1);
+                    expect(fsType).toEqual("array");
+                    expect(fbArray).toBeDefined();
+                });
+                describe("Nested Records", function() {
+                    it("should define a new method for records of the array", function() {
+                        expect(subject.phone).toBeDefined();
+                        expect(subject.email).toBeDefined();
+                    });
+                    it("should pass an id and the pluaralized array name to firePath", function() {
+                        subject.phone(1, 1);
+                        expect(pathSpy.nestedRecord).toHaveBeenCalledWith(1, "phones", 1);
+                    });
+                    it("should call 'object' on fireStarter", function() {
+                        subject.buildArray("path");
+                        subject.phone(1, 1);
+                        expect(fsType).toEqual("object");
+                        expect(fbObject).toBeDefined();
+                    });
+                });
+                it("should throw error if option isn't an array", function() {
+                    options = {
+                        nestedArrays: "blah",
+                    };
+                    expect(function() {
+                        fireEntity("path", options);
+                    }).toThrow();
+                });
             });
-
         });
 
     });
-
-
-
-
-
 
 })();
