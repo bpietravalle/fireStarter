@@ -2,9 +2,26 @@
     "use strict";
 
     describe("FireEntity Factory", function() {
-        var firePath, $injector, inflector, fsType, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+        var firePath, data, user, $injector, inflector, fsType, geoFireMock, accountMock, userMock, geoMock, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
         beforeEach(function() {
+            angular.module("fireStarter.services")
+                .factory("geoFire", function() {
+                    geoFireMock = jasmine.createSpyObj("geoFireMock", ["getId", "findId"]);
+                    return geoFireMock;
+                })
+                .factory("geo", function() {
+                    geoMock = jasmine.createSpyObj("geoMock", ["getId", "findId"]);
+                    return geoMock;
+                })
+                .factory("account", function() {
+                    accountMock = jasmine.createSpyObj("accountMock", ["getId", "findId"]);
+                    return accountMock;
+                })
+                .factory("user", function() {
+                    userMock = jasmine.createSpyObj("userMock", ["getId", "findId"]);
+                    return userMock;
+                });
             module("fireStarter.services",
                 function($provide) {
                     $provide.service("fireStarter",
@@ -39,7 +56,8 @@
                             }
                         });
                 });
-            inject(function(_firePath_, _fireEntity_, _inflector_, _fireStarter_, _$q_, _$log_) {
+            inject(function(_firePath_, _fireEntity_, _inflector_, _fireStarter_, _$q_, _$log_, _user_) {
+                user = _user_;
                 inflector = _inflector_;
                 firePath = _firePath_;
                 fireEntity = _fireEntity_;
@@ -154,12 +172,44 @@
                 });
 
             });
+            describe("Command Methods", function() {
+                beforeEach(function() {
+                    data = {
+                        name: "name",
+                        phone: "phone"
+                    };
+                });
+                describe("createMainRecord", function() {
+                    it("should call add on fireStarter", function() {
+                        subject.createMainRecord(data);
+                        expect(fbArray.add).toHaveBeenCalledWith(data);
+                        expect(pathSpy.mainArray).toHaveBeenCalled();
+                    });
+                    it("should call mainArray on firePath", function() {
+                        subject.createMainRecord(data);
+                        expect(pathSpy.mainArray).toHaveBeenCalled();
+                    });
+                });
+                describe("createNestedRecord", function() {
+                    it("should call add on fireStarter", function() {
+                        subject.createNestedRecord(1, "locations", data);
+                        expect(fbArray.add).toHaveBeenCalledWith(data);
+                    });
+                    it("should call nestedArray on firePath with correct args", function() {
+                        subject.createNestedRecord(1, "locations", data);
+                        expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "locations");
+                    });
+                });
+            });
         });
         describe("Options", function() {
             beforeEach(function() {
-							spyOn($log,"info").and.callThrough();
+                spyOn($log, "info").and.callThrough();
                 options = {
-                    nestedArrays: ["phone"]
+                    nestedArrays: ["phone"],
+                    geofire: true,
+                    user: true,
+
                 };
                 subject = fireEntity("path", options);
             });
@@ -179,39 +229,52 @@
                  */
             });
             describe("Nested Arrays", function() {
+							beforeEach(function(){
+								spyOn($q,"all").and.callThrough();
+								$rootScope.$digest();
+							});
+							it("q all",function(){
+								expect($log.info.calls.allArgs()).toEqual("asd");
+								expect($q.all.calls.allArgs()).toEqual("asd");
+							});
 
-                it("should define a new method for the array", function() {
-                    // expect(subject.phones()).toBeDefined();
-                });
-                it("should define a new method for records of the array", function() {
-                    expect($log.info.calls.argsFor(0)[0]).toEqual("as");
-                });
+            //     it("should define a new method for records of the array", function() {
+            //         expect(subject.phone).toBeDefined();
+            //     });
+            //     it("should define a new method for the array", function() {
+            //         expect(subject.phones).toBeDefined();
+            //     });
 
-                // it("should pass an id and the pluaralized array name to firePath", function() {
-                //     subject.phones(1);
-                //     expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
-                // });
-                // it("won't change array name if passed plural name to firePath", function() {
-                //     options = {
-                //         nestedArrays: ["phones"]
-                //     };
-                //     subject = fireEntity("path", options);
-                //     subject.phones(1);
-                //     expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
-                // });
-                // it("should call 'array' on fireStarter", function() {
-                //     subject.phones(1);
-                //     expect(fbType).toEqual("array");
-                //     expect(fbArray).toBeDefined();
-                // });
-                it("should throw error if option isn't an array", function() {
-                    options = {
-                        nestedArrays: "blah",
-                    };
-                    expect(function() {
-                        fireEntity("path", options);
-                    }).toThrow();
-                });
+            //     it("should pass an id and the pluaralized array name to firePath", function() {
+            //         subject.phones(1);
+            //         expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
+            //     });
+            //     it("won't change array name if passed plural name to firePath", function() {
+            //         options = {
+            //             nestedArrays: ["phones"]
+            //         };
+            //         subject = fireEntity("path", options);
+            //         subject.phones(1);
+            //         expect(pathSpy.nestedArray).toHaveBeenCalledWith(1, "phones");
+            //     });
+            //     it("should call 'array' on fireStarter", function() {
+            //         subject.phones(1);
+            //         expect(fsType).toEqual("array");
+            //         expect(fbArray).toBeDefined();
+            //     });
+            //     it("should pass an id and the pluaralized array name to firePath", function() {
+            //         subject.phone(1, 1);
+            //         expect(pathSpy.nestedRecord).toHaveBeenCalledWith(1, "phones", 1);
+            //     });
+
+            //     it("should throw error if option isn't an array", function() {
+            //         options = {
+            //             nestedArrays: "blah",
+            //         };
+            //         expect(function() {
+            //             fireEntity("path", options);
+            //         }).toThrow();
+            //     });
 
             });
 

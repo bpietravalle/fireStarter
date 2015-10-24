@@ -33,7 +33,12 @@
                 //TODO: what about different location in rootScope - this is too restrictive
                 this._sessionStorage = this._rootScope.session;
             }
-            this._sessionIdMethod = this._options.sessionIdMethod || "getId";
+            if (this._options.sessionIdMethod) {
+                this._sessionIdMethod = this._options.sessionIdMethod;
+            } else {
+                this._sessionIdMethod = "getId";
+
+            }
         }
     };
 
@@ -49,17 +54,13 @@
             fire.nestedRecord = nestedRecord;
             fire.makeNested = makeNested; //make private?
             if (self._sessionAccess === true) {
-                fire.currentUser = currentUser;
+                fire.userNestedArray = userNestedArray;
                 fire.session = session;
                 fire.sessionId = sessionId;
             }
 
             function mainArray() {
                 return checkParam(self._path);
-            }
-
-            function currentUser() {
-                return "go to your session and get the id";
             }
 
             //would prefer to remove this
@@ -79,12 +80,16 @@
                 return extendPath(mainRecord(recId), name);
             }
 
-            function nestedRecord(arrName, recId) {
-                return makeNested(arrName, recId);
+            function nestedRecord(mainRecId, arrName, recId) {
+                return extendPath(nestedArray(mainRecId, arrName), recId);
             }
 
             function makeNested(parent, child) {
                 return extendPath(checkParam(parent), child);
+            }
+
+            function userNestedArray(name) {
+                return nestedArray(sessionId(), name);
             }
 
             function extendPath(arr, id) {

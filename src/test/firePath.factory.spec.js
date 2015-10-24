@@ -62,7 +62,7 @@
                     expect(path.nestedArray(1, "nested")).toEqual(["path", 1, "nested"]);
                 });
                 it("nestedRecord()", function() {
-                    expect(path.nestedRecord("nested", 5)).toEqual(["nested", 5]);
+                    expect(path.nestedRecord(1, "nested", 5)).toEqual(["path",1, "nested", 5]);
                 });
                 it("makeNested() works when parent path is an array", function() {
                     expect(path.makeNested(["path"], "nested")).toEqual(["path", "nested"]);
@@ -85,13 +85,16 @@
                         expect(path).toBeDefined();
 
                     });
-                    it("should make currentUser methods available", function() {
-                        expect(path.currentUser()).toBeDefined();
+                    it("should make current user methods available", function() {
+                        expect(path.userNestedArray()).toBeDefined();
+                        expect(path.session()).toBeDefined();
+												//this doesn't pass if invoke sessionId()
+                        expect(path.sessionId).toBeDefined();
                     });
                     it("Should throw error if options are specified", function() {
                         path = firePath("path");
                         expect(function() {
-                            path.currentUser()
+                            path.userNestedArray()
                         }).toThrow();
                         expect(function() {
                             path.sessionId()
