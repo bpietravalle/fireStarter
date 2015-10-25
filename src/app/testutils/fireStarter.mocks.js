@@ -3,10 +3,12 @@
 
     /** @ngInject */
 
-    function fireStarterMocks(baseBuilder, $q, $timeout, fireStarter) {
+    function fireStarterMocks(baseBuilder, $q, $timeout, fireStarter,$firebaseArray,$firebaseObject) {
         var vm = this;
 
         vm.array = stubArray;
+				vm.fbObject = fbObject;
+				vm.fbArray = fbArray;
         vm.arrData = recArrayData;
         vm.auth = auth;
         vm.authRef = authRef;
@@ -30,6 +32,33 @@
             return obj;
         }
 
+				function fbObject(initialData, ref){
+            if (!ref) {
+                ref = stubRef();
+            }
+            var obj = $firebaseObject(ref);
+            if (initialData) {
+                obj.$ref().set(initialData);
+                obj.$ref().flush();
+                flushAll();
+            }
+            return obj;
+				}
+
+				function fbArray(initialData, ref){
+            if (!ref) {
+                ref = stubRef();
+            }
+            var arr = $firebaseArray(ref);
+            if (initialData) {
+                arr.$ref().set(initialData);
+                arr.$ref().flush();
+                flushAll();
+            }
+            return arr;
+					
+				
+				}
 
 
         vm.fbArraySpy = jasmine.createSpyObj("fbArray", ["timestamp", "ref", "path", "add", "destroy",
@@ -187,6 +216,17 @@
             return geo;
         }
 
+        var flushAll = (function() {
+            return function flushAll() {
+                // the order of these flush events is significant
+                Array.prototype.slice.call(arguments, 0).forEach(function(o) {
+                    o.flush();
+                });
+                try {
+                    $timeout.flush();
+                } catch (e) {}
+            }
+        })();
     }
 
     angular.module('fbMocks')

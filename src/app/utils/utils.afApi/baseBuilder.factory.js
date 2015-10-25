@@ -2,7 +2,7 @@
     "use strict";
 
     /** @ngInject */
-    function baseBuilderFactory($timeout, $q, $log, $firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
+    function baseBuilderFactory($timeout, $q, $firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
         var utils = {
             set: set,
             wrap: wrap,

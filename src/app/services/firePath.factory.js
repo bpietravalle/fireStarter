@@ -23,22 +23,6 @@
         this._injector = $injector;
         this._path = path;
         this._options = options;
-        if (this._options) {
-            this._sessionAccess = this._options.sessionAccess || false;
-        }
-        if (this._sessionAccess === true) {
-            if (this._options.sessionLocation) {
-                this._sessionStorage = this._injector.get(this._options.sessionLocation);
-            } else {
-                this._sessionStorage = this._rootScope.session;
-            }
-            if (this._options.sessionIdMethod) {
-                this._sessionIdMethod = this._options.sessionIdMethod;
-            } else {
-                this._sessionIdMethod = "getId";
-
-            }
-        }
     };
 
 
@@ -52,23 +36,9 @@
             fire.nestedArray = nestedArray;
             fire.nestedRecord = nestedRecord;
             fire.makeNested = makeNested; //make private?
-            if (self._sessionAccess === true) {
-                fire.userNestedArray = userNestedArray;
-                fire.session = session;
-                fire.sessionId = sessionId;
-            }
 
             function mainArray() {
                 return checkParam(self._path);
-            }
-
-            //would prefer to remove this
-            function session() {
-                return self._sessionStorage;
-            }
-
-            function sessionId() {
-                return self._sessionStorage[self._sessionIdMethod]();
             }
 
             function mainRecord(id) {
@@ -87,9 +57,6 @@
                 return extendPath(checkParam(parent), child);
             }
 
-            function userNestedArray(name) {
-                return nestedArray(sessionId(), name);
-            }
 
             function extendPath(arr, id) {
                 arr.push(id);
