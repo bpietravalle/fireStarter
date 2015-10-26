@@ -103,6 +103,10 @@
                 entity.loadUserRecords = loadUserRecords;
                 entity.createUserRecord = createUserRecord;
             }
+            if (self._user === true && self._geofire === true) {
+                entity.createWithUserAndGeo = createWithUserAndGeo;
+            }
+
             if (self._sessionAccess === true) {
                 entity.session = session;
                 entity.sessionId = sessionId;
@@ -172,7 +176,10 @@
 
             /*Commands*/
 
-            function createMainRecord(data) {
+            function createMainRecord(data, flag) {
+                if (flag === true) {
+                    delete data['geo'];
+                }
                 return mainArray().add(data);
             }
 
@@ -184,11 +191,14 @@
 
 
             /* save to user nested array 
-             * @param{Object} data to save to user array
+             * @param{Object} data to save to user array - just saving key for now
              *@return{Promise(fireBaseRef)}
              */
 
-            function createUserRecord(data) {
+            function createUserRecord(d) {
+                var data = {
+                    mainArrayKey: d.key()
+                };
                 return userNestedArray()
                     .add(data)
                     .then(logSuccess)
@@ -196,15 +206,19 @@
 
             }
 
+
+
             /* save to mainLocation array
              * @param{Object}
              */
-            function createLocationRecord(data) {
+            function createLocationRecord(data, flag) {
+                if (flag === true) {
+                    delete data['coords'];
+                }
                 return mainLocations()
                     .add(data)
                     .then(logSuccess)
                     .catch(standardError);
-
             }
 
             /* save to a records nested location array
@@ -212,8 +226,8 @@
              * @param{Object}
              */
             function createNestedLocationRecord(recId, data) {
-							//cant call nestedArray methods in the constructor i guess
-								return nestedArray(recId, self._locationName)
+                //cant call nestedArray methods in the constructor i guess
+                return nestedArray(recId, self._locationName)
                     .add(data)
                     .then(logSuccess)
                     .catch(standardError);
@@ -221,20 +235,48 @@
             }
 
 
+            /*@param{Object} must have a 'coords' property that = [latitude,longitude]
+             *@return{Array} [null,fireBaseRef(main Location)]
+             */
+
             function trackLocation(data) {
 
-                return createLocationRecord(data.loc)
-                    .then(sendToGeoFireAndNestedArray)
+                return self._q.all([createLocationRecord(data, true), qWrap({
+                        lat: data.lat,
+                        lon: data.lon
+                    })])
+                    .then(sendToGeoFireAndPassLocationResults)
                     .catch(standardError);
 
-                function sendToGeoFireAndNestedArray(res) {
-                    return self._q.all([geoFireSet(res.key(), data.coords), locations().add({
-                        key: res.key()
-                    })]);
+                function sendToGeoFireAndPassLocationResults(res) {
+                        self._log.info(res[1]);
+                    return self._q.all([geofireSet(res[0].key(), [res[1].lat, res[1].lon]), qWrap(res[0])]);
+
 
                 }
             }
 
+            function createWithUserAndGeo(data) {
+
+                return self._q.all([createMainRecord(data, true), qWrap(data.geo)])
+                    .then(trackLocationAndAddUserRec)
+                    .catch(standardError);
+
+                function trackLocationAndAddUserRec(res) {
+                    return self._q.all([trackLocation(res[1]), createUserRecord(res[0]), qWrap(res[0])]);
+
+
+                }
+
+                function sendtoUserAndPassMainRecResults(res) {
+                    var data = {
+                        mainArrayKey: res.key()
+                    };
+
+                    return self._q.all([createUserRecord(data), qWrap(res)]);
+                }
+
+            }
 
 
             function addNested(obj, arr) {
@@ -326,8 +368,8 @@
 
 
 
-						/** helpers 
-						 * */
+            /** helpers 
+             * */
 
 
             function standardError(err) {
@@ -339,9 +381,9 @@
                 return res
             }
 
-						function qWrap(obj){
-							return self._q.when(obj);
-						}
+            function qWrap(obj) {
+                return self._q.when(obj);
+            }
 
             /*to remove later on*/
             function inspect() {

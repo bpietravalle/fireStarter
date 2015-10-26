@@ -16,27 +16,32 @@
             };
 
             newData = {
-                "3": {
-                    phone: "111222333",
-                    firstName: "sally"
-                }
+                phone: "111222333",
+                key: function() {
+                    return "key";
+                },
+                firstName: "sally"
             };
 
-						fullLocData = {
-							loc: locData,
-							coords: [90,100]
-						};
+            locData = [{
+                    lat: 90,
+                    lon: 100,
+                    place_id: "string",
+                    placeType: "a place",
+                    distance: 1234,
+                    closeBy: true
+                }, {
+                    lat: 45,
+                    lon: 100,
+                    place_id: "different_place",
+                    placeType: "some place",
+                    distance: 1000,
+                    closeBy: false
+
+                }
 
 
-						gfData = {
-							coords: [90,100]
-						};
-						locData = {
-							place_id: "string",
-							placeType: "a place",
-							distance: 1234,
-							closeBy: true
-						};
+            ];
 
 
             beforeEach(function() {
@@ -85,6 +90,7 @@
                 spyOn($q, "reject").and.callThrough();
             });
             afterEach(function() {
+                arrMock = null;
                 pathSpy = null;
                 firePath = null;
                 fireEntity = null;
@@ -124,15 +130,15 @@
                         expect(baseBuilder.init.calls.argsFor(1)[2]).toEqual(undefined);
                     });
                     it("should add record to array", function() {
-												arrMock.$ref().flush();
+                        arrMock.$ref().flush();
                         $rootScope.$digest();
-												expect(arrMock.length).toEqual(3);
+                        expect(arrMock.length).toEqual(3);
                     });
-										it("should return the firebaseRef",function(){
-												arrMock.$ref().flush();
+                    it("should return the firebaseRef", function() {
+                        arrMock.$ref().flush();
                         $rootScope.$digest();
                         expect(test1.$$state.value.ref()).toBeDefined();
-										});
+                    });
                 });
             });
             describe("Methods Related to Geofire", function() {
@@ -143,13 +149,14 @@
                         geofire: true,
                     };
                     subject = fireEntity("requests", options);
-                    $rootScope.$digest();
-                    test = subject.createLocationRecord(locData);
-                    test1 = subject.createNestedLocationRecord(1, locData);
-                    $rootScope.$digest();
                 });
 
                 describe("createLocationRecord", function() {
+                    beforeEach(function() {
+                        test = subject.createLocationRecord(locData);
+                        $rootScope.$digest();
+                    });
+
                     it("should return a promise", function() {
                         expect(test).toBeAPromise();
                     });
@@ -158,39 +165,77 @@
                     });
 
                     it("should add record to array", function() {
-												arrMock.$ref().flush();
+                        arrMock.$ref().flush();
                         $rootScope.$digest();
-												expect(arrMock.length).toEqual(2);
+                        expect(arrMock.length).toEqual(1);
                     });
-										it("should return the firebaseRef",function(){
-												arrMock.$ref().flush();
+                    it("should return firebaseRef of object", function() {
+                        arrMock.$ref().flush();
                         $rootScope.$digest();
                         expect(test.$$state.value.ref()).toBeDefined();
-										});
+                    });
+                    // it("should all you to remove coords from data object before saving", function() {
+                    //     arrMock.$ref().flush();
+                    //     $rootScope.$digest();
+                    //     expect(test.$$state.value['data'].coords).toBeDefined();
+                    //     test1 = subject.createLocationRecord(locData, true);
+                    //     arrMock.$ref().flush();
+                    //     $rootScope.$digest();
+                    //     expect(test1.$$state.value['data'].coords).not.toBeDefined();
+
+                    // });
                 });
                 describe("createNestedLocationRecord", function() {
+                    beforeEach(function() {
+                        test1 = subject.createNestedLocationRecord(1, locData);
+                        $rootScope.$digest();
+                    });
                     it("should return a promise", function() {
                         expect(test1).toBeAPromise();
                     });
                     it("should send correct path args to fireStarter", function() {
-                        expect(baseBuilder.init.calls.argsFor(1)[0]).toEqual("array");
-                        expect(baseBuilder.init.calls.argsFor(1)[1]).toEqual(["requests", 1, "locations"]);
-                        expect(baseBuilder.init.calls.argsFor(1)[2]).toEqual(undefined);
+                        expect(baseBuilder.init.calls.argsFor(0)[0]).toEqual("array");
+                        expect(baseBuilder.init.calls.argsFor(0)[1]).toEqual(["requests", 1, "locations"]);
+                        expect(baseBuilder.init.calls.argsFor(0)[2]).toEqual(undefined);
                     });
 
                     it("should add record to array", function() {
-												arrMock.$ref().flush();
+                        arrMock.$ref().flush();
                         $rootScope.$digest();
-												expect(arrMock.length).toEqual(2);
+                        expect(arrMock.length).toEqual(1);
                     });
-										it("should return the firebaseRef",function(){
-												arrMock.$ref().flush();
+                    it("should return the firebaseRef", function() {
+                        arrMock.$ref().flush();
                         $rootScope.$digest();
                         expect(test1.$$state.value.ref()).toBeDefined();
-										});
+                    });
                 });
-                describe("Geofire", function() {
-									
+                describe("Track Location", function() {
+                    beforeEach(function() {
+                        test = subject.trackLocation(locData[0]);
+                        $rootScope.$digest();
+                        arrMock.$ref().flush();
+                        $rootScope.$digest();
+                        $rootScope.$digest();
+                        $rootScope.$digest();
+                    });
+                    it("should call set() on geoService for each location", function() {
+                        expect(geoSpy.set.calls.count()).toEqual(1);
+                    });
+                    it("should call geofire with the correct object name", function() {
+                        expect(geoSpy.set.calls.argsFor(0)[0]).toEqual("requests");
+                    });
+                    it("should call geofire with mainLocation array key", function() {
+                        expect(geoSpy.set.calls.argsFor(0)[1]).toEqual(test.$$state.value[1].ref().key());
+                    });
+                    it("should call geofire with correct coordinates", function() {
+                        expect(geoSpy.set.calls.argsFor(0)[2]).toEqual([locData[0].lat,locData[0].lon]);
+                    });
+
+                    it("should add record to nested location array with key from main array key", function() {
+											expect($log.info.calls.allArgs()).toEqual("as");
+
+                    });
 
                 });
             });
