@@ -2,28 +2,30 @@
     "use strict";
     describe("FireEntity Factory", function() {
         describe("with mocks", function() {
-            var baseBuilder, gfData, locData, firePath, fullLocData, newData, test, test1, arrData, sessionSpy, fsMocks, arrMock, objMock, geo, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, geoSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+            var baseBuilder, newRecord, locData, firePath, fullLocData, newData, test, test1, arrData, sessionSpy, fsMocks, arrMock, objMock, geo, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, geoSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
-            arrData = {
-                "1": {
-                    phone: "123456890",
-                    firstName: "tom"
-                },
-                "2": {
-                    phone: "0987654321",
-                    firstName: "frank"
-                }
-            };
 
-            newData = {
-                phone: "111222333",
-                key: function() {
-                    return "key";
-                },
-                firstName: "sally"
-            };
+            beforeEach(function() {
+                arrData = {
+                    "1": {
+                        phone: "123456890",
+                        firstName: "tom"
+                    },
+                    "2": {
+                        phone: "0987654321",
+                        firstName: "frank"
+                    }
+                };
 
-            locData = [{
+                newData = {
+                    phone: "111222333",
+                    key: function() {
+                        return "key";
+                    },
+                    firstName: "sally"
+                };
+
+                locData = [{
                     lat: 90,
                     lon: 100,
                     place_id: "string",
@@ -37,14 +39,13 @@
                     placeType: "some place",
                     distance: 1000,
                     closeBy: false
+                }];
 
-                }
+                newRecord = {
+                    phone: "111222333",
+                    firstName: "sally",
+                };
 
-
-            ];
-
-
-            beforeEach(function() {
                 MockFirebase.override();
                 angular.module("fireStarter.services")
                     .factory("sessionSpy", function() {
@@ -88,13 +89,62 @@
                 });
                 spyOn($log, "info").and.callThrough();
                 spyOn($q, "reject").and.callThrough();
+                // spyOn($q, "all").and.callThrough();
+                // spyOn($q, "when").and.callThrough();
             });
             afterEach(function() {
+                locData = null;
+                newRecord = null;
+                newData = null;
+                arrData = null;
                 arrMock = null;
                 pathSpy = null;
                 firePath = null;
                 fireEntity = null;
                 fireStarter = null;
+            });
+            describe("createMainRecord", function() {
+                beforeEach(function() {
+                    arrMock = fsMocks.fbArray();
+                    spyOn(baseBuilder, "init").and.returnValue(arrMock);
+                    options = {
+                        geofire: true,
+                    };
+                    subject = fireEntity("requests", options);
+                });
+                it("should return a promise", function() {
+                    test = subject.createMainRecord(newRecord);
+                    expect(test).toBeAPromise();
+                });
+                describe("geo option", function() {
+                    // describe("if undefined", function() {
+                    //     it("should send full data object to mainArray", function() {
+                    //         test = subject.createMainRecord(newRecord);
+                    //         $rootScope.$digest();
+                    //         arrMock.$ref().flush();
+                    //         $rootScope.$digest();
+                    //         expect(test.$$state.value['data'].geo).toBeDefined();
+                    //     });
+                    // });
+                    describe("if true", function() {
+                        beforeEach(function() {
+                            test1 = subject.createMainRecord(newRecord, true);
+                            arrMock.$ref().flush();
+                            $rootScope.$digest();
+                        });
+                        it("should not send full data object to mainArray if arg = true", function() {
+                            expect(test1.$$state.value['data'].geo).not.toBeDefined();
+                            expect(test1.$$state.value['data']).toBeDefined();
+                        });
+                    });
+                });
+                it("should send correct path args to fireStarter", function() {
+                    test = subject.createMainRecord(newRecord);
+                    $rootScope.$digest();
+                    arrMock.$ref().flush();
+                    $rootScope.$digest();
+                    expect(baseBuilder.init).toHaveBeenCalledWith("array", ["requests"], undefined);
+                });
             });
             describe("Methods for user Nested Array", function() {
                 beforeEach(function() {
@@ -147,6 +197,7 @@
                     spyOn(baseBuilder, "init").and.returnValue(arrMock);
                     options = {
                         geofire: true,
+                        user: true
                     };
                     subject = fireEntity("requests", options);
                 });
@@ -154,7 +205,6 @@
                 describe("createLocationRecord", function() {
                     beforeEach(function() {
                         test = subject.createLocationRecord(locData);
-                        $rootScope.$digest();
                     });
 
                     it("should return a promise", function() {
@@ -174,16 +224,6 @@
                         $rootScope.$digest();
                         expect(test.$$state.value.ref()).toBeDefined();
                     });
-                    // it("should all you to remove coords from data object before saving", function() {
-                    //     arrMock.$ref().flush();
-                    //     $rootScope.$digest();
-                    //     expect(test.$$state.value['data'].coords).toBeDefined();
-                    //     test1 = subject.createLocationRecord(locData, true);
-                    //     arrMock.$ref().flush();
-                    //     $rootScope.$digest();
-                    //     expect(test1.$$state.value['data'].coords).not.toBeDefined();
-
-                    // });
                 });
                 describe("createNestedLocationRecord", function() {
                     beforeEach(function() {
@@ -210,34 +250,67 @@
                         expect(test1.$$state.value.ref()).toBeDefined();
                     });
                 });
-                describe("Track Location", function() {
+                describe("trackLocations", function() {
                     beforeEach(function() {
-                        test = subject.trackLocation(locData[0]);
-                        $rootScope.$digest();
+                        test = subject.trackLocations(locData, "string");
                         arrMock.$ref().flush();
-                        $rootScope.$digest();
-                        $rootScope.$digest();
                         $rootScope.$digest();
                     });
                     it("should call set() on geoService for each location", function() {
-                        expect(geoSpy.set.calls.count()).toEqual(1);
+                    // expect(test).toEqual("as");
+                        expect(geoSpy.set.calls.count()).toEqual(locData.length);
                     });
                     it("should call geofire with the correct object name", function() {
                         expect(geoSpy.set.calls.argsFor(0)[0]).toEqual("requests");
+                        expect(geoSpy.set.calls.argsFor(1)[0]).toEqual("requests");
                     });
                     it("should call geofire with mainLocation array key", function() {
-                        expect(geoSpy.set.calls.argsFor(0)[1]).toEqual(test.$$state.value[1].ref().key());
+                        expect(geoSpy.set.calls.argsFor(0)[1]).toEqual(test.$$state.value[0][1].ref().key());
+                        expect(geoSpy.set.calls.argsFor(1)[1]).toEqual(test.$$state.value[1][1].ref().key());
                     });
                     it("should call geofire with correct coordinates", function() {
-                        expect(geoSpy.set.calls.argsFor(0)[2]).toEqual([locData[0].lat,locData[0].lon]);
+                        expect(geoSpy.set.calls.argsFor(0)[2]).toEqual([locData[0].lat, locData[0].lon]);
+                        expect(geoSpy.set.calls.argsFor(1)[2]).toEqual([locData[1].lat, locData[1].lon]);
                     });
 
-                    it("should add record to nested location array with key from main array key", function() {
-											expect($log.info.calls.allArgs()).toEqual("as");
-
+                    it("should add same main array key to each main location record", function() {
+                        expect(test.$$state.value[1][1]['data'].mainArrayKey).toEqual("string");
+                        expect(test.$$state.value[0][1]['data'].mainArrayKey).toEqual("string");
                     });
 
                 });
+            });
+            describe("createWithUserAndGeo", function() {
+                beforeEach(function() {
+                    arrMock = fsMocks.fbArray();
+                    spyOn(baseBuilder, "init").and.returnValue(arrMock);
+                    options = {
+                        user: true,
+                        geofire: true
+                    };
+                    subject = fireEntity("requests", options);
+                    test = subject.createWithUserAndGeo(newRecord, locData);
+                    $rootScope.$digest();
+                    arrMock.$ref().flush();
+                    $rootScope.$digest();
+                    arrMock.$ref().flush();
+                    $rootScope.$digest();
+                });
+
+                it("should add same main array key to each main location record", function() {
+                    // expect(test.$$state.value[0][1]['data'].mainArrayKey).toEqual(test.$$state.value[1][1]['data'].mainArrayKey);
+                });
+                it("log 1", function() {
+										var s = $log.info.calls.argsFor(0)[0];
+										expect(subject.locations(s).ref()).toEqual(2);
+
+                });
+                // it("log 2", function() {
+										// expect($log.info.calls.argsFor(1)).toEqual("as");
+                // });
+                // it("log 3", function() {
+										// expect($log.info.calls.argsFor(2)).toEqual("as");
+                // });
             });
         });
     });

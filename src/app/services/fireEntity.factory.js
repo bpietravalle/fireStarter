@@ -94,7 +94,7 @@
                 entity.geofireSet = geofireSet;
                 entity.geofireGet = geofireGet;
                 entity.geofireRemove = geofireRemove;
-                entity.trackLocation = trackLocation;
+                entity.trackLocations = trackLocations;
             }
 
             if (self._user === true) {
@@ -176,11 +176,13 @@
 
             /*Commands*/
 
-            function createMainRecord(data, flag) {
-                if (flag === true) {
-                    delete data['geo'];
+            function createMainRecord(data, geoFlag) {
+                if (geoFlag === true) {
+                    delete data["geo"]
                 }
+
                 return mainArray().add(data);
+
             }
 
 
@@ -201,7 +203,7 @@
                 };
                 return userNestedArray()
                     .add(data)
-                    .then(logSuccess)
+                    // .then(logSuccess)
                     .catch(standardError);
 
             }
@@ -210,14 +212,15 @@
 
             /* save to mainLocation array
              * @param{Object}
+             * @return{fireBaseRef}
              */
             function createLocationRecord(data, flag) {
                 if (flag === true) {
-                    delete data['coords'];
+                    delete data['geo'];
                 }
                 return mainLocations()
                     .add(data)
-                    .then(logSuccess)
+                    // .then(logSuccess)
                     .catch(standardError);
             }
 
@@ -235,10 +238,6 @@
             }
 
 
-            /*@param{Object} must have a 'coords' property that = [latitude,longitude]
-             *@return{Array} [null,fireBaseRef(main Location)]
-             */
-
             function trackLocation(data) {
 
                 return self._q.all([createLocationRecord(data, true), qWrap({
@@ -249,31 +248,48 @@
                     .catch(standardError);
 
                 function sendToGeoFireAndPassLocationResults(res) {
-                        self._log.info(res[1]);
                     return self._q.all([geofireSet(res[0].key(), [res[1].lat, res[1].lon]), qWrap(res[0])]);
 
 
                 }
             }
 
-            function createWithUserAndGeo(data) {
+            /*@param{Array} location objects to save.  each must have a lat and a lon property
+             *@return{Array} [[null,fireBaseRef(main Location)]]
+             */
+            function trackLocations(data, key) {
+                return self._q.all(data.map(function(item) {
+                        return trackLocation(addLocationKey(item, key));
+                    }))
+                    .catch(standardError);
 
-                return self._q.all([createMainRecord(data, true), qWrap(data.geo)])
+                function addLocationKey(obj, key) {
+                    obj.mainArrayKey = key;
+                    return obj;
+                }
+            }
+
+            function createWithUserAndGeo(data, loc) {
+
+                return self._q.all([createMainRecord(data, true), qWrap(loc)])
                     .then(trackLocationAndAddUserRec)
+                    .then(updateMainArray)
                     .catch(standardError);
 
                 function trackLocationAndAddUserRec(res) {
-                    return self._q.all([trackLocation(res[1]), createUserRecord(res[0]), qWrap(res[0])]);
+                    return self._q.all([trackLocations(res[1], res[0].key()), createUserRecord(res[0]), qWrap(res[0])]);
 
 
                 }
 
-                function sendtoUserAndPassMainRecResults(res) {
-                    var data = {
-                        mainArrayKey: res.key()
-                    };
+                function updateMainArray(res) {
+									// self._log.info(res[0]);
+									// self._log.info(res[1]);
+									self._log.info(res[2].key());
+                    return self._q.all(res[0].map(function(loc) {
+                        return createNestedLocationRecord(res[2].key(), loc[1].key());
+                    }));
 
-                    return self._q.all([createUserRecord(data), qWrap(res)]);
                 }
 
             }
