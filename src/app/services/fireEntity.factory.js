@@ -89,15 +89,19 @@
             if (self._geofire === true) {
                 entity.mainLocations = mainLocations;
                 entity.mainLocation = mainLocation;
+                entity.createLocationRecord = createLocationRecord;
+                entity.createNestedLocationRecord = createNestedLocationRecord;
                 entity.geofireSet = geofireSet;
                 entity.geofireGet = geofireGet;
                 entity.geofireRemove = geofireRemove;
+                entity.trackLocation = trackLocation;
             }
 
             if (self._user === true) {
                 entity.userNestedArray = userNestedArray;
                 entity.userNestedRecord = userNestedRecord;
                 entity.loadUserRecords = loadUserRecords;
+                entity.createUserRecord = createUserRecord;
             }
             if (self._sessionAccess === true) {
                 entity.session = session;
@@ -140,7 +144,7 @@
             }
 
 
-            /*Query Functions*/
+            /*Queries*/
 
             function findById(id) {
                 return mainRecord(id);
@@ -159,36 +163,77 @@
                 return nestedRecord(arr, id).loaded();
             }
 
-            /*@param{Object} data to save
-             *@return{Promise(firebaseRef)}
-             */
+            function loadUserRecords() {
+                return userNestedArray()
+                    .loaded()
+                    .then(logSuccess)
+                    .catch(standardError);
+            }
+
+            /*Commands*/
 
             function createMainRecord(data) {
                 return mainArray().add(data);
             }
 
-            /*@param{string} id of mainRecord
-             *@param{string} name of nestedArray
-             *@param{Object} data to save
-             *@return{Promise(firebaseRef)}
-             */
 
             function createNestedRecord(recId, name, data) {
                 return nestedArray(recId, name).add(data);
             }
 
 
-            function loadUserRecords() {
-                return userNestedArray().loaded()
+
+            /* save to user nested array 
+             * @param{Object} data to save to user array
+             *@return{Promise(fireBaseRef)}
+             */
+
+            function createUserRecord(data) {
+                return userNestedArray()
+                    .add(data)
                     .then(logSuccess)
                     .catch(standardError);
 
+            }
 
+            /* save to mainLocation array
+             * @param{Object}
+             */
+            function createLocationRecord(data) {
+                return mainLocations()
+                    .add(data)
+                    .then(logSuccess)
+                    .catch(standardError);
 
+            }
+
+            /* save to a records nested location array
+             * @param{string} id of mainArray record
+             * @param{Object}
+             */
+            function createNestedLocationRecord(recId, data) {
+							//cant call nestedArray methods in the constructor i guess
+								return nestedArray(recId, self._locationName)
+                    .add(data)
+                    .then(logSuccess)
+                    .catch(standardError);
 
             }
 
 
+            function trackLocation(data) {
+
+                return createLocationRecord(data.loc)
+                    .then(sendToGeoFireAndNestedArray)
+                    .catch(standardError);
+
+                function sendToGeoFireAndNestedArray(res) {
+                    return self._q.all([geoFireSet(res.key(), data.coords), locations().add({
+                        key: res.key()
+                    })]);
+
+                }
+            }
 
 
 
@@ -201,8 +246,6 @@
 
                 return angular.merge({}, obj, newProperties);
             }
-
-
 
             function addNestedArray(obj, arr) {
                 var arrName = self._inflector.pluralize(arr);
@@ -220,70 +263,6 @@
                 return newProp;
             }
 
-            /* @param {Object}
-             * @return{Array} [firebaseRef(entity), [{location1},{location2),...]
-             */
-
-            function saveArrAndPassLocations(data) {
-
-                /* first q.all */
-                return self._q.all([arraySave(data), passLocations(data)]);
-
-                function arraySave(data) {
-                    return createMainRecord(data);
-                }
-
-                function passLocations(data) {
-                    return self._q.when(data.locations);
-                }
-
-            }
-
-
-            /* @param {Array} [firebaseRef(request), [{location1},{location2),...]
-             * @return {Array} [firebaseRef(user/request), [firebaseRef(location1), firebaseRef(location2)...], main Request key]
-             */
-
-            function saveRecords(res) {
-                /* second q.all */
-                return $q.all([nestedArraySave(res), addLocations(res), passMainRequestRef(res)]);
-            }
-
-
-            function nestedArraySave(res) {
-                return userNestedArray()
-                    .add({
-                        start: timestamp(),
-                        mainArrayKey: res[0].key()
-                    })
-                    .then(nestedSaveSuccess)
-                    .catch(standardError);
-
-                function nestedSaveSuccess(res) {
-                    $log.info("after nested save");
-                    $log.info(res);
-                    return res;
-                }
-            }
-
-
-            function addLocations(res) {
-
-                /* third q.all */
-                return self._q.all(res[1].map(function(loc) {
-
-                    return locationsArray()
-                        .add({
-                            type: loc.type,
-                            lat: loc.lat,
-                            lon: loc.lon,
-                            mainArrayKey: res[0].key(),
-                            place_id: loc.place_id,
-                            createdAt: timestamp()
-                        });
-                }));
-
-            }
 
 
             /**
@@ -345,6 +324,12 @@
                 return self._sessionStorage[self._sessionIdMethod]();
             }
 
+
+
+						/** helpers 
+						 * */
+
+
             function standardError(err) {
                 return self._q.reject(err);
             }
@@ -353,6 +338,10 @@
                 self._log.info(res)
                 return res
             }
+
+						function qWrap(obj){
+							return self._q.when(obj);
+						}
 
             /*to remove later on*/
             function inspect() {
