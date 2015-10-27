@@ -2,7 +2,7 @@
     "use strict";
     describe("FireEntity Factory", function() {
         describe("with mocks", function() {
-            var baseBuilder, newRecord, locData, firePath, fullLocData, newData, test, test1, arrData, sessionSpy, fsMocks, arrMock, objMock, geo, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, geoSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+            var baseBuilder, rec, newRecord, arrMock1, locData, firePath, fullLocData, newData, test, test1, arrData, sessionSpy, fsMocks, arrMock, objMock, geo, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, geoSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
 
             beforeEach(function() {
@@ -43,7 +43,7 @@
 
                 newRecord = {
                     phone: "111222333",
-                    firstName: "sally",
+                    firstName: "sally"
                 };
 
                 MockFirebase.override();
@@ -89,8 +89,6 @@
                 });
                 spyOn($log, "info").and.callThrough();
                 spyOn($q, "reject").and.callThrough();
-                // spyOn($q, "all").and.callThrough();
-                // spyOn($q, "when").and.callThrough();
             });
             afterEach(function() {
                 locData = null;
@@ -103,47 +101,114 @@
                 fireEntity = null;
                 fireStarter = null;
             });
-            describe("createMainRecord", function() {
-                beforeEach(function() {
-                    arrMock = fsMocks.fbArray();
-                    spyOn(baseBuilder, "init").and.returnValue(arrMock);
-                    options = {
-                        geofire: true,
-                    };
-                    subject = fireEntity("requests", options);
-                });
-                it("should return a promise", function() {
-                    test = subject.createMainRecord(newRecord);
-                    expect(test).toBeAPromise();
-                });
-                describe("geo option", function() {
-                    // describe("if undefined", function() {
-                    //     it("should send full data object to mainArray", function() {
-                    //         test = subject.createMainRecord(newRecord);
-                    //         $rootScope.$digest();
-                    //         arrMock.$ref().flush();
-                    //         $rootScope.$digest();
-                    //         expect(test.$$state.value['data'].geo).toBeDefined();
-                    //     });
-                    // });
-                    describe("if true", function() {
-                        beforeEach(function() {
-                            test1 = subject.createMainRecord(newRecord, true);
-                            arrMock.$ref().flush();
-                            $rootScope.$digest();
+            describe("Main Record methods", function() {
+
+                describe("createMainRecord", function() {
+                    beforeEach(function() {
+                        arrMock = fsMocks.fbArray();
+                        spyOn(baseBuilder, "init").and.returnValue(arrMock);
+                        options = {
+                            geofire: true,
+                            user: true
+                        };
+                        subject = fireEntity("requests", options);
+                    });
+                    it("should return a promise", function() {
+                        test = subject.createMainRecord(newRecord);
+                        expect(test).toBeAPromise();
+                    });
+                    describe("user option", function() {
+                        describe("if true", function() {
+                            beforeEach(function() {
+                                var data = {
+                                    rec: newRecord,
+                                    geo: locData
+                                };
+                                test1 = subject.createMainRecord(data, null, true);
+                                arrMock.$ref().flush();
+                                $rootScope.$digest();
+                            });
+                            it("should add uid property to record", function() {
+                                expect(test1.$$state.value['data'].uid).toBeDefined();
+                                expect(test1.$$state.value['data']).toBeDefined();
+                            });
                         });
-                        it("should not send full data object to mainArray if arg = true", function() {
-                            expect(test1.$$state.value['data'].geo).not.toBeDefined();
-                            expect(test1.$$state.value['data']).toBeDefined();
+                        describe("if undefined", function() {
+                            beforeEach(function() {
+                                var data = {
+                                    rec: newRecord,
+                                    geo: locData
+                                };
+                                test1 = subject.createMainRecord(data);
+                                arrMock.$ref().flush();
+                                $rootScope.$digest();
+                            });
+                            it("should not add uid property to record", function() {
+                                expect(test1.$$state.value['data'].uid).not.toBeDefined();
+                                expect(test1.$$state.value['data']).toBeDefined();
+                            });
+                        });
+
+                    });
+                    describe("geo option", function() {
+                        describe("if true", function() {
+                            beforeEach(function() {
+                                var data = {
+                                    rec: newRecord,
+                                    geo: locData
+                                };
+                                test1 = subject.createMainRecord(data, true);
+                                arrMock.$ref().flush();
+                                $rootScope.$digest();
+                            });
+                            it("should not send full data object to mainArray if arg = true", function() {
+                                expect(test1.$$state.value['data'].geo).not.toBeDefined();
+                                expect(test1.$$state.value['data']).toBeDefined();
+                            });
+                        });
+                        describe("if undefined", function() {
+                            beforeEach(function() {
+                                var data = {
+                                    rec: newRecord,
+                                    geo: locData
+                                };
+                                test1 = subject.createMainRecord(data);
+                                arrMock.$ref().flush();
+                                $rootScope.$digest();
+                            });
+                            it("should not send full data object to mainArray if arg = true", function() {
+                                expect(test1.$$state.value['data'].geo).toBeDefined();
+                                expect(test1.$$state.value['data']).toBeDefined();
+                            });
                         });
                     });
+                    it("should send correct path args to fireStarter", function() {
+                        test = subject.createMainRecord(newRecord);
+                        $rootScope.$digest();
+                        arrMock.$ref().flush();
+                        $rootScope.$digest();
+                        expect(baseBuilder.init).toHaveBeenCalledWith("array", ["requests"], undefined);
+                    });
                 });
-                it("should send correct path args to fireStarter", function() {
-                    test = subject.createMainRecord(newRecord);
-                    $rootScope.$digest();
-                    arrMock.$ref().flush();
-                    $rootScope.$digest();
-                    expect(baseBuilder.init).toHaveBeenCalledWith("array", ["requests"], undefined);
+                describe("Remove", function() {
+                    beforeEach(function() {
+                        arrMock = fsMocks.fbArray(arrData);
+                        spyOn(baseBuilder, "init").and.returnValue(arrMock);
+                        options = {
+                            geofire: true,
+                        };
+                        subject = fireEntity("requests", options);
+                        $rootScope.$digest();
+                        test = subject.removeMainRecord(0);
+                        $rootScope.$digest();
+                        arrMock.$ref().flush();
+                        $rootScope.$digest();
+                    });
+                    it("should remove the record", function() {
+                        //base() exposes $fbArray
+                        expect(subject.mainArray().base().length).toEqual(1);
+                    });
+
                 });
             });
             describe("Methods for user Nested Array", function() {
@@ -153,11 +218,12 @@
                         user: true,
                     };
                     subject = fireEntity("requests", options);
-                    test = subject.loadUserRecords();
-                    test1 = subject.createUserRecord(newData);
-                    $rootScope.$digest();
                 });
                 describe("loadUserRecords", function() {
+                    beforeEach(function() {
+                        test = subject.loadUserRecords();
+                        $rootScope.$digest();
+                    });
                     it("should return a promise", function() {
                         expect(test).toBeAPromise();
                     });
@@ -171,13 +237,17 @@
                     });
                 });
                 describe("createUserRecord", function() {
+                    beforeEach(function() {
+                        test1 = subject.createUserRecord(newData);
+                        $rootScope.$digest();
+                    });
                     it("should return a promise", function() {
                         expect(test1).toBeAPromise();
                     });
                     it("should send correct path args to fireStarter", function() {
-                        expect(baseBuilder.init.calls.argsFor(1)[0]).toEqual("array");
-                        expect(baseBuilder.init.calls.argsFor(1)[1]).toEqual(["users", "1", "requests"]);
-                        expect(baseBuilder.init.calls.argsFor(1)[2]).toEqual(undefined);
+                        expect(baseBuilder.init.calls.argsFor(0)[0]).toEqual("array");
+                        expect(baseBuilder.init.calls.argsFor(0)[1]).toEqual(["users", "1", "requests"]);
+                        expect(baseBuilder.init.calls.argsFor(0)[2]).toEqual(undefined);
                     });
                     it("should add record to array", function() {
                         arrMock.$ref().flush();
@@ -189,6 +259,17 @@
                         $rootScope.$digest();
                         expect(test1.$$state.value.ref()).toBeDefined();
                     });
+                });
+                describe("removeUserRecord", function() {
+                    it("should remove the record", function() {
+                        expect(subject.userNestedArray().base().length).toEqual(2);
+                        test = subject.removeUserRecord(0);
+                        $rootScope.$digest();
+                        arrMock.$ref().flush();
+                        $rootScope.$digest();
+                        expect(subject.userNestedArray().base().length).toEqual(1);
+                    });
+
                 });
             });
             describe("Methods Related to Geofire", function() {
@@ -224,6 +305,32 @@
                         $rootScope.$digest();
                         expect(test.$$state.value.ref()).toBeDefined();
                     });
+                    describe("geo option", function() {
+                        describe("if true", function() {
+                            beforeEach(function() {
+                                test1 = subject.createLocationRecord(locData[0], true);
+                                arrMock.$ref().flush();
+                                $rootScope.$digest();
+                            });
+                            it("should not save lat or lon properties", function() {
+                                expect(test1.$$state.value['data'].lat).not.toBeDefined();
+                                expect(test1.$$state.value['data'].lon).not.toBeDefined();
+                                expect(test1.$$state.value['data']).toBeDefined();
+                            });
+                        });
+                        describe("if undefined", function() {
+                            beforeEach(function() {
+                                test1 = subject.createLocationRecord(locData[0]);
+                                arrMock.$ref().flush();
+                                $rootScope.$digest();
+                            });
+                            it("should not send full data object to mainArray if arg = true", function() {
+                                expect(test1.$$state.value['data'].lat).toBeDefined();
+                                expect(test1.$$state.value['data'].lon).toBeDefined();
+                                expect(test1.$$state.value['data']).toBeDefined();
+                            });
+                        });
+                    });
                 });
                 describe("createNestedLocationRecord", function() {
                     beforeEach(function() {
@@ -257,7 +364,6 @@
                         $rootScope.$digest();
                     });
                     it("should call set() on geoService for each location", function() {
-                    // expect(test).toEqual("as");
                         expect(geoSpy.set.calls.count()).toEqual(locData.length);
                     });
                     it("should call geofire with the correct object name", function() {
@@ -279,38 +385,45 @@
                     });
 
                 });
-            });
-            describe("createWithUserAndGeo", function() {
-                beforeEach(function() {
-                    arrMock = fsMocks.fbArray();
-                    spyOn(baseBuilder, "init").and.returnValue(arrMock);
-                    options = {
-                        user: true,
-                        geofire: true
-                    };
-                    subject = fireEntity("requests", options);
-                    test = subject.createWithUserAndGeo(newRecord, locData);
-                    $rootScope.$digest();
-                    arrMock.$ref().flush();
-                    $rootScope.$digest();
-                    arrMock.$ref().flush();
-                    $rootScope.$digest();
-                });
+                describe("untrackLocations", function() {
+                    beforeEach(function() {
+                        test = subject.trackLocations(locData, "string");
+                        arrMock.$ref().flush();
+                        $rootScope.$digest();
+                    });
+                    it("should remove record of each record provided", function() {
+                        expect(subject.locations("string").base().length).toEqual(2);
+                        var rec = subject.locations("string").base()[0];
+                        subject.untrackLocations([rec]);
+                        $rootScope.$digest();
+                        $rootScope.$digest();
+                        arrMock.$ref().flush();
+                        $rootScope.$digest();
+                        expect(subject.locations("string").base().length).toEqual(1);
+                    });
+                    it("should remove record if only provide key instead", function() {
+                        expect(subject.locations("string").base().length).toEqual(2);
+                        var rec = subject.locations("string").base()[0].$id;
+                        subject.untrackLocations([rec]);
+                        $rootScope.$digest();
+                        $rootScope.$digest();
+                        arrMock.$ref().flush();
+                        $rootScope.$digest();
+                        expect(subject.locations("string").base().length).toEqual(1);
+                    });
+                    it("should call geofire service correct number of times with correct args", function() {
+                        var rec = subject.locations("string").base()[0];
+                        subject.untrackLocations([rec]);
+                        $rootScope.$digest();
+                        $rootScope.$digest();
+                        arrMock.$ref().flush();
+                        $rootScope.$digest();
+                        expect(geoSpy.remove.calls.count()).toEqual(1);
+                        expect(geoSpy.remove.calls.argsFor(0)[0]).toEqual("requests");
+                        expect(geoSpy.remove.calls.argsFor(0)[1]).toEqual(rec.$id);
+                    });
 
-                it("should add same main array key to each main location record", function() {
-                    // expect(test.$$state.value[0][1]['data'].mainArrayKey).toEqual(test.$$state.value[1][1]['data'].mainArrayKey);
                 });
-                it("log 1", function() {
-										var s = $log.info.calls.argsFor(0)[0];
-										expect(subject.locations(s).ref()).toEqual(2);
-
-                });
-                // it("log 2", function() {
-										// expect($log.info.calls.argsFor(1)).toEqual("as");
-                // });
-                // it("log 3", function() {
-										// expect($log.info.calls.argsFor(2)).toEqual("as");
-                // });
             });
         });
     });

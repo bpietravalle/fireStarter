@@ -37,6 +37,7 @@
             fire.nestedRecord = nestedRecord;
             fire.makeNested = makeNested; //make private?
 
+						//TODO need to check for nested arrays and flatten;
             function mainArray() {
                 return checkParam(self._path);
             }

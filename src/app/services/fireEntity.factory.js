@@ -51,10 +51,10 @@
                 this._sessionAccess = true;
             }
             if (this._sessionAccess === true) {
-                if (this._options.sessionLocation) {
-                    this._sessionStorage = this._injector.get(this._options.sessionLocation);
-                } else {
+                if (!this._options.sessionLocation) {
                     this._sessionStorage = this._rootScope.session;
+                } else {
+                    this._sessionStorage = this._injector.get(this._options.sessionLocation);
                 }
                 if (this._options.sessionIdMethod) {
                     this._sessionIdMethod = this._options.sessionIdMethod;
@@ -72,6 +72,7 @@
             var self = this;
             var entity = {};
 
+
             entity.buildObject = buildObject;
             entity.buildArray = buildArray;
 
@@ -82,7 +83,9 @@
 
             entity.findById = findById;
             entity.loadById = loadById;
+            entity.loadMainFromUser = loadMainFromUser;
             entity.createMainRecord = createMainRecord;
+            entity.removeMainRecord = removeMainRecord;
             entity.createNestedRecord = createNestedRecord;
             entity.inspect = inspect;
 
@@ -95,13 +98,16 @@
                 entity.geofireGet = geofireGet;
                 entity.geofireRemove = geofireRemove;
                 entity.trackLocations = trackLocations;
+                entity.untrackLocations = untrackLocations;
             }
 
             if (self._user === true) {
                 entity.userNestedArray = userNestedArray;
                 entity.userNestedRecord = userNestedRecord;
                 entity.loadUserRecords = loadUserRecords;
+                entity.createUserAndMain = createUserAndMain;
                 entity.createUserRecord = createUserRecord;
+                entity.removeUserRecord = removeUserRecord;
             }
             if (self._user === true && self._geofire === true) {
                 entity.createWithUserAndGeo = createWithUserAndGeo;
@@ -120,16 +126,17 @@
             }
 
 
-            /* Access to fireStarter */
+            /* Access to firebase */
             function buildObject(path, flag) {
                 return self._fireStarter("object", path, flag);
+
             }
 
             function buildArray(path, flag) {
                 return self._fireStarter("array", path, flag);
             }
 
-            /* Registering firebase refs */
+            /* Registered firebase refs */
 
             function mainArray() {
                 return self._fireStarter("array", self._pathMaster.mainArray());
@@ -159,6 +166,7 @@
                     .loaded();
             }
 
+
             function loadArray(id, name) {
                 return nestedArray(id, name).loaded();
             }
@@ -167,164 +175,45 @@
                 return nestedRecord(arr, id).loaded();
             }
 
-            function loadUserRecords() {
-                return userNestedArray()
-                    .loaded()
-                    .then(logSuccess)
-                    .catch(standardError);
-            }
+
 
             /*Commands*/
 
-            function createMainRecord(data, geoFlag) {
+            function createMainRecord(data, geoFlag, userFlag) {
                 if (geoFlag === true) {
                     delete data["geo"]
                 }
+                if (userFlag === true) {
+                    data.uid = sessionId();
+                }
 
-                return mainArray().add(data);
+                return mainArray()
+                    .add(data)
 
             }
-
 
             function createNestedRecord(recId, name, data) {
                 return nestedArray(recId, name).add(data);
             }
 
+            function removeMainRecord(data) {
 
-
-            /* save to user nested array 
-             * @param{Object} data to save to user array - just saving key for now
-             *@return{Promise(fireBaseRef)}
-             */
-
-            function createUserRecord(d) {
-                var data = {
-                    mainArrayKey: d.key()
-                };
-                return userNestedArray()
-                    .add(data)
-                    // .then(logSuccess)
-                    .catch(standardError);
+                return mainArray()
+                    .remove(data)
 
             }
 
 
-
-            /* save to mainLocation array
-             * @param{Object}
-             * @return{fireBaseRef}
-             */
-            function createLocationRecord(data, flag) {
-                if (flag === true) {
-                    delete data['geo'];
-                }
-                return mainLocations()
-                    .add(data)
-                    // .then(logSuccess)
-                    .catch(standardError);
-            }
-
-            /* save to a records nested location array
-             * @param{string} id of mainArray record
-             * @param{Object}
-             */
-            function createNestedLocationRecord(recId, data) {
-                //cant call nestedArray methods in the constructor i guess
-                return nestedArray(recId, self._locationName)
-                    .add(data)
-                    .then(logSuccess)
-                    .catch(standardError);
-
-            }
-
-
-            function trackLocation(data) {
-
-                return self._q.all([createLocationRecord(data, true), qWrap({
-                        lat: data.lat,
-                        lon: data.lon
-                    })])
-                    .then(sendToGeoFireAndPassLocationResults)
-                    .catch(standardError);
-
-                function sendToGeoFireAndPassLocationResults(res) {
-                    return self._q.all([geofireSet(res[0].key(), [res[1].lat, res[1].lon]), qWrap(res[0])]);
-
-
-                }
-            }
-
-            /*@param{Array} location objects to save.  each must have a lat and a lon property
-             *@return{Array} [[null,fireBaseRef(main Location)]]
-             */
-            function trackLocations(data, key) {
-                return self._q.all(data.map(function(item) {
-                        return trackLocation(addLocationKey(item, key));
-                    }))
-                    .catch(standardError);
-
-                function addLocationKey(obj, key) {
-                    obj.mainArrayKey = key;
-                    return obj;
-                }
-            }
-
-            function createWithUserAndGeo(data, loc) {
-
-                return self._q.all([createMainRecord(data, true), qWrap(loc)])
-                    .then(trackLocationAndAddUserRec)
-                    .then(updateMainArray)
-                    .catch(standardError);
-
-                function trackLocationAndAddUserRec(res) {
-                    return self._q.all([trackLocations(res[1], res[0].key()), createUserRecord(res[0]), qWrap(res[0])]);
-
-
-                }
-
-                function updateMainArray(res) {
-									// self._log.info(res[0]);
-									// self._log.info(res[1]);
-									self._log.info(res[2].key());
-                    return self._q.all(res[0].map(function(loc) {
-                        return createNestedLocationRecord(res[2].key(), loc[1].key());
-                    }));
-
-                }
-
-            }
-
-
-            function addNested(obj, arr) {
-                var newProperties = {};
-
-                self._q.all(arr.map(function(item) {
-                    angular.extend(newProperties, addNestedArray(obj, item));
-                }))
-
-                return angular.merge({}, obj, newProperties);
-            }
-
-            function addNestedArray(obj, arr) {
-                var arrName = self._inflector.pluralize(arr);
-                var recName = self._inflector.singularize(arr);
-                var newProp = {};
-
-                newProp[arrName] = function(id) {
-                    return nestedArray(id, arrName);
-                }
-
-                newProp[recName] = function(mainRecId, nestedRecId) {
-                    return nestedRecord(mainRecId, arrName, nestedRecId);
-                }
-
-                return newProp;
-            }
-
-
+            /******************
+             * Geofire Interface
+             * *****************/
 
             /**
-             * Geofire Interface **/
+             * Two Parts:
+             * 1.) provides access to store and retrieve coordinates in GeoFire
+             * 2.) Any other location data(ie google place_id, etc, can be stored in a separate
+             * firebase node (currently called "locations" and refered to as the mainLocations array) **/
+
 
             /* private */
             function geoService() {
@@ -356,8 +245,105 @@
                 return buildObject(mainLocationsPath().mainRecord(id));
             }
 
-            /**
-             * User Interface **/
+
+            /* save to mainLocation array
+             * @param{Object}
+             * @return{fireBaseRef}
+             */
+
+            function createLocationRecord(data, geoFlag) {
+                if (geoFlag === true) {
+                    delete data['lon'];
+                    delete data['lat'];
+                }
+                return mainLocations()
+                    .add(data)
+                    // .then(logSuccess)
+                    .catch(standardError);
+            }
+
+            /* save to a record's nested location array
+             * TODO add option so just saving an index
+             * @param{string} id of mainArray record
+             * @param{Object}
+             */
+
+            function createNestedLocationRecord(recId, data) {
+                return nestedArray(recId, self._locationName)
+                    .add(data)
+                    .then(logSuccess)
+                    .catch(standardError);
+
+            }
+
+
+            /*@param{Array} location objects to save.  each must have a lat and a lon property
+             *@return{Array} [[null,fireBaseRef(main Location)]]
+             */
+
+            function trackLocations(data, key) {
+                return self._q.all(data.map(function(item) {
+                        return trackLocation(addLocationKey(item, key));
+                    }))
+                    .catch(standardError);
+
+                function addLocationKey(obj, key) {
+                    obj.mainArrayKey = key;
+                    return obj;
+                }
+            }
+
+            function trackLocation(data) {
+                return self._q.all([createLocationRecord(data, true), qWrap({
+                        lat: data.lat,
+                        lon: data.lon
+                    })])
+                    .then(sendToGeoFireAndPassLocationResults)
+                    .catch(standardError);
+
+                function sendToGeoFireAndPassLocationResults(res) {
+                    return self._q.all([geofireSet(res[0].key(), [res[1].lat, res[1].lon]), qWrap(res[0])]);
+
+
+                }
+            }
+
+            /*@param{Array} either pass keys or the fireBaseObject(mainlocations) to remove
+             *@return{Array} [[null,fireBaseRef(main Location)]]
+             */
+
+            function untrackLocations(keys) {
+
+                return self._q.all(keys.map(function(key) {
+                        return qWrap(checkKey(key))
+                            .then(completeAction)
+                            .catch(standardError);
+
+
+                        function checkKey(k) {
+                            if (angular.isString(k)) {
+                                return mainLocations().getRecord(k);
+                            } else {
+                                return k;
+                            }
+                        }
+
+                        function completeAction(res) {
+                            return self._q.all([geofireRemove(res.$id),
+                                mainLocations().remove(res)
+                            ]);
+                        }
+
+                    }))
+                    .catch(standardError);
+
+
+            }
+
+
+            /******************
+             * User Record Interface
+             * *****************/
 
 
             /* private */
@@ -374,6 +360,22 @@
                 return buildObject(userNestedPath().mainRecord(id));
             }
 
+            //TODO this needs to have option to simple 
+						//load keys from userNestedArray and then
+            //getRecords from the mainArray
+
+            function loadUserRecords() {
+                return userNestedArray()
+                    .loaded()
+                    .then(logSuccess)
+                    .catch(standardError);
+            }
+
+            function loadMainFromUser(rec) {
+                return mainArray()
+                    .getRecord(rec.mainArrayKey);
+            }
+
             function session() {
                 return self._sessionStorage;
             }
@@ -382,19 +384,109 @@
                 return self._sessionStorage[self._sessionIdMethod]();
             }
 
+            /* save to user nested array 
+             * TODO add option so just saving an index
+             * @param{Object} data to save to user array - just saving key for now
+             *@return{Promise(fireBaseRef)}
+             */
+
+            function createUserRecord(d) {
+                return userNestedArray()
+                    .add({
+                        mainArrayKey: d.key()
+                    })
+                    .then(logSuccess)
+                    .catch(standardError);
+
+            }
+
+            function createUserAndMain(data, geoFlag) {
+                return createMainRecord(data, geoFlag, true)
+                    .then(createUserRecord)
+                    .then(logSuccess)
+                    .catch(standardError);
+            }
 
 
-            /** helpers 
-             * */
+            function removeUserRecord(rec) {
 
+                return userNestedArray()
+                    .remove(rec)
+                    .catch(standardError);
+
+            }
+
+            /* Nested Arrays constructor
+             */
+
+            function addNested(obj, arr) {
+                var newProperties = {};
+
+                self._q.all(arr.map(function(item) {
+                    angular.extend(newProperties, addNestedArray(obj, item));
+                }))
+
+                return angular.merge({}, obj, newProperties);
+            }
+
+            function addNestedArray(obj, arr) {
+                var arrName = self._inflector.pluralize(arr);
+                var recName = self._inflector.singularize(arr);
+                var newProp = {};
+
+                newProp[arrName] = function(id) {
+                    return nestedArray(id, arrName);
+                }
+
+                newProp[recName] = function(mainRecId, nestedRecId) {
+                    return nestedRecord(mainRecId, arrName, nestedRecId);
+                }
+
+                return newProp;
+            }
+
+            /*Combo Methods*/
+
+            /* 1.) adds main array record
+             * 2.) adds user nested record,
+             * 3.) adds records to main location array for each location
+             * 4.) adds coordinates to geofire(key used is mainLocation key)
+             * 5.) updates main array record by adding nested locations array with mainLocation keys
+             */
+
+            //still needs more tests
+            function createWithUserAndGeo(data, loc) {
+
+                return self._q.all([createMainRecord(data, true, true), qWrap(loc)])
+                    .then(trackLocationAndAddUserRec)
+                    .then(addNestedLocations)
+                    .catch(standardError);
+
+                function trackLocationAndAddUserRec(res) {
+                    return self._q.all([trackLocations(res[1], res[0].key()),
+                        createUserRecord(res[0]), qWrap(res[0])
+                    ]);
+                }
+
+                function addNestedLocations(res) {
+                    self._log.info(res[2].key());
+                    return self._q.all(res[0].map(function(loc) {
+                        return createNestedLocationRecord(res[2].key(), loc[1].key());
+                    }));
+
+                }
+
+            }
+
+            /** helpers **/
 
             function standardError(err) {
                 return self._q.reject(err);
             }
 
             function logSuccess(res) {
-                self._log.info(res)
-                return res
+                self._log.info(res);
+                return res;
             }
 
             function qWrap(obj) {
