@@ -40,10 +40,11 @@
                 }
             }
             if (this._geofire === true) {
-                this._locationName = "locations"
-                this._geofireObject = this._injector.get("geo");
+                this._locationName = "locations";
+                this._geofireName = "geofire";
                 this._nestedArrays.push(this._locationName);
                 this._locationPath = [this._locationName, this._path];
+                this._geofirePath = [this._geofireName, this._path];
             }
             this._user = this._options.user || false;
             this._sessionAccess = this._options.sessionAccess || false;
@@ -143,6 +144,13 @@
                 return self._fireStarter("array", path, flag);
             }
 
+            function geoService() {
+                // if (self._pathFlag === true) {
+                //     var flag = self._pathFlag;
+                // }
+                return self._fireStarter("geo", geofirePath().mainArray(), self._pathFlag);
+            }
+
             /* Registered firebase refs */
 
             function mainArray() {
@@ -223,9 +231,10 @@
 
 
             /* private */
-            function geoService() {
-                return self._geofireObject;
+            function geofirePath() {
+                return self._firePath(self._geofirePath);
             }
+
 
             function mainLocationsPath() {
                 return self._firePath(self._locationPath);
@@ -233,15 +242,22 @@
 
             /* public */
             function geofireSet(k, c) {
-                return geoService().set(self._path, k, c);
+                return geoService().set(k, c)
+                    .then(logSuccess)
+                    .catch(standardError);
             }
 
             function geofireGet(k) {
-                return geoService().get(self._path, k);
+                return geoService().get(k)
+                    .then(logSuccess)
+                    .catch(standardError);
+
             }
 
             function geofireRemove(k) {
-                return geoService().remove(self._path, k);
+                return geoService().remove(k)
+                    .then(logSuccess)
+                    .catch(standardError);
             }
 
             function mainLocations() {

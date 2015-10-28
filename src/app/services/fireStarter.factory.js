@@ -6,10 +6,10 @@
         .factory("fireStarter", FireStarterFactory);
 
     /** @ngInject */
-    function FireStarterFactory(baseBuilder, $q, $log) {
+    function FireStarterFactory($timeout, baseBuilder, $q, $log) {
 
         return function(type, path, flag) {
-            var fb = new FireStarter(baseBuilder, $q, $log, type, path, flag);
+            var fb = new FireStarter($timeout, baseBuilder, $q, $log, type, path, flag);
             return fb.construct();
 
         };
@@ -21,7 +21,8 @@
      * @return Promise($firebase)
      */
 
-    FireStarter = function(baseBuilder, $q, $log, type, path, flag) {
+    FireStarter = function($timeout, baseBuilder, $q, $log, type, path, flag) {
+        this._timeout = $timeout;
         this._baseBuilder = baseBuilder;
         this._type = type;
         this._flag = flag;
@@ -164,6 +165,9 @@
             }
 
             function Geofire(geo) {
+							/* from angularGeoFire
+							 * TODO test without defer obj
+							 */
 
                 return angular.extend(geo, {
 
@@ -180,19 +184,30 @@
                 }
 
                 function geofireGet(key) {
-                    return self._q.when(self._firebase)
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.get(key);
-                    }
-
+                    var deferred = self._q.defer();
+                    self._timeout(function() {
+                        self._firebase.get(key).then(function(location) {
+                            deferred.resolve(location);
+                        }).catch(function(error) {
+                            deferred.reject(error);
+                        });
+                    });
+                    return deferred.promise;
                 }
+
+                // return qWrap(self._firebase)
+                //     .then(completeAction)
+                //     .catch(standardError);
+
+                // function completeAction(res) {
+                //     return res;
+                // }
+
 
                 function geofireQuery(data) {
                     var geoQuery;
-                    geoQuery = self._q.when(self._firebase.query(data));
+										//TODO test with promise chain
+                    geoQuery = qWrap(self._firebase.query(data));
 
                     return {
                         center: function() {
@@ -206,7 +221,7 @@
                         },
                         on: function(eventType, cb, context) {
                             return geoQuery.on(eventType, function(key, location, distance) {
-                                return self._q.when(cb.call(context, key, location, distance))
+                                return qWrap(cb.call(context, key, location, distance))
                                     .catch(standardError);
                             });
                         },
@@ -227,26 +242,42 @@
 
 
                 function geofireRemove(key) {
-                    return self._q.when(self._firebase)
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.remove(key);
-                    }
-
+                    var deferred = self._q.defer();
+                    self._timeout(function() {
+                        self._firebase.remove(key).then(function() {
+                            deferred.resolve(null);
+                        }).catch(function(error) {
+                            deferred.reject(error);
+                        });
+                    });
+                    return deferred.promise;
                 }
+
+                // return qWrap(self._firebase)
+                //     .then(completeAction)
+                //     .then(returnGeoRef)
+                //     .catch(standardError);
+
+                // function completeAction(res) {
+                //     return qWrap(res.remove(key));
+                // }
+
 
                 function geofireSet(key, coords) {
-                    return self._q.when(self._firebase)
-                        .then(completeAction)
-                        .catch(standardError);
-
-                    function completeAction(res) {
-                        return res.set(key, coords);
-                    }
-
+                    var deferred = self._q.defer();
+                    self._timeout(function() {
+                        self._firebase.set(key, location)
+                            .then(function() {
+                                deferred.resolve(function() {
+                                    return geofireRef();
+                                });
+                            }).catch(function(error) {
+                                deferred.reject(error);
+                            });
+                    });
+                    return deferred.promise;
                 }
+
 
             }
 
@@ -379,6 +410,10 @@
                 function watch(cb, context) {
                     return self._firebase.$watch(cb, context);
                 }
+            }
+
+            function qWrap(obj) {
+                return self._q.when(obj);
             }
 
             function standardError(err) {
