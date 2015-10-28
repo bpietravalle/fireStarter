@@ -105,11 +105,13 @@
                 });
             });
         });
-        describe("main geofire functions", function() {
+
+        describe("main geofire functions -with spies", function() {
             beforeEach(function() {
                 gfSpy = jasmine.createSpyObj("spy", ["get", "set", "ref", "remove", "distance", "query"]);
                 spyOn(baseBuilder, "init").and.returnValue(gfSpy);
                 geo = makeGeo(null, ref, true);
+                $rootScope.$digest();
                 spyOn($q, "when").and.callThrough();
             });
 
@@ -123,75 +125,90 @@
             ];
 
             function testMethods(y) {
-                describe(y[0], function() {
-                    if (y[0] === "ref" || y[0] === "distance" || y[0] === "query") {
-                        it("should not be a promise", function() {
-                            expect(geo[y[0]]).not.toBeAPromise();
-                        });
-                    } else {
-                        it("should be a promise", function() {
-                            expect(geo[y[0]]()).toBeAPromise();
-                        });
-                    }
+                    describe(y[0], function() {
+                        if (y[0] === "ref" || y[0] === "distance" || y[0] === "query") {
+                            it("should not be a promise", function() {
+                                expect(geo[y[0]]).not.toBeAPromise();
+                            });
+                        } else {
+                            it("should be a promise", function() {
+                                expect(geo[y[0]]()).toBeAPromise();
+                            });
+                        }
 
-                    it("should send: " + y[0] + ". to geofire object", function() {
-                        geo[y[0]]();
-                        $rootScope.$digest();
-												// $timeout.flush();
-                        expect(gfSpy[y[0]]).toHaveBeenCalled();
+                        it("should send: " + y[0] + ". to geofire object", function() {
+                            geo[y[0]]();
+                            $rootScope.$digest();
+                            expect(gfSpy[y[0]]).toHaveBeenCalled();
+                        });
+                        it("should not call $q.reject", function() {
+                            expect($q.reject).not.toHaveBeenCalled();
+                        });
+
+                        if (y[0] !== "ref") {
+                            it("should call: " + y[0] + ". with: " + y[1], function() {
+                                if (y[1].length === 1) {
+                                    geo[y[0]](y[1][0])
+                                    $rootScope.$digest();
+                                    expect(gfSpy[y[0]]).toHaveBeenCalledWith(y[1][0]);
+                                } else {
+                                    geo[y[0]](y[1][0], y[1][0])
+                                    $rootScope.$digest();
+                                    expect(gfSpy[y[0]]).toHaveBeenCalledWith(y[1][0], y[1][0]);
+
+                                }
+                            });
+                        }
                     });
-                    it("should not call $q.reject", function() {
-                        expect($q.reject).not.toHaveBeenCalled();
-                    });
-
-                    if (y[0] !== "ref") {
-                        it("should call: " + y[0] + ". with: " + y[1], function() {
-                            if (y[1].length === 1) {
-                                geo[y[0]](y[1][0])
-                                $rootScope.$digest();
-                                expect(gfSpy[y[0]]).toHaveBeenCalledWith(y[1][0]);
-                            } else {
-                                geo[y[0]](y[1][0], y[1][0])
-                                $rootScope.$digest();
-                                expect(gfSpy[y[0]]).toHaveBeenCalledWith(y[1][0], y[1][0]);
-
-                            }
-                        });
-                    }
-                });
-            }
-            // methods.forEach(testMethods);
+                }
+                methods.forEach(testMethods);
         });
         describe("return values", function() {
             beforeEach(function() {
-                geo = makeGeo(null, ref, true);
+                this.ref = stubRef(["path"]);
+                this.geo = fireStarter("geo", this.ref, true);
                 spyOn($q, "when").and.callThrough();
             });
-            // it("should return the geofireRef", function() {
-            //     geo.set("string", [90, 100]);
-            //     $rootScope.$digest();
-            //     // ref.flush();
-            //     $rootScope.$digest();
-            //     var test = geo.get("string");
-            //     $rootScope.$digest();
-            //     ref.flush();
-            //     expect(test).toEqual("as");
-								// expect($q.when.calls.allArgs()).toEqual(2);
-								// expect($log.info.calls.allArgs()).toEqual(1);
-            // });
+            it("should return the geofireRef", function() {
+                var test = this.geo.set("string", [90, 100]);
+                var results;
+                var spy = jasmine.createSpy('success');
+                var spy1 = jasmine.createSpy('failure');
+                $rootScope.$digest();
+                expect($q.reject).not.toHaveBeenCalled();
+
+                wrapPromise(test);
+                test.then(spy, spy1);
+                $rootScope.$digest();
+                this.ref.flush();
+                $rootScope.$digest();
+                expect(this.geo.ref()['data']).toEqual("as");
+            });
+
+            function wrapPromise(p) {
+                p.then(function(res) {
+                    return res;
+                }).catch(function(err) {
+                    return err;
+                });
+            }
         });
 
         describe("geoQuery", function() {
             beforeEach(function() {
-                gfSpy = jasmine.createSpyObj("spy", ["center", "cancel", "radius", "updateCriteria", "on", "remove"]);
-                spy = jasmine.createSpyObj("builder", ["get", "set", "ref", "remove", "distance", "query"]);
+                spy = {
+                    query: function() {
+                        gfSpy = jasmine.createSpyObj("geoQuerySpy", ["center", "cancel", "radius", "updateCriteria", "on", "remove"]);
+                        return gfSpy;
+                    }
+                }
                 spyOn(baseBuilder, "init").and.returnValue(spy);
-                spyOn($q, "when").and.returnValue(gfSpy);
                 geo = makeGeo(null, ref, true);
                 geoQuery = geo.query(data);
+                $rootScope.$digest();
             });
             it("should have all geofire functions", function() {
-                expect(geoQuery).toEqual(jasmine.objectContaining({
+                expect(geoQuery.$$state.value).toEqual(jasmine.objectContaining({
                     center: jasmine.any(Function),
                     remove: jasmine.any(Function),
                     radius: jasmine.any(Function),
@@ -205,7 +222,9 @@
 
             function queryMethods(y) {
                 it("should call " + y + " on the geoQuery", function() {
-                    geoQuery[y]()
+                    $rootScope.$digest();
+                    var test = geoQuery.$$state.value
+                    test[y]();
                     expect(gfSpy[y]).toHaveBeenCalled();
                 });
 
@@ -215,7 +234,7 @@
 
 
         function stubRef(path) {
-            var mockPath = path.join('/'); //baseBuilder changes array to string
+            var mockPath = path.join('/');
             return new MockFirebase('Mock://').child(mockPath);
         }
 
@@ -231,7 +250,6 @@
             if (initialData) {
                 geo.ref().set(initialData);
                 geo.ref().flush();
-                // $timeout.flush();
             }
             return geo;
         }

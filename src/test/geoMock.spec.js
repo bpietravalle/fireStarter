@@ -70,8 +70,8 @@
                     expect(test[y]).toBeDefined();
                 });
             }
-            promisefns.forEach(testPromise);
-            definedfns.forEach(testDefined);
+            // promisefns.forEach(testPromise);
+            // definedfns.forEach(testDefined);
         });
 
         describe("geoSpyObj", function() {

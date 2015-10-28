@@ -165,9 +165,9 @@
             }
 
             function Geofire(geo) {
-							/* from angularGeoFire
-							 * TODO test without defer obj
-							 */
+                /* from angularGeoFire - trying q.when instead of 
+                 * deferred obj/$timeout
+                 */
 
                 return angular.extend(geo, {
 
@@ -184,54 +184,53 @@
                 }
 
                 function geofireGet(key) {
-                    var deferred = self._q.defer();
-                    self._timeout(function() {
-                        self._firebase.get(key).then(function(location) {
-                            deferred.resolve(location);
-                        }).catch(function(error) {
-                            deferred.reject(error);
-                        });
-                    });
-                    return deferred.promise;
+                    // var deferred = self._q.defer();
+                    return qWrap(self._firebase.get(key))
+                        .then(returnGeoRef)
+                        .catch(standardError);
+
+                    // self._timeout(function() {
+                    //     self._firebase.get(key).then(function(location) {
+                    //         deferred.resolve(location);
+                    //     }).catch(function(error) {
+                    //         deferred.reject(error);
+                    //     });
+                    // });
+                    // return deferred.promise;
                 }
 
-                // return qWrap(self._firebase)
-                //     .then(completeAction)
-                //     .catch(standardError);
-
-                // function completeAction(res) {
-                //     return res;
-                // }
 
 
                 function geofireQuery(data) {
-                    var geoQuery;
-										//TODO test with promise chain
-                    geoQuery = qWrap(self._firebase.query(data));
+                    return qWrap(self._firebase.query(data))
+                        .then(extendQuery)
+                        .catch(standardError);
 
-                    return {
-                        center: function() {
-                            return geoQuery.center();
-                        },
-                        radius: function() {
-                            return geoQuery.radius();
-                        },
-                        updateCriteria: function(criteria) {
-                            return geoQuery.updateCriteria(criteria);
-                        },
-                        on: function(eventType, cb, context) {
-                            return geoQuery.on(eventType, function(key, location, distance) {
-                                return qWrap(cb.call(context, key, location, distance))
-                                    .catch(standardError);
-                            });
-                        },
-                        cancel: function() {
-                            return geoQuery.cancel();
-                        },
-                        remove: function() {
-                            return geoQuery.remove();
-                        }
-                    };
+                    function extendQuery(geoQuery) {
+                        return {
+                            center: function() {
+                                return geoQuery.center();
+                            },
+                            radius: function() {
+                                return geoQuery.radius();
+                            },
+                            updateCriteria: function(criteria) {
+                                return geoQuery.updateCriteria(criteria);
+                            },
+                            on: function(eventType, cb, context) {
+                                return geoQuery.on(eventType, function(key, location, distance) {
+                                    return qWrap(cb.call(context, key, location, distance))
+                                        .catch(standardError);
+                                });
+                            },
+                            cancel: function() {
+                                return geoQuery.cancel();
+                            },
+                            remove: function() {
+                                return geoQuery.remove();
+                            }
+                        };
+                    }
 
 
                 }
@@ -242,43 +241,44 @@
 
 
                 function geofireRemove(key) {
-                    var deferred = self._q.defer();
-                    self._timeout(function() {
-                        self._firebase.remove(key).then(function() {
-                            deferred.resolve(null);
-                        }).catch(function(error) {
-                            deferred.reject(error);
-                        });
-                    });
-                    return deferred.promise;
+                    // var deferred = self._q.defer();
+                    return qWrap(self._firebase.remove(key))
+                        .then(returnGeoRef)
+                        .catch(standardError);
+                    // self._timeout(function() {
+                    //     self._firebase.remove(key).then(function() {
+                    //         deferred.resolve(null);
+                    //     }).catch(function(error) {
+                    //         deferred.reject(error);
+                    //     });
+                    // });
+                    // return deferred.promise;
                 }
-
-                // return qWrap(self._firebase)
-                //     .then(completeAction)
-                //     .then(returnGeoRef)
-                //     .catch(standardError);
-
-                // function completeAction(res) {
-                //     return qWrap(res.remove(key));
-                // }
 
 
                 function geofireSet(key, coords) {
-                    var deferred = self._q.defer();
-                    self._timeout(function() {
-                        self._firebase.set(key, location)
-                            .then(function() {
-                                deferred.resolve(function() {
-                                    return geofireRef();
-                                });
-                            }).catch(function(error) {
-                                deferred.reject(error);
-                            });
-                    });
-                    return deferred.promise;
+                    // var deferred = self._q.defer();
+                    // return self._timeout(function() {
+                    return qWrap(self._firebase.set(key, coords))
+                        .then(returnGeoRef)
+                        .catch(standardError);
+
+                    // function() {
+                    // deferred.resolve(function() {
+                    // return geofireRef();
+                    // });
+                    // }).catch(function(error) {
+                    // deferred.reject(error);
+                    // });
+                    // });
+                    // return deferred.promise;
                 }
 
 
+                function returnGeoRef(res) {
+                    self._log.info(res);
+                    return qWrap(geofireRef());
+                }
             }
 
             function FirebaseArray(arr) {
