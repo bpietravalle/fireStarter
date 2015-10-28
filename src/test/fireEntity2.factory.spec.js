@@ -2,7 +2,7 @@
     "use strict";
     describe("FireEntity Factory", function() {
         describe("with mocks", function() {
-            var baseBuilder, rec, newRecord, arrMock1, locData, firePath, fullLocData, newData, test, test1, arrData, sessionSpy, fsMocks, arrMock, objMock, geo, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, geoSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+            var baseBuilder, objMock, deferred, rec, newRecord, arrMock1, locData, firePath, fullLocData, newData, test, test1, arrData, sessionSpy, fsMocks, arrMock, objMock, geo, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, geoSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
 
             beforeEach(function() {
@@ -205,7 +205,6 @@
                         $rootScope.$digest();
                     });
                     it("should remove the record", function() {
-                        //base() exposes $fbArray
                         expect(subject.mainArray().base().length).toEqual(1);
                     });
 
@@ -220,6 +219,7 @@
                     subject = fireEntity("requests", options);
                 });
                 describe("loadUserRecords", function() {
+                    //TODO add option for loading indexes
                     beforeEach(function() {
                         test = subject.loadUserRecords();
                         $rootScope.$digest();
@@ -230,6 +230,7 @@
                     it("should send correct path args to fireStarter", function() {
                         expect(baseBuilder.init).toHaveBeenCalledWith("array", ["users", "1", "requests"], undefined);
                     });
+
 
                     it("should return correct data", function() {
                         expect(test.$$state.value[0].phone).toEqual(arrData["1"].phone);

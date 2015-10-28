@@ -28,8 +28,9 @@
         this._path = path;
         this._options = options;
         this._nestedArrays = [];
-        this._pathMaster = this._firePath(this._path);
+        this._pathMaster = this._firePath(this._path, this._pathOptions);
         if (this._options) {
+            this._pathFlag = false || this._options.pathFlag;
             this._geofire = false || this._options.geofire;
             if (this._options.nestedArrays) {
                 if (!Array.isArray(this._options.nestedArrays)) {
@@ -72,7 +73,6 @@
             var self = this;
             var entity = {};
 
-
             entity.buildObject = buildObject;
             entity.buildArray = buildArray;
 
@@ -109,6 +109,7 @@
                 entity.createUserRecord = createUserRecord;
                 entity.removeUserRecord = removeUserRecord;
             }
+
             if (self._user === true && self._geofire === true) {
                 entity.createWithUserAndGeo = createWithUserAndGeo;
             }
@@ -128,30 +129,36 @@
 
             /* Access to firebase */
             function buildObject(path, flag) {
+                if (self._pathFlag === true) {
+                    flag = self._pathFlag;
+                }
                 return self._fireStarter("object", path, flag);
 
             }
 
             function buildArray(path, flag) {
+                if (self._pathFlag === true) {
+                    flag = self._pathFlag;
+                }
                 return self._fireStarter("array", path, flag);
             }
 
             /* Registered firebase refs */
 
             function mainArray() {
-                return self._fireStarter("array", self._pathMaster.mainArray());
+                return buildArray(self._pathMaster.mainArray());
             }
 
             function mainRecord(id) {
-                return self._fireStarter("object", self._pathMaster.mainRecord(id));
+                return buildObject(self._pathMaster.mainRecord(id));
             }
 
             function nestedArray(id, name) {
-                return self._fireStarter("array", self._pathMaster.nestedArray(id, name));
+                return buildArray(self._pathMaster.nestedArray(id, name));
             }
 
             function nestedRecord(mainId, name, recId) {
-                return self._fireStarter("object", self._pathMaster.nestedRecord(mainId, name, recId));
+                return buildObject(self._pathMaster.nestedRecord(mainId, name, recId));
             }
 
 
@@ -361,13 +368,21 @@
             }
 
             //TODO this needs to have option to simple 
-						//load keys from userNestedArray and then
+            //load keys from userNestedArray and then
             //getRecords from the mainArray
+
+            /* por ejemplo
+										self._q.all(res.map(function(key){
+										return mainArray().getRecord(key.mainArrayKey);
+										}));
+
+
+											 */
 
             function loadUserRecords() {
                 return userNestedArray()
                     .loaded()
-                    .then(logSuccess)
+                    // .then(logSuccess)
                     .catch(standardError);
             }
 
