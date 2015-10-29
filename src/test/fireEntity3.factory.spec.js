@@ -3,9 +3,10 @@
 
     describe("FireEntity Factory", function() {
         describe("with firePath mock", function() {
-            var firePath, sessionSpy, locData, userId, maSpy, maSpy1, mrSpy, naSpy, nrSpy, fsMocks, geo, test, ref, objRef, objCount, arrCount, arrRef, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+            var firePath, testutils, root, success, failure, pathsCalled, sessionSpy, locData, userId, maSpy, maSpy1, mrSpy, naSpy, nrSpy, fsMocks, geo, test, ref, objRef, objCount, arrCount, arrRef, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
             beforeEach(function() {
+                pathsCalled = [];
                 locData = [{
                     lat: 90,
                     lon: 100,
@@ -28,65 +29,65 @@
                         sessionSpy = jasmine.createSpyObj("sessionSpy", ["getId", "findId"]);
                         return sessionSpy;
                     })
-                    .factory("user", function() {
-                        userSpy = jasmine.createSpyObj("userSpy", ["getId", "findId"]);
-                        return userSpy;
-                    });
+                module("testutils");
                 module("fbMocks");
-                module("fireStarter.services",
-                    function($provide) {
-                        $provide.service("firePath",
-                            function() {
-                                return function(path, options) {
-                                    if (Array.isArray(path)) {
-                                        path = path.join('/');
-                                    }
-                                    fsPath = path;
-                                    pathSpy = {
-                                        mainArray: jasmine.createSpy("mainArray").and.callFake(function() {
-                                            // switch (arrCount) {
-                                            //     case 0:
-                                            maSpy = new MockFirebase('Mock://').child(fsPath);
-                                            arrCount++;
-                                            return maSpy;
-                                            // case 1:
-                                            //     maSpy1 = new MockFirebase('Mock://').child(fsPath);
-                                            //     arrCount++;
-                                            //     return maSpy1;
-                                            // }
-                                        }),
-                                        mainRecord: jasmine.createSpy("mainRecord").and.callFake(function(id) {
-                                            fsPath = path + "/" + id;
-                                            mrSpy = new MockFirebase('Mock://').child(fsPath);
-                                            return mrSpy;
-                                        }),
-                                        nestedArray: jasmine.createSpy("nestedArray").and.callFake(function(id, name) {
-                                            fsPath = path + "/" + id + "/" + name;
-                                            naSpy = new MockFirebase('Mock://').child(fsPath);
-                                            return naSpy;
-                                        }),
-                                        nestedRecord: jasmine.createSpy("nestedRecord").and.callFake(function(id, name, recId) {
-                                            fsPath = path + "/" + id + "/" + name + "/" + recId;
-                                            nrSpy = new MockFirebase('Mock://').child(fsPath);
-                                            return nrSpy;
-                                        }),
-                                    };
-                                    return pathSpy;
-                                }
-                            });
-                    });
+                module("fireStarter.services");
+								// ,
+                    // function($provide) {
+                        // $provide.service("firePath",
+                            // function() {
+                                // return function(path, options) {
+                                    // if (Array.isArray(path)) {
+                                        // path = path.join('/');
+                                    // }
+                                    // if (!root) {
+                                        // root = new MockFirebase('Mock://');
+                                    // }
 
-                inject(function(_firePath_, _fsMocks_, _sessionSpy_, _$rootScope_, _fireEntity_, _inflector_, _fireStarter_, _$q_, _$log_, _user_) {
+                                    // pathSpy = {
+                                        // mainArray: jasmine.createSpy("mainArray").and.callFake(function() {
+                                            // fsPath = path;
+                                            // var child = root.child(fsPath);
+                                            // pathsCalled.push(fsPath);
+                                            // arrCount++;
+								// 														maSpy = child.ref();
+                                            // return child;
+                                        // }),
+                                        // mainRecord: jasmine.createSpy("mainRecord").and.callFake(function(id) {
+                                            // fsPath = path + "/" + id;
+                                            // mrSpy = new MockFirebase('Mock://').child(fsPath);
+                                            // pathsCalled.push(fsPath);
+                                            // return mrSpy;
+                                        // }),
+                                        // nestedArray: jasmine.createSpy("nestedArray").and.callFake(function(id, name) {
+                                            // fsPath = path + "/" + id + "/" + name;
+                                            // naSpy = new MockFirebase('Mock://').child(fsPath);
+                                            // pathsCalled.push(fsPath);
+                                            // return naSpy;
+                                        // }),
+                                        // nestedRecord: jasmine.createSpy("nestedRecord").and.callFake(function(id, name, recId) {
+                                            // fsPath = path + "/" + id + "/" + name + "/" + recId;
+                                            // nrSpy = new MockFirebase('Mock://').child(fsPath);
+                                            // pathsCalled.push(fsPath);
+                                            // return nrSpy;
+                                        // }),
+                                    // };
+                                    // return pathSpy;
+                                // }
+                            // });
+                    // });
+
+                inject(function(_testutils_, _$log_, _firePath_, _fsMocks_, _sessionSpy_, _$rootScope_, _fireEntity_, _inflector_, _fireStarter_, _$q_) {
+                    testutils = _testutils_;
                     sessionSpy = _sessionSpy_;
                     fsMocks = _fsMocks_;
                     $rootScope = _$rootScope_;
-                    user = _user_;
                     inflector = _inflector_;
                     firePath = _firePath_;
                     fireEntity = _fireEntity_;
                     fireStarter = _fireStarter_;
                     $q = _$q_;
-                    ref = fsMocks.stubRef();
+                    ref = fsMocks.stubRef(["trips"]);
                     $log = _$log_;
                     $rootScope.session = {
                         getId: jasmine.createSpy("getId").and.callFake(function() {
@@ -95,16 +96,25 @@
                         })
                     };
                 });
+								var mock = new MockFirebase("//:mock");
+								var ref = jasmine.createSpy("firePath");
                 options = {
                     pathFlag: true,
+										mockRef: mock,
                     user: true,
                     geofire: true
                 };
 
+                spyOn($log, "info").and.callThrough();
+                success = jasmine.createSpy("success");
+                failure = jasmine.createSpy("failure");
                 subject = fireEntity("trips", options);
 
             });
             afterEach(function() {
+                root = null;
+                objCount = null;
+                arrCount = null;
                 pathSpy = null;
                 firePath = null;
                 fireEntity = null;
@@ -114,40 +124,60 @@
                 describe("Geofire", function() {
                     describe("trackLocations", function() {
                         beforeEach(function() {
-                            // test = subject.trackLocations(locData, "string");
-                            test = subject.geofireSet("string",[90,100]);
-                            $rootScope.$digest();
+                            spyOn($q, "all").and.callThrough();
                         });
-                        it("should send data to mainLocations Array", function() {
-                            expect(pathSpy.mainArray.calls.count()).toEqual(1);
-                            // expect(fsPath).toEqual("locations/trips");
-                        });
-                        it("should add mainArrayKey to data object", function() {
-                            // maSpy.flush();
-                            $rootScope.$digest();
-                            $rootScope.$digest();
-                            // expect(test).toEqual("as");
-                            // expect(subject.inspect()).toEqual("as");
-                        });
-                        // it("should call geofire with mainLocation array key", function() {
-                        //     expect(pathSpy.mainArray.calls.argsFor(0)[1]).toEqual(test.$$state.value[0][1].ref().key());
-                        //     expect(pathSpy.mainArray.calls.argsFor(1)[1]).toEqual(test.$$state.value[1][1].ref().key());
-                        // });
-                        // it("should call geofire with correct coordinates", function() {
-                        //     expect(pathSpy.mainArray.calls.argsFor(0)[2]).toEqual([locData[0].lat, locData[0].lon]);
-                        //     expect(pathSpy.mainArray.calls.argsFor(1)[2]).toEqual([locData[1].lat, locData[1].lon]);
-                        // });
+												it("should work",function(){
+													expect(subject.mainArray().ref()).toEqual("as");
 
-                        // it("should add same main array key to each main location record", function() {
-                        //     expect(test.$$state.value[1][1]['data'].mainArrayKey).toEqual("string");
-                        //     expect(test.$$state.value[0][1]['data'].mainArrayKey).toEqual("string");
+
+												});
+                        // it("should send data to mainLocations Array", function() {
+                        //     test = subject.trackLocations(locData, "string");
+                        //     expect(arrCount).toEqual(2);
+                        //     expect(pathSpy.mainArray.calls.count()).toEqual(1);
+                        //     expect(fsPath).toEqual("locations/trips");
                         // });
+                        // it("should add mainArrayKey to data object", function() {
+                        //     test = subject.trackLocations(locData, "string");
+                        //     maSpy.flush();
+                        //     expect(arrCount).toEqual(2);
+                        //     expect(getRefData(maSpy)).toBeDefined();
+                        //     expect(pathSpy.mainArray.calls.count()).toEqual(1);
+                        //     expect(maSpy.child('mainArrayKey')).toBeDefined();
+                        // });
+                        // it("should set geofire key to the mainLocation array key", function() {
+                        //     var keys = [];
+                        //     var key = [];
+                        //     subject.mainArray();
+                        //     root.on("child_added", function(snap) {
+                        //         snap.ref().on("value", function(shot) {
+                        //             shot.ref().on("value", function(r) {
+                        //                 keys.push(r.key());
+                        //             });
+                        //         });
+                        //     });
+                        //     test = subject.trackLocations(locData, "string");
+                        //     $rootScope.$digest();
+                        //     maSpy.flush();
+                        //     // $rootScope.$digest();
+                        //     expect(getRefData(maSpy)).toEqual("sd");
+                        //     $rootScope.$digest();
+                        //     maSpy.flush();
+                        //     $rootScope.$digest();
+                        //     expect(getRefData(maSpy)).toEqual("2");
+                        //     // expect(keys[0]).toEqual(keys[1]);
+                        //     expect(pathsCalled).toEqual(3);
+                        //     expect(keys).toEqual(2);
+
+                        // });
+                        it("should call geofire with correct coordinates", function() {});
+
+                        it("should add same main array key to each main location record", function() {});
 
                     });
                     describe("untrackLocations", function() {
                         beforeEach(function() {
                             test = subject.trackLocations(locData, "string");
-                            // arrMock.$ref().flush();
                             $rootScope.$digest();
                         });
                         // it("should remove record of each record provided", function() {
@@ -191,12 +221,12 @@
                             duration: 1,
                             outside: true
                         }
-                        test = subject.createUserAndMain(main);
+                        // test = subject.createUserAndMain(main);
                         $rootScope.$digest();
                     });
 
                     it("should call the main Array", function() {
-                        expect(pathSpy.mainArray).toHaveBeenCalled();
+                        // expect(pathSpy.mainArray).toHaveBeenCalled();
                         // expect(maSpy).toEqual("as");
                     });
                     it("should call main Array again", function() {
@@ -264,6 +294,46 @@
                 //     // });
                 // });
             });
+
+            function wrapPromise(p) {
+                return p.then(success, failure);
+            }
+
+            function arrCount(arr) {
+                return arr.base().ref().length;
+            }
+
+            function getBaseResult(obj) {
+                return obj.base().ref()['data'];
+            }
+
+            function getRefData(obj) {
+                return obj.ref()['data'];
+            }
+
+            function getDeferred(obj) {
+                return obj.$$state.pending[0][0];
+            }
+
+            function promiseStatus(obj) {
+                return obj.$$state.status;
+            }
+
+            function deferredStatus(obj) {
+                return obj.$$state.pending[0][0].promise.$$state.status;
+            }
+
+            function resolveDeferred(obj, cb) {
+                return obj.$$state.pending[0][0].resolve(cb);
+            }
+
+            function rejectDeferred(obj, cb) {
+                return obj.$$state.pending[0][0].reject(cb);
+            }
+
+            function deferredValue(obj) {
+                return obj.$$state.pending[0][0].promise.$$state.value; //.value;
+            }
         });
 
     });

@@ -3,12 +3,12 @@
 
     /** @ngInject */
 
-    function fireStarterMocks(baseBuilder, $q, $timeout, fireStarter,$firebaseArray,$firebaseObject) {
+    function fireStarterMocks(baseBuilder, $q, $timeout, fireStarter, $firebaseArray, $firebaseObject) {
         var vm = this;
 
         vm.array = stubArray;
-				vm.fbObject = fbObject;
-				vm.fbArray = fbArray;
+        vm.fbObject = fbObject;
+        vm.fbArray = fbArray;
         vm.arrData = recArrayData;
         vm.auth = auth;
         vm.authRef = authRef;
@@ -32,7 +32,7 @@
             return obj;
         }
 
-				function fbObject(initialData, ref){
+        function fbObject(initialData, ref) {
             if (!ref) {
                 ref = stubRef();
             }
@@ -43,9 +43,9 @@
                 flushAll();
             }
             return obj;
-				}
+        }
 
-				function fbArray(initialData, ref){
+        function fbArray(initialData, ref) {
             if (!ref) {
                 ref = stubRef();
             }
@@ -56,9 +56,9 @@
                 flushAll();
             }
             return arr;
-					
-				
-				}
+
+
+        }
 
 
         vm.fbArraySpy = jasmine.createSpyObj("fbArray", ["timestamp", "ref", "path", "add", "destroy",
@@ -161,43 +161,14 @@
         vm.geoSpy = $q.when(vm.geoSpyObj);
 
         vm.geoData = {
-            "a": {
-                "g": "keyA",
-                "1": {
-                    "0": 90,
-                    "1": 50
-                }
-            },
-            "b": {
-                "g": "keyB",
-                "1": {
-                    "0": 30,
-                    "1": 60
-                }
-            },
-            "c": {
-                "g": "keyC",
-                "1": {
-                    "0": -70,
-                    "1": 150
-                }
-            }
+            a: [50, -180],
+            b: [30, 90],
+            c: [-70, 150]
         };
         vm.newGeoData = {
-            "d": {
-                "g": "keyD",
-                "1": {
-                    "0": 20,
-                    "1": -180
-                }
-            },
-            "e": {
-                "g": "keyE",
-                "1": {
-                    "0": 40,
-                    "1": -100
-                }
-            }
+            d: [40, -180],
+            e: [250, 80],
+            f: [70, -150]
         };
 
         function makeGeo(initialData, path, flag) {

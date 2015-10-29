@@ -3,7 +3,7 @@
 
     describe("FireEntity Factory", function() {
         describe("with spies", function() {
-            var firePath, sessionSpy, geo, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, geoSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+            var firePath, sessionSpy, geo, $rootScope, data, location, locationSpy, $injector, inflector, fsType, geoSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
             beforeEach(function() {
                 angular.module("fireStarter.services")
@@ -15,10 +15,6 @@
                         locationSpy = jasmine.createSpyObj("locationSpy", ["buildArray", "buildObject"]);
                         return locationSpy;
                     })
-                    .factory("user", function() {
-                        userSpy = jasmine.createSpyObj("userSpy", ["getId", "findId"]);
-                        return userSpy;
-                    });
                 module("fireStarter.services",
                     function($provide) {
                         $provide.service("fireStarter",
@@ -63,11 +59,9 @@
                                 }
                             });
                     });
-                inject(function(_firePath_, _location_, _sessionSpy_, _$rootScope_, _fireEntity_, _inflector_, _fireStarter_, _$q_, _$log_, _user_) {
+                inject(function(_firePath_, _sessionSpy_, _$rootScope_, _fireEntity_, _inflector_, _fireStarter_, _$q_, _$log_) {
                     sessionSpy = _sessionSpy_;
                     $rootScope = _$rootScope_;
-                    location = _location_;
-                    user = _user_;
                     inflector = _inflector_;
                     firePath = _firePath_;
                     fireEntity = _fireEntity_;

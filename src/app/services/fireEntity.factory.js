@@ -31,6 +31,14 @@
         this._pathMaster = this._firePath(this._path, this._pathOptions);
         if (this._options) {
             this._pathFlag = false || this._options.pathFlag;
+            if (this._pathFlag === true) {
+                if (this._options.mockPath) {
+                    this._firePath = this._options.mockPath;
+                }
+                if (this._options.mockRef) {
+                    this._mockRef = this._options.mockRef;
+                }
+            }
             this._geofire = false || this._options.geofire;
             if (this._options.nestedArrays) {
                 if (!Array.isArray(this._options.nestedArrays)) {
@@ -129,27 +137,26 @@
 
 
             /* Access to firebase */
-            function buildObject(path, flag) {
-                if (self._pathFlag === true) {
+            function buildFire(type, path, flag) {
+                if (self._pathFlag === true && self._mockRef) {
                     flag = self._pathFlag;
+                    path = self._mockRef;
                 }
-                return self._fireStarter("object", path, flag);
+                return self._fireStarter(type, path, flag);
+            }
 
+            function buildObject(path, flag) {
+                return buildFire("object", path, flag);
             }
 
             function buildArray(path, flag) {
-                if (self._pathFlag === true) {
-                    flag = self._pathFlag;
-                }
-                return self._fireStarter("array", path, flag);
+                return buildFire("array", path, flag);
             }
 
-            function geoService() {
-                // if (self._pathFlag === true) {
-                //     var flag = self._pathFlag;
-                // }
-                return self._fireStarter("geo", geofirePath().mainArray(), self._pathFlag);
+            function buildGeo(path, flag) {
+                return buildFire("geo", path, flag);
             }
+
 
             /* Registered firebase refs */
 
@@ -231,14 +238,17 @@
 
 
             /* private */
-            function geofirePath() {
-                return self._firePath(self._geofirePath);
-            }
 
 
             function mainLocationsPath() {
                 return self._firePath(self._locationPath);
             }
+
+            function geofirePath() {
+                return buildGeo(self._firePath(self._geofirePath)
+                    .mainArray());
+            }
+
 
             /* public */
             function geofireSet(k, c) {
@@ -317,16 +327,16 @@
             }
 
             function trackLocation(data) {
-                return self._q.all([createLocationRecord(data, true), qWrap({
-                        lat: data.lat,
-                        lon: data.lon
-                    })])
+                var geo = {
+                    lat: data.lat,
+                    lon: data.lon
+                };
+                return createLocationRecord(data, true)
                     .then(sendToGeoFireAndPassLocationResults)
                     .catch(standardError);
 
                 function sendToGeoFireAndPassLocationResults(res) {
-                    return self._q.all([geofireSet(res[0].key(), [res[1].lat, res[1].lon]), qWrap(res[0])]);
-
+                    return geofireSet(res.key(), [geo.lat, geo.lon]);
 
                 }
             }

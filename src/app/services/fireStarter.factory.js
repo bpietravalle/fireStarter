@@ -184,11 +184,10 @@
                 }
 
                 function geofireGet(key) {
-                    // var deferred = self._q.defer();
                     return qWrap(self._firebase.get(key))
-                        .then(returnGeoRef)
                         .catch(standardError);
 
+                    // var deferred = self._q.defer();
                     // self._timeout(function() {
                     //     self._firebase.get(key).then(function(location) {
                     //         deferred.resolve(location);
