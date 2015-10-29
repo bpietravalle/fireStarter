@@ -244,7 +244,7 @@
                 return self._firePath(self._locationPath);
             }
 
-            function geofirePath() {
+            function geoService() {
                 return buildGeo(self._firePath(self._geofirePath)
                     .mainArray());
             }
