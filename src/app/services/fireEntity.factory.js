@@ -108,6 +108,7 @@
                 entity.geofireRemove = geofireRemove;
                 entity.trackLocations = trackLocations;
                 entity.untrackLocations = untrackLocations;
+                entity.untrackLocation = untrackLocation;
             }
 
             if (self._user === true) {
@@ -138,9 +139,11 @@
 
             /* Access to firebase */
             function buildFire(type, path, flag) {
+								// return path;
                 if (self._pathFlag === true && self._mockRef) {
                     flag = self._pathFlag;
-                    path = self._mockRef;
+								// self._log.info(path.join('/'));
+                    path = self._mockRef.child(path.join('/'));
                 }
                 return self._fireStarter(type, path, flag);
             }
@@ -355,7 +358,9 @@
 
                         function checkKey(k) {
                             if (angular.isString(k)) {
-                                return mainLocations().getRecord(k);
+                                return mainLocations()
+                                    .getRecord(k);
+
                             } else {
                                 return k;
                             }
@@ -372,6 +377,9 @@
 
 
             }
+						function untrackLocation(keyOrRecord){
+
+						}
 
 
             /******************
@@ -510,7 +518,6 @@
                 }
 
                 function addNestedLocations(res) {
-                    self._log.info(res[2].key());
                     return self._q.all(res[0].map(function(loc) {
                         return createNestedLocationRecord(res[2].key(), loc[1].key());
                     }));
@@ -526,7 +533,7 @@
             }
 
             function logSuccess(res) {
-                self._log.info(res);
+                // self._log.info(res);
                 return res;
             }
 

@@ -275,7 +275,6 @@
 
 
                 function returnGeoRef(res) {
-                    self._log.info(res);
                     return qWrap(geofireRef());
                 }
             }
