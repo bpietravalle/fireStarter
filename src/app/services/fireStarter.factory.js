@@ -325,9 +325,12 @@
                 }
 
 
-                function remove(rec) {
+								//TODO add test for case when pass key instead of idx/record;
+                function remove(rec, flag) {
+                    if (angular.isString(rec) && flag ===true) {
+                        rec = indexFor(rec);
+                    }
                     return self._firebase.$remove(rec);
-
                 }
 
                 function save(rec) {

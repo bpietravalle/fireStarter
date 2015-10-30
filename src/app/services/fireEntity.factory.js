@@ -108,7 +108,6 @@
                 entity.geofireRemove = geofireRemove;
                 entity.trackLocations = trackLocations;
                 entity.untrackLocations = untrackLocations;
-                entity.untrackLocation = untrackLocation;
             }
 
             if (self._user === true) {
@@ -139,10 +138,9 @@
 
             /* Access to firebase */
             function buildFire(type, path, flag) {
-								// return path;
                 if (self._pathFlag === true && self._mockRef) {
                     flag = self._pathFlag;
-								// self._log.info(path.join('/'));
+                    self._log.info(path.join('/'));
                     path = self._mockRef.child(path.join('/'));
                 }
                 return self._fireStarter(type, path, flag);
@@ -288,14 +286,45 @@
              */
 
             function createLocationRecord(data, geoFlag) {
-                if (geoFlag === true) {
-                    delete data['lon'];
-                    delete data['lat'];
-                }
-                return mainLocations()
-                    .add(data)
-                    // .then(logSuccess)
+                return checkParams() //(data, geoFlag)
+                    .then(addData)
                     .catch(standardError);
+
+                function checkParams() {
+                    // if (geoFlag === true) {
+                    var c = new Coords();
+                    c['lat'] = data.lat;
+                    c['lon'] = data.lon;
+                    return qWrap([data, c]);
+                    // } else {
+                    //     return qWrap(data);
+                    // }
+                }
+
+                function addData(res) {
+                    // if (angular.isArray(res)) {
+                    return self._q.all([saveData(res[0]),
+                        qWrap(res[1])
+                    ]);
+                    // } else {
+                    // return mainLocations()
+                    //     .add(res);
+                    // }
+                }
+
+                function saveData(res) {
+                    if (geoFlag === true) {
+                        delete res['lon'];
+                        delete res['lat'];
+                    }
+
+                    return mainLocations().add(res);
+                }
+            }
+
+            function Coords(x, y) {
+                this.lat = x;
+                this.lon = y;
             }
 
             /* save to a record's nested location array
@@ -330,56 +359,36 @@
             }
 
             function trackLocation(data) {
-                var geo = {
-                    lat: data.lat,
-                    lon: data.lon
-                };
-                return createLocationRecord(data, true)
+                return createLocationRecord(data)
                     .then(sendToGeoFireAndPassLocationResults)
                     .catch(standardError);
 
                 function sendToGeoFireAndPassLocationResults(res) {
-                    return geofireSet(res.key(), [geo.lat, geo.lon]);
+                    return geofireSet(res[0].key(), [res[1].lat, res[1].lon]);
 
                 }
             }
 
-            /*@param{Array} either pass keys or the fireBaseObject(mainlocations) to remove
+            /*@param{Array} pass keys 
              *@return{Array} [[null,fireBaseRef(main Location)]]
              */
 
             function untrackLocations(keys) {
 
                 return self._q.all(keys.map(function(key) {
-                        return qWrap(checkKey(key))
-                            .then(completeAction)
+                        mainLocations().remove(key)
+                            // .then(geofireRemove(key))
                             .catch(standardError);
-
-
-                        function checkKey(k) {
-                            if (angular.isString(k)) {
-                                return mainLocations()
-                                    .getRecord(k);
-
-                            } else {
-                                return k;
-                            }
-                        }
-
-                        function completeAction(res) {
-                            return self._q.all([geofireRemove(res.$id),
-                                mainLocations().remove(res)
-                            ]);
-                        }
 
                     }))
                     .catch(standardError);
 
 
             }
-						function untrackLocation(keyOrRecord){
 
-						}
+            function untrackLocation(keyOrRecord) {
+
+            }
 
 
             /******************
