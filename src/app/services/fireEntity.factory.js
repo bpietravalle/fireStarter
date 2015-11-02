@@ -80,26 +80,32 @@
             var self = this;
             var entity = {};
 
+            /*low-level methods (may make private)*/
             entity.buildObject = buildObject;
             entity.buildArray = buildArray;
-
             entity.mainArray = mainArray;
             entity.mainRecord = mainRecord;
             entity.nestedArray = nestedArray;
             entity.nestedRecord = nestedRecord;
 
-            entity.preActionRef = getPreActionRef; 
+            /*fireBaseRef Mngt */
+            entity.preActionRef = getPreActionRef;
             entity._preActionRefHistory = [];
             entity.preActionRefHistory = getPreActionRefHistory;
-
             entity.currentRef = getCurrentRef;
-
-            entity.postActionRef = getPostActionRef; 
+            entity.currentBase = getCurrentFirebase;
+            entity.postActionRef = getPostActionRef;
             entity._postActionRefHistory = [];
             entity.postActionRefHistory = getPostActionRefHistory;
 
+            /*Queries*/
             entity.getIndex = getIndex;
-            entity.loadMainFromUser = loadMainFromUser;
+            entity.loadMainArray = loadMainArray;
+            entity.loadMainRecord = loadMainRecord;
+            entity.loadNestedArray = loadNestedArray;
+            entity.loadNestedRecord = loadNestedRecord;
+
+            /*Commands*/
             entity.createMainRecord = createMainRecord;
             entity.removeMainRecord = removeMainRecord;
             entity.createNestedRecord = createNestedRecord;
@@ -126,6 +132,7 @@
                 entity.createUserAndMain = createUserAndMain;
                 entity.createUserRecord = createUserRecord;
                 entity.removeUserRecord = removeUserRecord;
+                entity.loadMainFromUser = loadMainFromUser;
             }
 
             if (self._user === true && self._geofire === true) {
@@ -152,12 +159,17 @@
             function getCurrentRef() {
                 return entity._currentRef;
             }
+            function getCurrentFirebase() {
+                return entity._currentBase;
+            }
 
             function setCurrentRef(ref, type) {
-                entity._currentRef = ref; //angular.extend({}, {
-                // type: ref
-                // });
+                entity._currentRef = ref; 
                 return entity._currentRef;
+            }
+            function setCurrentFirebase(ref) {
+                entity._currentBase = ref; 
+                return entity._currentBase;
             }
 
             /* Pre Action */
@@ -171,7 +183,6 @@
 
             function setPreActionRef(ref) {
                 if (angular.isObject(entity._preActionRef)) {
-                    //if return is from qAll need to check for that; bc method below won't work
                     setPreActionRefHistory(entity._preActionRef.path);
                 }
 
@@ -199,6 +210,7 @@
             function setPostActionRef(ref) {
                 if (angular.isObject(entity._postActionRef)) {
                     if (angular.isDefined(entity._postActionRef.path)) {
+                        self._log.info(ref);
                         setPostActionRefHistory(entity._postActionRef.path);
                     } else if (Array.isArray(entity._postActionRef)) {
                         var history = [];
@@ -208,7 +220,6 @@
                                 }
                             }))
                             .then(function(res) {
-                                self._log.info(res);
                                 setPostActionRefHistory(history);
                             })
                             .catch(standardError);
@@ -232,62 +243,63 @@
              * *******************/
 
             function buildFire(type, path, flag) {
-                self._log.info("building a firebaseRef");
 
                 return self._q.when(self._fireStarter(type, path, flag))
                     .then(setPreActionRefAndReturn)
                     .catch(standardError)
 
                 function setPreActionRefAndReturn(res) {
+                    setCurrentFirebase(res);
                     setPreActionRef(res.ref());
                     return res;
                 }
             }
 
             function buildObject(path, flag) {
+                self._log.info("building a firebaseObject");
                 return buildFire("object", path, flag)
                     .catch(standardError);
             }
 
             function buildArray(path, flag) {
+                self._log.info("building a firebaseArray");
                 return buildFire("array", path, flag)
                     .catch(standardError);
             }
 
             function buildGeo(path, flag) {
+                self._log.info("building a Geofire object");
                 return buildFire("geo", path, flag)
                     .catch(standardError);
             }
 
 
             /*********************
-             * Methods that create
-             * a fireBaseRef
+             * Registered firebaseRef Constructors
              * ********************/
 
             /* 
              * @return{Promise(fireStarter)} returns a configured firebaseObj, firebaseArray, or a Geofire object
              */
 
+
             function mainArray() {
-                return buildArray(self._pathMaster.mainArray());
+                return checkCurrentRef(mainArrayPath(), "array");
             }
 
             function mainRecord(id) {
-                return buildObject(self._pathMaster.mainRecord(id));
+                return buildObject(mainRecordPath(id));
             }
 
             function nestedArray(id, name) {
-                return buildArray(self._pathMaster.nestedArray(id, name));
+                return buildArray(nestedArrayPath(id, name));
             }
 
             function nestedRecord(mainId, name, recId) {
-                return buildObject(self._pathMaster.nestedRecord(mainId, name, recId));
+                return buildObject(nestedRecordPath(mainId, name, recId));
             }
 
             /* Geofire Interface */
-
-
             function mainLocations() {
                 return buildArray(mainLocationsPath().mainArray());
             }
@@ -302,9 +314,7 @@
                     .mainArray());
             }
 
-            /* User Interface */
-
-
+            /* User Object Interface */
             function userNestedArray() {
                 return buildArray(userNestedPath().mainArray());
             }
@@ -320,21 +330,35 @@
              * ***************/
 
             /*Queries*/
+            function loadMainArray() {
+                return mainArray()
+                    .then(loadResult)
+                    .then(querySuccess)
+                    .catch(standardError);
+            }
 
-            function loadArray(id, name) {
+            function loadMainRecord(id) {
+                return mainRecord(id)
+                    .then(loadResult)
+                    .then(querySuccess)
+                    .catch(standardError);
+            }
+
+            function loadNestedArray(id, name) {
                 return nestedArray(id, name)
                     .then(loadResult)
+                    .then(querySuccess)
                     .catch(standardError);
             }
 
             function loadNestedRecord(arr, id) {
                 return nestedRecord(arr, id)
                     .then(loadResult)
+                    .then(querySuccess)
                     .catch(standardError);
             }
 
             /*Commands*/
-
             function createMainRecord(data, geoFlag, userFlag) {
                 if (geoFlag === true && data.geo) {
                     delete data["geo"]
@@ -644,13 +668,46 @@
              **** Helpers ****/
 
 
-            /** For constructing user and location paths**/
+            /** For constructing paths*/
             function userNestedPath() {
                 return self._firePath([self._userPath, sessionId(), self._path]);
             }
 
             function mainLocationsPath() {
                 return self._firePath(self._locationPath);
+            }
+
+            function mainArrayPath() {
+                return self._pathMaster.mainArray();
+            }
+
+            function mainRecordPath(id) {
+                return self._pathMaster.mainRecord(id);
+            }
+
+            function nestedArrayPath(id, name) {
+                return self._pathMaster.nestedArray(id, name);
+            }
+
+            function nestedRecordPath(mainId, name, recId) {
+                return self._pathMaster.nestedRecord(mainId, name, recId);
+            }
+
+            //untested
+            function checkCurrentRef(path, type) {
+                if (angular.isObject(getCurrentRef()) && pathEquality(path)) {
+                    self._log.info("Reusing currentRef");
+                    return qWrap(getCurrentFirebase());
+                } else {
+                    return buildFire(type, path);
+                }
+            }
+
+            function pathEquality(path) {
+                if (Array.isArray(path)) {
+                    path = path.join('/');
+                }
+                return getCurrentRef().root().path.concat(path) === getCurrentRef().path;
             }
 
             /** upon loading a firebase **/
@@ -665,7 +722,9 @@
                 return res[0].add(res[1]);
             }
 
+
             function removeFrom(res) {
+                self._log.info(res[0].base());
                 return res[0].remove(res[1]);
             }
 
@@ -679,13 +738,18 @@
             }
 
             function commandSuccess(res) {
+                setCurrentFirebase(res);
                 setPostActionRef(res);
                 return res;
             }
 
             function querySuccess(res) {
-                self._log.info(res);
-                //what should return? to log ref history 
+                setCurrentFirebase(res);
+                if (Array.isArray(res)) {
+                    res = res.$ref();
+                }
+                setCurrentFirebase(res);
+                setPostActionRef(res);
                 return res;
             }
 

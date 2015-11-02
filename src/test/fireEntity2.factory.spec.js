@@ -7,16 +7,13 @@
 
 
             beforeEach(function() {
-                arrData = {
-                    "1": {
-                        phone: "123456890",
-                        firstName: "tom"
-                    },
-                    "2": {
-                        phone: "0987654321",
-                        firstName: "frank"
-                    }
-                };
+                arrData = [{
+                    phone: "123456890",
+                    firstName: "tom"
+                }, {
+                    phone: "0987654321",
+                    firstName: "frank"
+                }];
 
                 newData = {
                     phone: "111222333",
@@ -89,6 +86,7 @@
                 newRecord = null;
                 newData = null;
                 arrData = null;
+                subject = null;
                 arrMock = null;
                 pathSpy = null;
                 firePath = null;
@@ -131,8 +129,8 @@
                                 $rootScope.$digest();
                             });
                             it("should not add uid property to record", function() {
-                                expect(getPromValue(test1,true).uid).not.toBeDefined();
-                                expect(getPromValue(test1,true)).toBeDefined();
+                                expect(getPromValue(test1, true).uid).not.toBeDefined();
+                                expect(getPromValue(test1, true)).toBeDefined();
                             });
 
 
@@ -152,8 +150,8 @@
                                 $rootScope.$digest();
                             });
                             it("should not send full data object to mainArray if arg = true", function() {
-                                expect(getPromValue(test1,true).geo).not.toBeDefined();
-                                expect(getPromValue(test1,true)).toBeDefined();
+                                expect(getPromValue(test1, true).geo).not.toBeDefined();
+                                expect(getPromValue(test1, true)).toBeDefined();
                             });
                         });
                         describe("if undefined", function() {
@@ -168,8 +166,8 @@
                                 $rootScope.$digest();
                             });
                             it("should send full data object to mainArray if arg is undefined", function() {
-                                expect(getPromValue(test1,true).geo).toBeDefined();
-                                expect(getPromValue(test1,true)).toBeDefined();
+                                expect(getPromValue(test1, true).geo).toBeDefined();
+                                expect(getPromValue(test1, true)).toBeDefined();
                             });
                         });
                     });
@@ -181,21 +179,26 @@
                         expect(subject.currentRef().parent().path).toEqual("https://your-firebase.firebaseio.com/requests");
                     });
                 });
-                describe("Remove", function() {
+                describe("keyAt", function() {
                     beforeEach(function() {
-												subject.createMainRecord(arrData[0]);
-												$rootScope.$digest();
-												subject.currentRef().flush();
-												$rootScope.$digest();
-												subject.createMainRecord(arrData[1]);
-												$rootScope.$digest();
-												subject.currentRef().flush();
-												$rootScope.$digest();
-                        test = subject.mainArray();
+                        subject.mainArray();
+                        $rootScope.$digest();
+                        subject.currentRef().set(arrData);
+                        $rootScope.$digest();
+                        subject.currentRef().flush()
+                        $rootScope.$digest();
                         $rootScope.$digest();
                     });
                     it("should remove the record", function() {
-                        expect(getPromValue(test).base().length).toEqual(1);
+                        test = subject.removeMainRecord(0);
+												$rootScope.$digest();
+												subject.currentRef().flush();
+												$rootScope.$digest();
+                        expect(getPromValue(test).path).toEqual("https://your-firebase.firebaseio.com/requests/0");
+                    });
+                    it("shouldn't call $q.reject", function() {
+                        expect($q.reject.calls.allArgs()).toEqual([]);
+                        expect($q.reject.calls.count()).toEqual(0);
                     });
 
                 });
@@ -223,8 +226,8 @@
 
 
                     it("should return correct data", function() {
-                        expect(test.$$state.value[0].phone).toEqual(arrData["1"].phone);
-                        expect(test.$$state.value[1].phone).toEqual(arrData["2"].phone);
+                        expect(test.$$state.value[0].phone).toEqual(arrData[0].phone);
+                        expect(test.$$state.value[1].phone).toEqual(arrData[1].phone);
                     });
                 });
                 describe("createUserRecord", function() {
@@ -636,6 +639,10 @@
 
             function getRefResult(obj) {
                 return obj.ref()['data'];
+            }
+
+            function getRefData(obj) {
+                return obj['data'];
             }
 
             function getPromValue(obj, flag) {

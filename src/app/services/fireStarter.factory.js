@@ -325,6 +325,9 @@
                 }
 
                 function remove(rec) {
+                    // if (angular.isNumber(rec)) {
+                    //     rec = keyAt(rec);
+                    // }
                     return self._firebase.$remove(rec);
                 }
 
