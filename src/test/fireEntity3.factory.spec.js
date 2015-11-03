@@ -336,7 +336,31 @@
             describe("Geofire", function() {
                 describe("geofireSet", function() {});
                 describe("geofireRemove", function() {});
-                describe("createLocationRecord", function() {});
+                describe("createLocationRecord", function() {
+                    beforeEach(function() {
+                        test = subject.createLocationRecord(locData);
+                        $rootScope.$digest();
+                        subject.currentRef().flush();
+                        $rootScope.$digest();
+                    });
+                    it("should return a promise", function() {
+                        expect(test).toBeAPromise();
+                    });
+                    it("should add data to correct array", function() {
+                        var arr = subject.currentRef();
+                        // var key = arr.key().toString();
+                        // expect(arr).toEqual("as");
+                        // expect(arr.parent().path).toEqual("https://your-firebase.firebaseio.com/locations");
+                        // expect(getRefData(arr)).toEqual(getRefData(subject.currentRef()));
+
+                    });
+                    logCallsContain("return from qALL");
+                    it("should return the firebaseRef", function() {
+                        $rootScope.$digest();
+                        // expect(getRefData(getPromValue(test))).toBeDefined();
+                    });
+
+                });
                 describe("createNestedLocationRecord", function() {});
                 describe("removeLocationRecord", function() {});
                 describe("removeNestedLocationRecord", function() {});
@@ -369,23 +393,32 @@
                     beforeEach(function() {
                         subject.userNestedArray();
                         $rootScope.$digest();
-                        subject.currentRef().set(newData);
+                        subject.currentRef().set(arrData);
                         $rootScope.$digest();
                         subject.currentRef().flush();
                         $rootScope.$digest();
-                        // this.arrLength
+                        this.currentPath = subject.currentPath();
+                        this.arrLength = subject.currentBase().length();
+                        test = subject.removeUserRecord(0);
+                        $rootScope.$digest();
+                        subject.currentRef().flush();
+                        $rootScope.$digest();
                     });
                     it("should remove the record", function() {
-                        expect(subject.currentBase().base().length).toEqual(3);
-                        subject.removeUserRecord(0);
-                        $rootScope.$digest();
-                        subject.currentRef().flush();
-                        $rootScope.$digest();
-                        expect($log.info.calls.count()).toEqual(3);
-                        qRejectCheck(0, true);
+                        expect(this.arrLength).toEqual(2);
+                        expect(getRefData(subject.parentRef())).toEqual({
+                            1: arrData[1]
+                        });
                     });
-                    it("should set the correct currentRef", function() {
-                        expect(subject.currentRef().path).toEqual("https://your-firebase.firebaseio.com/users/1/trips");
+
+                    it("sets currentBase to a firebaseRef", function() {
+                        expect(subject.currentBase()).toBeAFirebaseRef();
+                        expect(subject.currentBase()).toEqual(subject.currentRef());
+                    });
+                    useParentRef();
+
+                    it("should return the firebaseRef of the removed record", function() {
+                        currentRefCheck("users/1/trips/0", true);
                     });
 
                     qRejectCheck(0);
@@ -542,11 +575,11 @@
         }
 
         function logCallsContain(message) {
-            var logArray = $log.info.calls.allArgs();
-            var flatLog = logArray.reduce(function(x, y) {
-                return x.concat(y);
-            }, []);
             it("should call $log.info with " + message, function() {
+                var logArray = $log.info.calls.allArgs();
+                var flatLog = logArray.reduce(function(x, y) {
+                    return x.concat(y);
+                }, []);
                 expect(flatLog.indexOf(message)).toBeGreaterThan(-1);
             });
         }
@@ -571,6 +604,16 @@
             }
         }
 
+        function specificLogCall(x, message, flag) {
+            if (flag === true) {
+                return expect($log.info.calls.argsFor(x)).toEqual(message);
+            } else {
+                it("should log:" + message, function() {
+                    expect($log.info.calls.argsFor(x)).toEqual(message);
+                });
+            }
+        }
+
         function qRejectCheck(x, flag) {
             if (flag === true) {
                 expect($q.reject.calls.allArgs()).toEqual([]);
@@ -584,6 +627,17 @@
 
         }
 
+        function useParentRef() {
+            it("should construct firebaseArray from parentRef", function() {
+                logCallsContain("Using currentParentRef");
+            });
+        }
+
+        function reUseCurrentRef() {
+            it("should reuse currentRef", function() {
+                logCallsContain("Reusing currentRef");
+            });
+        }
 
 
         function getDeferred(obj) {

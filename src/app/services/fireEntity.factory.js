@@ -89,6 +89,7 @@
 
             /*fireBaseRef Mngt */
             entity.currentBase = getCurrentFirebase;
+            entity.parentRef = getCurrentParentRef;
             entity.currentRef = getCurrentRef;
             entity._pathHistory = [];
             entity.pathHistory = getPathHistory;
@@ -160,6 +161,10 @@
 
             function getCurrentRef() {
                 return entity._currentRef;
+            }
+
+            function getCurrentParentRef() {
+                return entity._currentRef.parent();
             }
 
             function getCurrentFirebase() {
@@ -299,7 +304,6 @@
             }
 
 
-
             /*****************
              * General Methods
              * ***************/
@@ -417,6 +421,7 @@
             function createLocationRecord(data, geoFlag) {
                 return qAll(mainLocations(), data)
                     .then(addDataAndPass)
+                    .then(qAllResult)
                     .then(commandSuccess)
                     .catch(standardError);
 
@@ -445,9 +450,7 @@
                     .then(addTo)
                     .then(commandSuccess)
                     .catch(standardError);
-
             }
-
 
             /*@param{Array} location objects to save.  each must have a lat and a lon property
              *@return{Array} [[null,fireBaseRef(main Location)]]
@@ -690,9 +693,8 @@
                     self._log.info("Reusing currentRef");
                     return qWrap(getCurrentFirebase());
                 } else if (angular.isObject(getCurrentRef()) && parentEquality(path)) {
-                    self._log.info("Using current Parent Ref");
-                    //untested
-                    return buildFire(type, getCurrentRef().parent(), true);
+                    self._log.info("Using currentParentRef");
+                    return buildFire(type, getCurrentParentRef(), true);
                 } else {
                     return buildFire(type, path);
                 }
@@ -727,7 +729,7 @@
 
 
             function removeFrom(res) {
-                self._log.info(res[0].base());
+                // self._log.info(res[0].base());
                 return res[0].remove(res[1]);
             }
 
@@ -757,6 +759,15 @@
 
             function qAll(x, y) {
                 return self._q.all([x, qWrap(y)]);
+            }
+
+            function qAllResult(res) {
+                if (res.length === 1) {
+                    self._log.info("return from qAll");
+                    return res[0];
+                } else {
+                    return res;
+                }
             }
 
             /*to remove later on*/

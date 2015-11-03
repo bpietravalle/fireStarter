@@ -287,6 +287,7 @@
                     getRecord: getRecord,
                     keyAt: keyAt,
                     indexFor: indexFor,
+                    length: length,
                     loaded: loaded,
                     ref: ref,
                     remove: remove,
@@ -311,6 +312,10 @@
                     return self._firebase.$indexFor(val);
                 }
 
+								//untested
+                function length() {
+                    return self._firebase.length;
+                }
 
                 function keyAt(rec) {
                     return self._firebase.$keyAt(rec);
