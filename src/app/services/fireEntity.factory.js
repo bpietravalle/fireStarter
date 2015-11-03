@@ -82,10 +82,11 @@
             /*low-level methods (may make private)*/
             entity.buildObject = buildObject;
             entity.buildArray = buildArray;
+
             entity.mainArray = mainArray;
             entity.mainRecord = mainRecord;
-            entity.nestedArray = nestedArray;
-            entity.nestedRecord = nestedRecord;
+            // entity.nestedArray = nestedArray;
+            // entity.nestedRecord = nestedRecord;
 
             /*fireBaseRef Mngt */
             entity.currentBase = getCurrentFirebase;
@@ -99,21 +100,24 @@
             entity.getIndex = getIndex;
             entity.loadMainArray = loadMainArray;
             entity.loadMainRecord = loadMainRecord;
-            entity.loadNestedArray = loadNestedArray;
-            entity.loadNestedRecord = loadNestedRecord;
+            // entity.loadNestedArray = loadNestedArray;
+            // entity.loadNestedRecord = loadNestedRecord;
 
             /*Commands*/
             entity.createMainRecord = createMainRecord;
             entity.removeMainRecord = removeMainRecord;
-            entity.createNestedRecord = createNestedRecord;
-            entity.removeNestedRecord = removeNestedRecord;
+            // entity.createNestedRecord = createNestedRecord;
+            // entity.removeNestedRecord = removeNestedRecord;
             entity.inspect = inspect;
 
             if (self._geofire === true) {
+							//four below should be private
                 entity.mainLocations = mainLocations;
                 entity.mainLocation = mainLocation;
                 entity.createLocationRecord = createLocationRecord;
-                entity.createNestedLocationRecord = createNestedLocationRecord;
+                entity.removeLocationRecord = removeLocationRecord;
+                // entity.createNestedLocationRecord = createNestedLocationRecord;
+                // entity.removeNestedLocationRecord = removeNestedLocationRecord;
                 entity.geofireSet = geofireSet;
                 entity.geofireGet = geofireGet;
                 entity.geofireRemove = geofireRemove;
@@ -169,8 +173,6 @@
 
             function getCurrentFirebase() {
                 return entity._currentBase;
-
-
             }
 
             function setCurrentFirebase(base, flag) {
@@ -178,17 +180,20 @@
                 if (flag === true) {
                     setCurrentRef(entity._currentBase.$ref());
                 } else if (Array.isArray(base)) {
+                    //need to figure out how to handle commands that return arrays;
+                    //this works for now
                     var refs = []
                     self._q.all(base.map(function(item) {
                             if (item.ref) {
                                 refs.push(item.ref());
-                            }
+                            } else {
+                                refs.push(item);
+                            };
                         }))
                         .catch(standardError);
-                    // self._log.info('refs');
-                    // self._log.info(refs);
                     setCurrentRef(refs);
                 } else {
+                    //if returns fireStarter obj
                     setCurrentRef(entity._currentBase.ref());
                 }
                 return entity._currentBase;
@@ -205,12 +210,10 @@
                     setPathHistory(entity._currentPath);
                 }
                 entity._currentPath = path;
-                // return entity._currentPath;
             }
 
             function setPathHistory(path) {
                 entity._pathHistory.push(path);
-                // return entity._pathHistory;
             }
 
             function getPathHistory() {
@@ -286,7 +289,6 @@
             function mainLocation(id) {
                 return checkCurrentRef(mainLocationsPath().mainRecord(id), "object");
             }
-
 
             //not sure if should use checkRef here
             function geoService() {
@@ -418,6 +420,7 @@
              * @return{fireBaseRef}
              */
 
+            //just for single records for now
             function createLocationRecord(data, geoFlag) {
                 return qAll(mainLocations(), data)
                     .then(addDataAndPass)
@@ -427,6 +430,7 @@
 
 
                 function addDataAndPass(res) {
+                    //coords don't pass if send more than one record
                     return qAll(addTo(res), {
                         lat: res[1].lat,
                         lon: res[1].lon
@@ -434,10 +438,6 @@
                 }
             }
 
-            // function Coords(x, y) {
-            //     this.lat = x;
-            //     this.lon = y;
-            // }
 
             /* save to a record's nested location array
              * TODO add option so just saving an index
@@ -445,16 +445,32 @@
              * @param{Object}
              */
 
-            function createNestedLocationRecord(recId, data) {
-                return qAll(nestedArray(recId, self._locationName), data)
-                    .then(addTo)
+            function removeLocationRecord(idxOrRec) {
+
+                return qAll(mainLocations(), idxOrRec)
+                    .then(removeFrom)
+                    .then(qAllResult)
                     .then(commandSuccess)
                     .catch(standardError);
+
+
             }
+
+            function createNestedLocationRecord(recId, data) {
+                return createNestedRecord(recId, self._locationName, data)
+                    .catch(standardError);
+            }
+
 
             /*@param{Array} location objects to save.  each must have a lat and a lon property
              *@return{Array} [[null,fireBaseRef(main Location)]]
              */
+
+            function removeNestedLocationRecord(recId, nestedIdxOrRec) {
+                return removeNestedRecord(recId, self._locationName, nestedIdxOrRec)
+                    .catch(standardError);
+
+            }
 
             function trackLocations(data, key) {
                 return self._q.all(data.map(function(item) {
@@ -587,7 +603,6 @@
                     .catch(standardError);
             }
 
-
             function removeUserRecord(rec) {
 
                 return qAll(userNestedArray(), rec)
@@ -643,9 +658,15 @@
             }
 
             function addNestedArray(obj, arr) {
-                var arrName = self._inflector.pluralize(arr);
-                var recName = self._inflector.singularize(arr);
-                var newProp = {};
+                var arrName, recName, addRec, removeRec, loadRec, loadRecs, newProp;
+                arrName = self._inflector.pluralize(arr);
+                recName = self._inflector.singularize(arr);
+                addRec = "add" + self._inflector.camelize(recName, true);
+                removeRec = "remove" + self._inflector.camelize(recName, true);
+                loadRec = "load" + self._inflector.camelize(recName, true);
+                loadRecs = "load" + self._inflector.camelize(arrName, true);
+                newProp = {};
+
 
                 newProp[arrName] = function(id) {
                     return nestedArray(id, arrName);
@@ -653,6 +674,32 @@
 
                 newProp[recName] = function(mainRecId, nestedRecId) {
                     return nestedRecord(mainRecId, arrName, nestedRecId);
+                }
+
+                newProp[addRec] = function(id, data) {
+                    return qAll(newProp[arrName](id), data)
+                        .then(addTo)
+                        .then(commandSuccess)
+                        .catch(standardError);
+                }
+                newProp[removeRec] = function(mainRecId, nestedRecId, idxOrRec) {
+                    return qAll(newProp[recName](mainRecId, nestedRecId), idxOrRec)
+                        .then(removeFrom)
+                        .then(commandSuccess)
+                        .catch(standardError);
+                }
+                newProp[loadRec] = function(id, idxOrRec) {
+                    return qAll(newProp[recName](mainRecId, nestedRecId), idxOrRec)
+                        .then(loadResult)
+                        .then(querySuccess)
+                        .catch(standardError);
+                }
+
+                newProp[loadRecs] = function(id, idxOrRec) {
+                    return qAll(newProp[arrName](id), idxOrRec)
+                        .then(loadResult)
+                        .then(querySuccess)
+                        .catch(standardError);
                 }
 
                 return newProp;
@@ -695,7 +742,11 @@
                 } else if (angular.isObject(getCurrentRef()) && parentEquality(path)) {
                     self._log.info("Using currentParentRef");
                     return buildFire(type, getCurrentParentRef(), true);
+                    //else if getCurrentRef() is parent of new path then child(new string) - parent
                 } else {
+
+                    self._log.info("building new firebase");
+
                     return buildFire(type, path);
                 }
             }
@@ -729,7 +780,6 @@
 
 
             function removeFrom(res) {
-                // self._log.info(res[0].base());
                 return res[0].remove(res[1]);
             }
 
@@ -762,13 +812,21 @@
             }
 
             function qAllResult(res) {
-                if (res.length === 1) {
-                    self._log.info("return from qAll");
-                    return res[0];
+                if (res.length) {
+                    self._log.info("flattening results");
+                    return flatten(res);
                 } else {
                     return res;
                 }
             }
+
+            function flatten(arr) {
+                var flatResults = arr.reduce(function(x, y) {
+                    return x.concat(y);
+                }, []);
+                return flatResults;
+            }
+
 
             /*to remove later on*/
             function inspect() {

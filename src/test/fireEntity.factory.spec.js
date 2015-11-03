@@ -128,8 +128,8 @@
                 var fpMethods = [
                     ["mainArray", [], "array"],
                     ["mainRecord", [recId], "object"],
-                    ["nestedArray", [recId, nested], "array"],
-                    ["nestedRecord", [recId, nested, nestedId], "object"],
+                    // ["nestedArray", [recId, nested], "array"],
+                    // ["nestedRecord", [recId, nested, nestedId], "object"],
                 ];
 
                 function testMethods(y) {

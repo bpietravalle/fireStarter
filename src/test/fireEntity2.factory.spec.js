@@ -157,29 +157,6 @@
                     });
                 });
                 describe("createNestedLocationRecord", function() {
-                    beforeEach(function() {
-                        test1 = subject.createNestedLocationRecord(1, locData);
-                        $rootScope.$digest();
-                    });
-                    it("should return a promise", function() {
-                        expect(test1).toBeAPromise();
-                    });
-                    it("should send correct path args to fireStarter", function() {
-                        expect(baseBuilder.init.calls.argsFor(0)[0]).toEqual("array");
-                        expect(baseBuilder.init.calls.argsFor(0)[1]).toEqual(["requests", 1, "locations"]);
-                        expect(baseBuilder.init.calls.argsFor(0)[2]).toEqual(undefined);
-                    });
-
-                    it("should add record to array", function() {
-                        arrMock.$ref().flush();
-                        $rootScope.$digest();
-                        expect(arrMock.length).toEqual(1);
-                    });
-                    it("should return the firebaseRef", function() {
-                        arrMock.$ref().flush();
-                        $rootScope.$digest();
-                        expect(test1.$$state.value.ref()).toBeDefined();
-                    });
                 });
             });
             describe("FireStarter-Geo", function() {
