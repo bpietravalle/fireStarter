@@ -16,7 +16,6 @@
 
     }
 
-
     FireEntity = function(fireStarter, firePath, $q, $log, inflector, $injector, path, options) {
         this._fireStarter = fireStarter;
         this._firePath = firePath;
@@ -89,14 +88,11 @@
             entity.nestedRecord = nestedRecord;
 
             /*fireBaseRef Mngt */
-            entity.preActionRef = getPreActionRef;
-            entity._preActionRefHistory = [];
-            entity.preActionRefHistory = getPreActionRefHistory;
-            entity.currentRef = getCurrentRef;
             entity.currentBase = getCurrentFirebase;
-            entity.postActionRef = getPostActionRef;
-            entity._postActionRefHistory = [];
-            entity.postActionRefHistory = getPostActionRefHistory;
+            entity.currentRef = getCurrentRef;
+            entity._pathHistory = [];
+            entity.pathHistory = getPathHistory;
+            entity.currentPath = getCurrentPath;
 
             /*Queries*/
             entity.getIndex = getIndex;
@@ -109,6 +105,7 @@
             entity.createMainRecord = createMainRecord;
             entity.removeMainRecord = removeMainRecord;
             entity.createNestedRecord = createNestedRecord;
+            entity.removeNestedRecord = removeNestedRecord;
             entity.inspect = inspect;
 
             if (self._geofire === true) {
@@ -156,85 +153,62 @@
              * *******************/
 
             /* Current */
+            function getCurrentPath() {
+                return entity._currentPath;
+            }
+
             function getCurrentRef() {
                 return entity._currentRef;
             }
+
             function getCurrentFirebase() {
                 return entity._currentBase;
+
+
             }
 
-            function setCurrentRef(ref, type) {
-                entity._currentRef = ref; 
-                return entity._currentRef;
-            }
-            function setCurrentFirebase(ref) {
-                entity._currentBase = ref; 
+            function setCurrentFirebase(base, flag) {
+                entity._currentBase = base;
+                if (flag === true) {
+                    setCurrentRef(entity._currentBase.$ref());
+                } else if (Array.isArray(base)) {
+                    var refs = []
+                    self._q.all(base.map(function(item) {
+                            if (item.ref) {
+                                refs.push(item.ref());
+                            }
+                        }))
+                        .catch(standardError);
+                    // self._log.info('refs');
+                    // self._log.info(refs);
+                    setCurrentRef(refs);
+                } else {
+                    setCurrentRef(entity._currentBase.ref());
+                }
                 return entity._currentBase;
             }
 
-            /* Pre Action */
-            function getPreActionRef() {
-                return entity._preActionRef;
+            function setCurrentRef(ref) {
+                entity._currentRef = ref;
+                setCurrentPath(entity._currentRef.path);
+                return entity._currentRef;
             }
 
-            function getPreActionRefHistory() {
-                return entity._preActionRefHistory;
-            }
-
-            function setPreActionRef(ref) {
-                if (angular.isObject(entity._preActionRef)) {
-                    setPreActionRefHistory(entity._preActionRef.path);
+            function setCurrentPath(path) {
+                if (angular.isString(entity._currentPath)) {
+                    setPathHistory(entity._currentPath);
                 }
-
-                entity._preActionRef = ref
-                setCurrentRef(entity._preActionRef, "pre");
-                return entity._preActionRef;
+                entity._currentPath = path;
+                // return entity._currentPath;
             }
 
-            function setPreActionRefHistory(path) {
-                entity._preActionRefHistory.push(path);
-                return entity._preActionRefHistory;
+            function setPathHistory(path) {
+                entity._pathHistory.push(path);
+                // return entity._pathHistory;
             }
 
-
-            /* postAction */
-
-            function getPostActionRef() {
-                return entity._postActionRef;
-            }
-
-            function getPostActionRefHistory() {
-                return entity._postActionRefHistory;
-            }
-
-            function setPostActionRef(ref) {
-                if (angular.isObject(entity._postActionRef)) {
-                    if (angular.isDefined(entity._postActionRef.path)) {
-                        self._log.info(ref);
-                        setPostActionRefHistory(entity._postActionRef.path);
-                    } else if (Array.isArray(entity._postActionRef)) {
-                        var history = [];
-                        self._q.all(entity._postActionRef.map(function(ref) {
-                                if (angular.isDefined(ref.path)) {
-                                    history.push(ref.path);
-                                }
-                            }))
-                            .then(function(res) {
-                                setPostActionRefHistory(history);
-                            })
-                            .catch(standardError);
-
-                    }
-                }
-
-                entity._postActionRef = ref
-                setCurrentRef(entity._postActionRef, "post");
-                return entity._postActionRef;
-            }
-
-            function setPostActionRefHistory(path) {
-                entity._postActionRefHistory.push(path);
-                return entity._postActionRefHistory;
+            function getPathHistory() {
+                return entity._pathHistory;
             }
 
 
@@ -250,7 +224,6 @@
 
                 function setPreActionRefAndReturn(res) {
                     setCurrentFirebase(res);
-                    setPreActionRef(res.ref());
                     return res;
                 }
             }
@@ -262,7 +235,7 @@
             }
 
             function buildArray(path, flag) {
-                self._log.info("building a firebaseArray");
+                // self._log.info("building a firebaseArray");
                 return buildFire("array", path, flag)
                     .catch(standardError);
             }
@@ -381,8 +354,15 @@
 
             }
 
-            function removeMainRecord(data) {
-                return qAll(mainArray(), data)
+            function removeMainRecord(idxOrRec) {
+                return qAll(mainArray(),idxOrRec)
+                    .then(removeFrom)
+                    .then(commandSuccess)
+                    .catch(standardError);
+            }
+
+            function removeNestedRecord(recId, name, idxOrRec) {
+                return qAll(nestedArray(recId, name), idxOrRec)
                     .then(removeFrom)
                     .then(commandSuccess)
                     .catch(standardError);
@@ -405,6 +385,7 @@
             function geofireSet(k, c) {
                 return qAll(geoService(), [k, c])
                     .then(completeAction)
+										.then(commandSuccess)
                     .catch(standardError);
 
                 function completeAction(res) {
@@ -421,6 +402,7 @@
             function geofireRemove(k) {
                 return qAll(geoService(), k)
                     .then(removeFrom)
+										.then(commandSuccess)
                     .catch(standardError);
             }
 
@@ -474,18 +456,23 @@
                         return trackLocation(item, key);
                     }))
                     .catch(standardError);
-
             }
 
             function trackLocation(data, key) {
                 return createLocationRecord(addLocationKey(data, key))
                     .then(sendToGeoFireAndPassLocationResults)
+                    .then(returnLocationResults)
                     .then(commandSuccess)
                     .catch(standardError);
 
                 function sendToGeoFireAndPassLocationResults(res) {
                     return qAll(geofireSet(res[0].key(), [res[1].lat, res[1].lon]), res[0]);
+                }
 
+                function returnLocationResults(res) {
+                    self._log.info('res+++');
+                    self._log.info(res);
+                    return res[1];
                 }
 
                 function addLocationKey(obj, key) {
@@ -505,7 +492,6 @@
                             .catch(standardError);
                     }))
                     .catch(standardError);
-
 
             }
 
@@ -539,12 +525,9 @@
             }
 
 
-
             /******************
              * User Record Interface
              * *****************/
-
-
 
             //TODO this needs to have option for saving as index
 
@@ -738,18 +721,13 @@
             }
 
             function commandSuccess(res) {
+                // self._log.info(res);
                 setCurrentFirebase(res);
-                setPostActionRef(res);
                 return res;
             }
 
             function querySuccess(res) {
-                setCurrentFirebase(res);
-                if (Array.isArray(res)) {
-                    res = res.$ref();
-                }
-                setCurrentFirebase(res);
-                setPostActionRef(res);
+                setCurrentFirebase(res, true);
                 return res;
             }
 
