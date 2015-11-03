@@ -126,6 +126,7 @@
                 entity.userNestedArray = userNestedArray;
                 entity.userNestedRecord = userNestedRecord;
                 entity.loadUserRecords = loadUserRecords;
+                entity.loadUserRecord = loadUserRecord;
                 entity.createUserAndMain = createUserAndMain;
                 entity.createUserRecord = createUserRecord;
                 entity.removeUserRecord = removeUserRecord;
@@ -261,27 +262,28 @@
             }
 
             function mainRecord(id) {
-                return buildObject(mainRecordPath(id));
+                return checkCurrentRef(mainRecordPath(id), "object");
             }
 
             function nestedArray(id, name) {
-                return buildArray(nestedArrayPath(id, name));
+                return checkCurrentRef(nestedArrayPath(id, name), "array");
             }
 
             function nestedRecord(mainId, name, recId) {
-                return buildObject(nestedRecordPath(mainId, name, recId));
+                return checkCurrentRef(nestedRecordPath(mainId, name, recId), "object");
             }
 
             /* Geofire Interface */
             function mainLocations() {
-                return buildArray(mainLocationsPath().mainArray());
+                return checkCurrentRef(mainLocationsPath().mainArray(), "array");
             }
 
             function mainLocation(id) {
-                return buildObject(mainLocationsPath().mainRecord(id));
+                return checkCurrentRef(mainLocationsPath().mainRecord(id), "object");
             }
 
 
+            //not sure if should use checkRef here
             function geoService() {
                 return buildGeo(self._firePath(self._geofirePath)
                     .mainArray());
@@ -289,11 +291,11 @@
 
             /* User Object Interface */
             function userNestedArray() {
-                return buildArray(userNestedPath().mainArray());
+                return checkCurrentRef(userNestedPath().mainArray(), "array");
             }
 
             function userNestedRecord(id) {
-                return buildObject(userNestedPath().mainRecord(id));
+                return checkCurrentRef(userNestedPath().mainRecord(id), "object");
             }
 
 
@@ -355,7 +357,7 @@
             }
 
             function removeMainRecord(idxOrRec) {
-                return qAll(mainArray(),idxOrRec)
+                return qAll(mainArray(), idxOrRec)
                     .then(removeFrom)
                     .then(commandSuccess)
                     .catch(standardError);
@@ -385,7 +387,7 @@
             function geofireSet(k, c) {
                 return qAll(geoService(), [k, c])
                     .then(completeAction)
-										.then(commandSuccess)
+                    .then(commandSuccess)
                     .catch(standardError);
 
                 function completeAction(res) {
@@ -402,7 +404,7 @@
             function geofireRemove(k) {
                 return qAll(geoService(), k)
                     .then(removeFrom)
-										.then(commandSuccess)
+                    .then(commandSuccess)
                     .catch(standardError);
             }
 
@@ -537,6 +539,12 @@
                     .catch(standardError);
             }
 
+            function loadUserRecord(id) {
+                return userNestedRecord(id)
+                    .then(loadResult)
+                    .catch(standardError);
+            }
+
             function loadMainFromUser(rec) {
                 return mainArray()
                     .then(completeAction)
@@ -585,36 +593,6 @@
                     .catch(standardError);
             }
 
-
-            /* Nested Arrays constructor
-             */
-
-            function addNested(obj, arr) {
-                var newProperties = {};
-
-                self._q.all(arr.map(function(item) {
-                    angular.extend(newProperties, addNestedArray(obj, item));
-                }))
-
-                return angular.merge({}, obj, newProperties);
-            }
-
-            function addNestedArray(obj, arr) {
-                var arrName = self._inflector.pluralize(arr);
-                var recName = self._inflector.singularize(arr);
-                var newProp = {};
-
-                newProp[arrName] = function(id) {
-                    return nestedArray(id, arrName);
-                }
-
-                newProp[recName] = function(mainRecId, nestedRecId) {
-                    return nestedRecord(mainRecId, arrName, nestedRecId);
-                }
-
-                return newProp;
-            }
-
             /*Combo Methods*/
 
             /* 1.) adds main array record
@@ -647,6 +625,37 @@
 
             }
 
+
+            /* Nested Arrays constructor
+             */
+
+            function addNested(obj, arr) {
+                var newProperties = {};
+
+                self._q.all(arr.map(function(item) {
+                    angular.extend(newProperties, addNestedArray(obj, item));
+                }))
+
+                return angular.merge({}, obj, newProperties);
+            }
+
+            function addNestedArray(obj, arr) {
+                var arrName = self._inflector.pluralize(arr);
+                var recName = self._inflector.singularize(arr);
+                var newProp = {};
+
+                newProp[arrName] = function(id) {
+                    return nestedArray(id, arrName);
+                }
+
+                newProp[recName] = function(mainRecId, nestedRecId) {
+                    return nestedRecord(mainRecId, arrName, nestedRecId);
+                }
+
+                return newProp;
+            }
+
+
             /****************
              **** Helpers ****/
 
@@ -676,11 +685,14 @@
                 return self._pathMaster.nestedRecord(mainId, name, recId);
             }
 
-            //untested
             function checkCurrentRef(path, type) {
                 if (angular.isObject(getCurrentRef()) && pathEquality(path)) {
                     self._log.info("Reusing currentRef");
                     return qWrap(getCurrentFirebase());
+                } else if (angular.isObject(getCurrentRef()) && parentEquality(path)) {
+                    self._log.info("Using current Parent Ref");
+                    //untested
+                    return buildFire(type, getCurrentRef().parent(), true);
                 } else {
                     return buildFire(type, path);
                 }
@@ -691,6 +703,14 @@
                     path = path.join('/');
                 }
                 return getCurrentRef().root().path.concat(path) === getCurrentRef().path;
+            }
+
+            function parentEquality(path) {
+                //untested
+                if (Array.isArray(path)) {
+                    path = path.join('/');
+                }
+                return getCurrentRef().root().path.concat(path) === getCurrentRef().parent().path;
             }
 
             /** upon loading a firebase **/
@@ -721,7 +741,7 @@
             }
 
             function commandSuccess(res) {
-                // self._log.info(res);
+                self._log.info(res);
                 setCurrentFirebase(res);
                 return res;
             }
