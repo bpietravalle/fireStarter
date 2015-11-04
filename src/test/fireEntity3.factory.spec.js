@@ -6,7 +6,7 @@
 
 
         beforeEach(function() {
-            rootPath = "https://your-firebase.firebaseio.com/trips/";
+            rootPath = "https://your-firebase.firebaseio.com";
             arrData = [{
                 phone: "123456890",
                 firstName: "tom"
@@ -112,18 +112,6 @@
                     var base2 = subject.currentBase();
                     expect(base1).toEqual(base2);
                 });
-                it("should not change after successful queries that result in an object", function() {
-                    subject.createMainRecord("data");
-                    $rootScope.$digest();
-                    subject.currentRef().flush();
-                    $rootScope.$digest();
-                    var key = subject.currentRef().key();
-                    subject.loadMainRecord(key);
-                    var base1 = subject.currentBase();
-                    $rootScope.$digest();
-                    var base2 = subject.currentBase();
-                    expect(base1).toEqual(base2);
-                });
                 it("should not change currentBase if command fails", function() {
                     subject.removeMainRecord("data");
                     $rootScope.$digest();
@@ -174,16 +162,16 @@
                     // expect(subject.currentRef()).toEqual(subject.currentBase().ref());
                 });
 
-                it("should correctly set currentBase if command results in array", function() {
-                    subject.trackLocations(locData, "mainRecKey");
-                    $rootScope.$digest();
-                    subject.currentRef().flush();
-                    $rootScope.$digest();
-                    subject.currentRef().flush();
-                    $rootScope.$digest();
-                    var b = subject.currentRef();
-                    // expect(typeof b).toEqual('Array');
-                });
+                // it("should correctly set currentBase if command results in array", function() {
+                //     subject.trackLocations(locData, "mainRecKey");
+                //     $rootScope.$digest();
+                //     subject.currentRef().flush();
+                //     $rootScope.$digest();
+                //     subject.currentRef().flush();
+                //     $rootScope.$digest();
+                //     var b = subject.currentRef();
+                //     // expect(typeof b).toEqual('Array');
+                // });
                 it("should correctly assign ref of firebaseArrays", function() {
                     subject.loadMainArray();
                     $rootScope.$digest();
@@ -388,7 +376,7 @@
                         this.key = subject.currentRef().key();
                     });
                     it("should add data to correct node", function() {
-                        expect(subject.parentRef().path).toEqual(rootPath + "0/phones");
+                        expect(subject.parentRef().path).toEqual(rootPath + "/trips/0/phones");
                         expect(getRefData(subject.parentRef())[this.key]).toEqual({
                             type: "cell",
                             number: 123456789
@@ -397,30 +385,43 @@
                     qRejectCheck(0);
                     describe("remove", function() {
                         beforeEach(function() {
-                            subject.removePhone(0, 0);
+                            subject.removePhone(0, this.key);
                             $rootScope.$digest();
                             subject.currentRef().flush();
                             $rootScope.$digest();
-                            this.key = subject.currentRef().key();
                         });
                         it("should remove the correct record", function() {
-                            expect(subject.parentRef().path).toEqual(rootPath + "0/phones");
+                            $rootScope.$digest();
+                            expect(subject.parentRef().path).toEqual(rootPath + "/trips/0/phones");
                             expect(getRefData(subject.parentRef())).toEqual(null);
                         });
                         qRejectCheck(0);
                     });
                     describe("load", function() {
                         beforeEach(function() {
-                            subject.loadPhone(0,this.key);
+                            subject.loadPhone(0, this.key);
                             $rootScope.$digest();
-                            // subject.currentRef().flush();
+                            subject.currentRef().flush();
                             $rootScope.$digest();
-                            // this.key = subject.currentRef().key();
                         });
                         it("should load the correct record", function() {
-                            // logCheck(null, true);
-                            expect(subject.currentPath()).toEqual(rootPath + "0/phones");
-                            // expect(subject.currentRef()).toEqual("as");
+                            expect(subject.currentPath()).toEqual(rootPath + "/trips/0/phones/" + this.key);
+                            expect(getRefData(subject.parentRef())[this.key]).toEqual({
+                                type: "cell",
+                                number: 123456789
+                            });
+                        });
+                        qRejectCheck(0);
+                    });
+                    describe("load All", function() {
+                        beforeEach(function() {
+                            subject.loadPhones(0);
+                            $rootScope.$digest();
+                            subject.currentRef().flush();
+                            $rootScope.$digest();
+                        });
+                        it("should load the correct record", function() {
+                            expect(subject.currentPath()).toEqual(rootPath + "/trips/0/phones");
                             expect(getRefData(subject.currentRef())[this.key]).toEqual({
                                 type: "cell",
                                 number: 123456789
@@ -435,8 +436,52 @@
             });
 
             describe("Geofire", function() {
-                describe("geofireSet", function() {});
-                describe("geofireRemove", function() {});
+                describe("geofireSet", function() {
+                    beforeEach(function() {
+                        test = subject.geofireSet("myKey", [90, 100]);
+                        $rootScope.$digest();
+                        subject.currentRef().flush();
+                        $rootScope.$digest();
+                        $rootScope.$digest();
+                        this.ref = subject.currentRef();
+                    });
+                    it("should return a promise", function() {
+                        expect(test).toBeAPromise();
+                    });
+                    it("should add data to correct array", function() {
+                        expect(getRefData(this.ref)).toEqual({
+                            myKey: {
+                                g: jasmine.any(String),
+                                l: [90, 100]
+                            }
+                        });
+                    });
+                    it("should return null", function() {
+                        expect(getPromValue(test)).toEqual(undefined);
+                    });
+                    qRejectCheck(0);
+                    describe("geofireRemove", function() {
+                        beforeEach(function() {
+                            test = subject.geofireRemove("myKey");
+                            $rootScope.$digest();
+                            subject.currentRef().flush();
+                            $rootScope.$digest();
+                            $rootScope.$digest();
+                            this.ref = subject.currentRef();
+                        });
+                        it("should return a promise", function() {
+                            expect(test).toBeAPromise();
+                        });
+                        it("should return null", function() {
+                            expect(getPromValue(test)).toEqual(undefined);
+                        });
+                        it("should remove data correctly", function() {
+													expect(this.ref.path).toEqual(rootPath + "/geofire/trips");
+                            expect(getRefData(this.ref)).toEqual(null);
+                        });
+                        qRejectCheck(0);
+                    });
+                });
                 describe("createLocationRecord", function() {
                     beforeEach(function() {
                         test = subject.createLocationRecord(locData[0]);
@@ -540,8 +585,10 @@
                             1: arrData[1]
                         });
                     });
+                    // logCheck();
 
                     useParentRef();
+                    useCurrentRef();
 
                     it("should return the firebaseRef of the removed record", function() {
                         currentRefCheck("users/1/trips/0", true);

@@ -305,9 +305,10 @@
             }
 
             //not sure if should use checkRef here
+
             function geoService() {
-                return buildGeo(self._firePath(self._geofirePath)
-                    .mainArray());
+                return checkCurrentRef(self._firePath(self._geofirePath)
+                    .mainArray(), "geo");
             }
 
             /* User Object Interface */
@@ -376,9 +377,9 @@
 
             }
 
-            function removeMainRecord(idxOrRec) {
-                return qAll(mainArray(), idxOrRec)
-                    .then(removeFrom)
+            function removeMainRecord(key) {
+                return mainRecord(key)
+                    .then(removeResult)
                     .then(commandSuccess)
                     .catch(standardError);
             }
@@ -407,7 +408,6 @@
             function geofireSet(k, c) {
                 return qAll(geoService(), [k, c])
                     .then(completeAction)
-                    .then(commandSuccess)
                     .catch(standardError);
 
                 function completeAction(res) {
@@ -459,11 +459,10 @@
              * @param{Object}
              */
 
-            function removeLocationRecord(idxOrRec) {
+            function removeLocationRecord(key) {
 
-                return qAll(mainLocations(), idxOrRec)
-                    .then(removeFrom)
-                    .then(qAllResult)
+                return mainLocation(key)
+                    .then(removeResult)
                     .then(commandSuccess)
                     .catch(standardError);
 
@@ -617,10 +616,10 @@
                     .catch(standardError);
             }
 
-            function removeUserRecord(rec) {
+            function removeUserRecord(key) {
 
-                return qAll(userNestedArray(), rec)
-                    .then(removeFrom)
+                return userNestedRecord(key)
+                    .then(removeResult)
                     .then(commandSuccess)
                     .catch(standardError);
             }
@@ -696,9 +695,9 @@
                         .then(commandSuccess)
                         .catch(standardError);
                 }
-                newProp[removeRec] = function(mainRecId, nestedRecId, idxOrRec) {
-                    return qAll(newProp[recName](mainRecId, nestedRecId), idxOrRec)
-                        .then(removeFrom)
+                newProp[removeRec] = function(mainRecId, key) {
+                    return newProp[recName](mainRecId, key)
+                        .then(removeResult)
                         .then(commandSuccess)
                         .catch(standardError);
                 }
@@ -767,25 +766,32 @@
 
 
             function currentRefExists(path, type) {
-                var pathCheck = standardizePath(path);
-                if (pathEquality(pathCheck)) {
+                //pathcheck can be path
+                path = standardizePath(path);
+                if (pathEquality(path)) {
                     self._log.info("Reusing currentRef");
-                    return qWrap(getCurrentFirebase());
-                } else if (parentEquality(pathCheck)) {
+                    //this should still use buildFire
+                    return buildFire(type, getCurrentRef(), true);
+                    // return qWrap(getCurrentFirebase());
+                } else if (parentEquality(path)) {
                     self._log.info("Using currentParentRef");
                     return buildFire(type, getCurrentParentRef(), true);
-                } else if (isCurrentChild(pathCheck)) {
+                } else if (isCurrentChild(path)) {
                     self._log.info("Building childRef");
-                    return buildFire(type, buildChildRef(pathCheck), true);
+                    return buildFire(type, buildChildRef(path), true);
                 } else {
                     self._log.info("building new firebase");
-                    return buildFire(type, path);
+                    var ref = getCurrentRef().root().child(stripRoot(path));
+                    self._log.info(ref.path);
+                    return buildFire(type, ref, true);
                 }
             }
 
 
             //if new path === currentPath
             function pathEquality(path) {
+                self._log.info('path arg');
+                self._log.info(path);
                 self._log.info('current path');
                 self._log.info(getCurrentPath());
                 return path === getCurrentPath();
@@ -793,8 +799,6 @@
 
             //if new path === parent of currentRef
             function parentEquality(path) {
-                self._log.info('path');
-                self._log.info(path);
                 self._log.info('current parent path');
                 self._log.info(getCurrentParentRef().path);
                 return path === getCurrentParentRef().path;
@@ -804,8 +808,8 @@
             function isCurrentChild(path) {
                 var pathSub;
                 pathSub = path.substring(0, getCurrentPath().length);
-								self._log.info('pathSub');
-								self._log.info(pathSub);
+                self._log.info('pathSub');
+                self._log.info(pathSub);
                 if (path.length > getCurrentPath().length) {
                     return pathSub === getCurrentPath();
                 } else {
@@ -821,7 +825,6 @@
                 if (path[0] === "/") {
                     path = path.substring(1);
                 }
-                self._log.info('removeSlash');
                 return path;
             }
 
@@ -829,7 +832,6 @@
                 if (Array.isArray(path)) {
                     path = path.join('/');
                 }
-                self._log.info('stringify');
                 return path;
             }
 
@@ -839,11 +841,15 @@
                 return extendRoot(path);
             }
 
+            function stripRoot(path) {
+                return path.substring(getCurrentRef().root().path.length);
+
+            }
+
 
 
             function buildChildRef(path) {
                 var newStr = removeSlash(path.slice(getCurrentPath().length));
-                // self._log.info(newStr);
                 return getCurrentRef().child(newStr);
             }
 
@@ -855,7 +861,6 @@
             /** upon loading a firebase **/
 
             function loadResult(res) {
-
                 return res.loaded();
             }
 
@@ -865,8 +870,8 @@
                 return res[0].add(res[1]);
             }
 
-
             function removeFrom(res) {
+                self._log.info(res[0].ref());
                 return res[0].remove(res[1]);
             }
 
@@ -875,9 +880,13 @@
             }
 
 
-            function standardError(err) {
-                return self._q.reject(err);
+						//same methods as above for firebaseObjects
+
+            function removeResult(res) {
+                // self._log.info(res);
+                return res.remove();
             }
+
 
             function commandSuccess(res) {
                 self._log.info('command success');
@@ -913,6 +922,10 @@
                     return x.concat(y);
                 }, []);
                 return flatResults;
+            }
+
+            function standardError(err) {
+                return self._q.reject(err);
             }
 
 
