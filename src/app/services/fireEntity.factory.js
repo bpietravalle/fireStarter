@@ -95,32 +95,29 @@
             entity._pathHistory = [];
             entity.pathHistory = getPathHistory;
             entity.currentPath = getCurrentPath;
+            entity.record = setCurrentRecord;
 
             /*Queries*/
             entity.getIndex = getIndex;
             entity.loadMainArray = loadMainArray;
             entity.loadMainRecord = loadMainRecord;
-            // entity.loadNestedArray = loadNestedArray;
-            // entity.loadNestedRecord = loadNestedRecord;
 
             /*Commands*/
             entity.createMainRecord = createMainRecord;
             entity.removeMainRecord = removeMainRecord;
-            // entity.createNestedRecord = createNestedRecord;
-            // entity.removeNestedRecord = removeNestedRecord;
             entity.inspect = inspect;
 
             if (self._geofire === true) {
-							//four below should be private
+                //four below should be private
                 entity.mainLocations = mainLocations;
                 entity.mainLocation = mainLocation;
                 entity.createLocationRecord = createLocationRecord;
                 entity.removeLocationRecord = removeLocationRecord;
-                // entity.createNestedLocationRecord = createNestedLocationRecord;
-                // entity.removeNestedLocationRecord = removeNestedLocationRecord;
+
                 entity.geofireSet = geofireSet;
                 entity.geofireGet = geofireGet;
                 entity.geofireRemove = geofireRemove;
+
                 entity.trackLocations = trackLocations;
                 entity.trackLocation = trackLocation;
                 entity.untrackLocations = untrackLocations;
@@ -177,13 +174,20 @@
 
             function setCurrentFirebase(base, flag) {
                 entity._currentBase = base;
-                if (flag === true) {
+                if (base.ref) {
+                    setCurrentRef(entity._currentBase.ref());
+                }
+                if (base.$ref) {
                     setCurrentRef(entity._currentBase.$ref());
-                } else if (Array.isArray(base)) {
-                    //need to figure out how to handle commands that return arrays;
-                    //this works for now
+                }
+                self._log.info("setting currentBase");
+                return entity._currentBase;
+            }
+
+            function setCurrentRef(ref) {
+                if (Array.isArray(ref)) {
                     var refs = []
-                    self._q.all(base.map(function(item) {
+                    self._q.all(ref.map(function(item) {
                             if (item.ref) {
                                 refs.push(item.ref());
                             } else {
@@ -191,17 +195,11 @@
                             };
                         }))
                         .catch(standardError);
-                    setCurrentRef(refs);
-                } else {
-                    //if returns fireStarter obj
-                    setCurrentRef(entity._currentBase.ref());
+                    ref = refs;
                 }
-                return entity._currentBase;
-            }
-
-            function setCurrentRef(ref) {
                 entity._currentRef = ref;
-                setCurrentPath(entity._currentRef.path);
+
+                setCurrentPath(entity._currentRef);
                 return entity._currentRef;
             }
 
@@ -209,7 +207,23 @@
                 if (angular.isString(entity._currentPath)) {
                     setPathHistory(entity._currentPath);
                 }
+                if (Array.isArray(path)) {
+                    var paths = []
+                    self._q.all(path.map(function(item) {
+                            if (item.path) {
+                                paths.push(item.path);
+                            } else {
+                                paths.push(item);
+                            };
+                        }))
+                        .catch(standardError);
+                    path = paths;
+                } else {
+                    path = path.path;
+                }
+
                 entity._currentPath = path;
+                return entity._currentPath;
             }
 
             function setPathHistory(path) {
@@ -689,14 +703,14 @@
                         .catch(standardError);
                 }
                 newProp[loadRec] = function(id, idxOrRec) {
-                    return qAll(newProp[recName](mainRecId, nestedRecId), idxOrRec)
+                    return newProp[recName](id, idxOrRec)
                         .then(loadResult)
                         .then(querySuccess)
                         .catch(standardError);
                 }
 
-                newProp[loadRecs] = function(id, idxOrRec) {
-                    return qAll(newProp[arrName](id), idxOrRec)
+                newProp[loadRecs] = function(id) {
+                    return newProp[arrName](id)
                         .then(loadResult)
                         .then(querySuccess)
                         .catch(standardError);
@@ -735,40 +749,113 @@
                 return self._pathMaster.nestedRecord(mainId, name, recId);
             }
 
+            function setCurrentRecord(x) {
+                return getCurrentPath().substring(standardizePath(mainArrayPath()).length);
+
+            }
+
             function checkCurrentRef(path, type) {
-                if (angular.isObject(getCurrentRef()) && pathEquality(path)) {
-                    self._log.info("Reusing currentRef");
-                    return qWrap(getCurrentFirebase());
-                } else if (angular.isObject(getCurrentRef()) && parentEquality(path)) {
-                    self._log.info("Using currentParentRef");
-                    return buildFire(type, getCurrentParentRef(), true);
-                    //else if getCurrentRef() is parent of new path then child(new string) - parent
+                if (angular.isObject(getCurrentRef())) {
+                    self._log.info('currentRef exists');
+                    return currentRefExists(path, type);
                 } else {
-
-                    self._log.info("building new firebase");
-
+                    self._log.info("Building new firebase");
                     return buildFire(type, path);
                 }
             }
 
-            function pathEquality(path) {
-                if (Array.isArray(path)) {
-                    path = path.join('/');
+
+
+            function currentRefExists(path, type) {
+                var pathCheck = standardizePath(path);
+                if (pathEquality(pathCheck)) {
+                    self._log.info("Reusing currentRef");
+                    return qWrap(getCurrentFirebase());
+                } else if (parentEquality(pathCheck)) {
+                    self._log.info("Using currentParentRef");
+                    return buildFire(type, getCurrentParentRef(), true);
+                } else if (isCurrentChild(pathCheck)) {
+                    self._log.info("Building childRef");
+                    return buildFire(type, buildChildRef(pathCheck), true);
+                } else {
+                    self._log.info("building new firebase");
+                    return buildFire(type, path);
                 }
-                return getCurrentRef().root().path.concat(path) === getCurrentRef().path;
             }
 
+
+            //if new path === currentPath
+            function pathEquality(path) {
+                self._log.info('current path');
+                self._log.info(getCurrentPath());
+                return path === getCurrentPath();
+            }
+
+            //if new path === parent of currentRef
             function parentEquality(path) {
-                //untested
+                self._log.info('path');
+                self._log.info(path);
+                self._log.info('current parent path');
+                self._log.info(getCurrentParentRef().path);
+                return path === getCurrentParentRef().path;
+            }
+
+            //if new path === child of currentRef
+            function isCurrentChild(path) {
+                var pathSub;
+                pathSub = path.substring(0, getCurrentPath().length);
+								self._log.info('pathSub');
+								self._log.info(pathSub);
+                if (path.length > getCurrentPath().length) {
+                    return pathSub === getCurrentPath();
+                } else {
+                    return false;
+                }
+
+            }
+
+            function removeSlash(path) {
+                if (path[-1] === "/") {
+                    path = path.substring(0, -1);
+                }
+                if (path[0] === "/") {
+                    path = path.substring(1);
+                }
+                self._log.info('removeSlash');
+                return path;
+            }
+
+            function stringifyPath(path) {
                 if (Array.isArray(path)) {
                     path = path.join('/');
                 }
-                return getCurrentRef().root().path.concat(path) === getCurrentRef().parent().path;
+                self._log.info('stringify');
+                return path;
+            }
+
+            function standardizePath(path) {
+                path = stringifyPath(path);
+                path = removeSlash(path);
+                return extendRoot(path);
+            }
+
+
+
+            function buildChildRef(path) {
+                var newStr = removeSlash(path.slice(getCurrentPath().length));
+                // self._log.info(newStr);
+                return getCurrentRef().child(newStr);
+            }
+
+            function extendRoot(path) {
+                //should check if already fullPath
+                return getCurrentRef().root().path.concat(path);
             }
 
             /** upon loading a firebase **/
 
             function loadResult(res) {
+
                 return res.loaded();
             }
 
@@ -793,13 +880,14 @@
             }
 
             function commandSuccess(res) {
-                self._log.info(res);
-                setCurrentFirebase(res);
+                self._log.info('command success');
+                setCurrentRef(res);
                 return res;
             }
 
             function querySuccess(res) {
-                setCurrentFirebase(res, true);
+                self._log.info('query success');
+                setCurrentRef(res.$ref());
                 return res;
             }
 

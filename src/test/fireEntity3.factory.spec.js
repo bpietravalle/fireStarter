@@ -2,10 +2,11 @@
     "use strict";
 
     describe("FireEntity Factory", function() {
-        var firePath, arrData, newData, newRecord, test1, session, lastRecs, recRemoved, copy, keys, testutils, root, success, failure, recAdded, sessionSpy, locData, userId, maSpy, maSpy1, mrSpy, naSpy, nrSpy, fsMocks, geo, test, ref, objRef, objCount, arrCount, arrRef, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
+        var firePath, arrData, newData, newRecord, test1, session, lastRecs, recRemoved, rootPath, copy, keys, testutils, root, success, failure, recAdded, sessionSpy, locData, userId, maSpy, maSpy1, mrSpy, naSpy, nrSpy, fsMocks, geo, test, ref, objRef, objCount, arrCount, arrRef, $rootScope, data, user, location, locationSpy, $injector, inflector, fsType, userSpy, fsPath, options, fbObject, fbArray, pathSpy, $provide, fireEntity, subject, path, fireStarter, $q, $log;
 
 
         beforeEach(function() {
+            rootPath = "https://your-firebase.firebaseio.com/trips/";
             arrData = [{
                 phone: "123456890",
                 firstName: "tom"
@@ -93,34 +94,35 @@
                     $rootScope.$digest();
                     expect(subject.currentBase()).toBeDefined();
                 });
-                it("should change after successfull command", function() {
+                it("should not change after successful command", function() {
                     subject.createMainRecord("data");
                     $rootScope.$digest();
                     var base1 = subject.currentBase();
                     subject.currentRef().flush();
                     $rootScope.$digest();
                     var base2 = subject.currentBase();
-                    expect(base1).not.toEqual(base2);
+                    expect(base1).toEqual(base2);
                 });
-                it("should change after successful queries that result in an array", function() {
+                it("should not change after successful queries that result in an array", function() {
                     subject.loadMainArray();
                     $rootScope.$digest();
                     var base1 = subject.currentBase();
                     subject.currentRef().flush();
                     $rootScope.$digest();
                     var base2 = subject.currentBase();
-                    expect(base1).not.toEqual(base2);
+                    expect(base1).toEqual(base2);
                 });
-                it("should change after successful queries that result in an object", function() {
+                it("should not change after successful queries that result in an object", function() {
                     subject.createMainRecord("data");
                     $rootScope.$digest();
                     subject.currentRef().flush();
+                    $rootScope.$digest();
                     var key = subject.currentRef().key();
                     subject.loadMainRecord(key);
                     var base1 = subject.currentBase();
                     $rootScope.$digest();
                     var base2 = subject.currentBase();
-                    expect(base1).not.toEqual(base2);
+                    expect(base1).toEqual(base2);
                 });
                 it("should not change currentBase if command fails", function() {
                     subject.removeMainRecord("data");
@@ -140,18 +142,16 @@
                     var base2 = subject.currentBase();
                     expect(base1).toEqual(base2);
                 });
-                //Still a problem
-                it("should correctly set currentBase if command results in array", function() {
-                    subject.trackLocations(locData, "mainRecKey");
-                    $rootScope.$digest();
-                    subject.currentRef().flush();
-                    $rootScope.$digest();
-                    subject.currentRef().flush();
+                it("should change if begin a new query or command with a different path", function() {
+                    subject.mainRecord("data");
                     $rootScope.$digest();
                     var base1 = subject.currentBase();
-                    // expect(base1).toEqual("as");
-                    // expect($log.info.calls.argsFor()[0][1]).toEqual("as");
-                    // expect($log.info.calls.allArgs()).toEqual(2);
+                    subject.currentRef().flush();
+                    $rootScope.$digest();
+                    subject.mainLocations();
+                    $rootScope.$digest();
+                    var base2 = subject.currentBase();
+                    expect(base1.ref()).not.toEqual(base2.ref());
 
                 });
             });
@@ -171,15 +171,24 @@
                     $rootScope.$digest();
                     subject.currentRef().flush();
                     $rootScope.$digest();
-                    expect(subject.currentRef()).toEqual(subject.currentBase().ref());
+                    // expect(subject.currentRef()).toEqual(subject.currentBase().ref());
                 });
 
+                it("should correctly set currentBase if command results in array", function() {
+                    subject.trackLocations(locData, "mainRecKey");
+                    $rootScope.$digest();
+                    subject.currentRef().flush();
+                    $rootScope.$digest();
+                    subject.currentRef().flush();
+                    $rootScope.$digest();
+                    var b = subject.currentRef();
+                    // expect(typeof b).toEqual('Array');
+                });
                 it("should correctly assign ref of firebaseArrays", function() {
                     subject.loadMainArray();
                     $rootScope.$digest();
                     subject.currentRef().flush();
                     $rootScope.$digest();
-                    expect(subject.currentRef()).toEqual(subject.currentBase().$ref());
                 });
             });
             describe("currentPath", function() {
@@ -319,40 +328,112 @@
                     subject.currentRef().flush()
                     $rootScope.$digest();
                     $rootScope.$digest();
-                });
-                it("should remove the record and return a firebaseRef", function() {
                     test = subject.removeMainRecord(0);
                     $rootScope.$digest();
                     subject.currentRef().flush();
                     $rootScope.$digest();
+                });
+                it("should remove the record and return a firebaseRef", function() {
                     expect(getPromValue(test).path).toEqual("https://your-firebase.firebaseio.com/trips/0");
                 });
                 it("shouldn't call $q.reject", function() {
                     expect($q.reject.calls.allArgs()).toEqual([]);
                     expect($q.reject.calls.count()).toEqual(0);
                 });
+                useCurrentRef();
             });
-            describe("createNestedRecord", function() {
+            describe("Nested Arrays", function() {
                 beforeEach(function() {
-									options = {
-										nestedArrays: ["phones","addresses"]
-									};
-									subject = fireEntity("trips",options);
+                    options = {
+                        nestedArrays: ["phones"],
+                        geofire: true
+
+                    };
+                    subject = fireEntity("trips", options);
+                    $rootScope.$digest();
                     subject.mainArray();
                     $rootScope.$digest();
+                    subject.currentRef().set({
+                        name: "bill",
+                        age: 100
+                    });
                     subject.currentRef().flush();
+                    $rootScope.$digest();
                 });
-								subject();
-								// it("should work",function(){
-								// 	test = subject.phones(1);
-								// 	$rootScope.$digest();
-								// 	subject.currentRef().flush();
-								// 	$rootScope.$digest();
-								// 	expect(getPromValue(test)).toEqual("as");
-								// });
+                var methods = ["addPhone", "removePhone", "loadPhone", "loadPhones", "phone", "phones"];
 
+                function nestedArr(x) {
+                    it(x + " should be defined", function() {
+                        expect(subject[x]).toBeDefined();
+                    });
+                }
+                methods.forEach(nestedArr);
+                it("simple checks on setup", function() {
+                    expect(getRefData(subject.currentRef())).toEqual({
+                        name: "bill",
+                        age: 100
+                    });
+
+                });
+
+                describe("add", function() {
+                    beforeEach(function() {
+                        subject.addPhone(0, {
+                            type: "cell",
+                            number: 123456789
+                        });
+                        $rootScope.$digest();
+                        subject.currentRef().flush();
+                        $rootScope.$digest();
+                        this.key = subject.currentRef().key();
+                    });
+                    it("should add data to correct node", function() {
+                        expect(subject.parentRef().path).toEqual(rootPath + "0/phones");
+                        expect(getRefData(subject.parentRef())[this.key]).toEqual({
+                            type: "cell",
+                            number: 123456789
+                        });
+                    });
+                    qRejectCheck(0);
+                    describe("remove", function() {
+                        beforeEach(function() {
+                            subject.removePhone(0, 0);
+                            $rootScope.$digest();
+                            subject.currentRef().flush();
+                            $rootScope.$digest();
+                            this.key = subject.currentRef().key();
+                        });
+                        it("should remove the correct record", function() {
+                            expect(subject.parentRef().path).toEqual(rootPath + "0/phones");
+                            expect(getRefData(subject.parentRef())).toEqual(null);
+                        });
+                        qRejectCheck(0);
+                    });
+                    describe("load", function() {
+                        beforeEach(function() {
+                            subject.loadPhone(0,this.key);
+                            $rootScope.$digest();
+                            // subject.currentRef().flush();
+                            $rootScope.$digest();
+                            // this.key = subject.currentRef().key();
+                        });
+                        it("should load the correct record", function() {
+                            // logCheck(null, true);
+                            expect(subject.currentPath()).toEqual(rootPath + "0/phones");
+                            // expect(subject.currentRef()).toEqual("as");
+                            expect(getRefData(subject.currentRef())[this.key]).toEqual({
+                                type: "cell",
+                                number: 123456789
+                            });
+                        });
+                        qRejectCheck(0);
+                    });
+
+
+
+                });
             });
-            describe("removeNestedRecord", function() {});
+
             describe("Geofire", function() {
                 describe("geofireSet", function() {});
                 describe("geofireRemove", function() {});
@@ -374,10 +455,6 @@
                     it("should return the correct firebaseRef", function() {
                         expect(this.ref.path).toEqual("https://your-firebase.firebaseio.com/locations/trips/" + this.key);
                     });
-                    it("should set the currentBase to the currentRef", function() {
-                        expect(subject.currentBase()[0]).toEqual(subject.currentRef()[0]);
-                        expect(subject.currentBase()[0]).toBeAFirebaseRef();
-                    });
                     it("should return an array with a firebaseRef and a object with coordinates", function() {
                         expect(getPromValue(test).length).toEqual(2);
                         expect(getPromValue(test)[0]).toBeAFirebaseRef();
@@ -386,41 +463,6 @@
                             lon: 100
                         });
                     });
-                });
-                describe("createNestedLocationRecord", function() {
-                    // beforeEach(function() {
-                    //     subject.mainArray();
-                    //     $rootScope.$digest();
-                    //     subject.currentRef().set("data");
-                    //     $rootScope.$digest();
-                    //     subject.currentRef().flush();
-                    //     $rootScope.$digest();
-
-                    //     test = subject.createNestedLocationRecord(0, locData[0]);
-                    //     $rootScope.$digest();
-                    //     subject.currentRef().flush();
-                    //     $rootScope.$digest();
-                    //     this.ref = subject.currentRef();
-                    //     this.key = this.ref.key().toString();
-                    // });
-                    // it("should return a promise", function() {
-                    //     expect(test).toBeAPromise();
-                    // });
-                    // it("should add data to correct array", function() {
-                    //     expect(getRefData(this.ref)).toEqual(locData[0]);
-                    // });
-                    // it("should return the correct firebaseRef", function() {
-                    //     expect(this.ref.path).toEqual("https://your-firebase.firebaseio.com/trips/0/locations/" + this.key);
-                    // });
-
-                    // useParentRef();
-
-                    // it("should return the firebaseRef of the removed record", function() {
-                    //     var path = "trips/0/locations/" + this.key;
-                    //     currentRefCheck(path, true);
-                    // });
-
-                    // qRejectCheck(0);
                 });
                 describe("removeLocationRecord", function() {
                     beforeEach(function() {
@@ -444,10 +486,6 @@
                         });
                     });
 
-                    it("sets currentBase to a firebaseRef", function() {
-                        expect(subject.currentBase()).toBeAFirebaseRef();
-                        expect(subject.currentBase()).toEqual(subject.currentRef());
-                    });
                     useParentRef();
 
                     it("should return the firebaseRef of the removed record", function() {
@@ -455,61 +493,6 @@
                     });
 
                     qRejectCheck(0);
-                });
-                describe("removeNestedLocationRecord", function() {
-                    // beforeEach(function() {
-                    //     subject.mainArray();
-                    //     $rootScope.$digest();
-                    //     subject.currentRef().set({
-                    //         name: "example",
-                    //         title: 1984,
-                    //         locations: {
-                    //             0: locData[0],
-                    //             1: locData[1]
-                    //         }
-                    //     });
-                    //     subject.currentRef().flush();
-                    //     $rootScope.$digest();
-                    //     this.ref = subject.currentRef();
-                    //     this.key = this.ref.key().toString();
-                    // subject.loadNestedArray(0,"locations");
-                    //     $rootScope.$digest();
-                    //     subject.currentRef().flush();
-                    //     $rootScope.$digest();
-                    //     // test = subject.removeNestedLocationRecord(0,0);
-                    //     // $rootScope.$digest();
-                    //     // subject.currentRef().flush();
-                    //     // $rootScope.$digest();
-                    // });
-                    // it("should remove the record", function() {
-                    //     expect(getRefData(this.ref)).toEqual({
-                    //         title: 1984,
-                    //         name: "example",
-                    //         locations: {
-                    //             0: locData[0],
-                    //             1: locData[1]
-                    //         }
-                    //     });
-                    //     expect(this.key).toEqual(jasmine.any(String));
-                    //     // expect(getPromValue(test)).toEqual("as");
-
-                    //     // expect(getRefData(subject.currentRef())).toEqual(locData[1]);
-
-                    //     // expect(this.ref).toEqual(jasmine.any(String));
-                    //     // expect(getRefData(subject.parentRef())).toEqual({
-                    //     //     1: locData[1]
-                    //     // });
-                    // });
-
-                    // currentRefCheck("trips/0/locations");
-                    // // logCallCheck();
-                    // // it("sets currentBase to a firebaseRef", function() {
-                    // //     expect(subject.currentBase()).toBeAFirebaseRef();
-                    // //     expect(subject.currentBase()).toEqual(subject.currentRef());
-                    // // });
-                    // useParentRef();
-
-                    // qRejectCheck(0);
                 });
             });
             describe("User", function() {
@@ -558,10 +541,6 @@
                         });
                     });
 
-                    it("sets currentBase to a firebaseRef", function() {
-                        expect(subject.currentBase()).toBeAFirebaseRef();
-                        expect(subject.currentBase()).toEqual(subject.currentRef());
-                    });
                     useParentRef();
 
                     it("should return the firebaseRef of the removed record", function() {
@@ -576,17 +555,13 @@
         describe("Simple Queries", function() {
             describe("loadMainArray", function() {});
             describe("loadMainRecord", function() {});
-            describe("loadNestedArray", function() {
-                //this should be use the built in method
-            });
-            describe("loadNestedRecord", function() {});
             describe("Geofire", function() {
                 describe("geofireGet", function() {});
                 describe("loadLocationRecord", function() {});
-                describe("loadNestedLocationRecord", function() {});
                 describe("MainLocations", function() {});
                 describe("MainLocation", function() {});
             });
+            describe("Nested Arrays", function() {});
             describe("User", function() {
                 describe("loadUserRecords", function() {
                     //TODO add option for loading indexes
@@ -741,7 +716,17 @@
             }
         }
 
-        function logCallCheck(x, flag) {
+        function testCheck(x, flag) {
+            if (flag === true) {
+                return expect(test).toEqual(x);
+            } else {
+                it("should work", function() {
+                    expect(test).toEqual(x);
+                });
+            }
+        }
+
+        function logCheck(x, flag) {
             if (flag === true) {
                 return expect($log.info.calls.allArgs()).toEqual(x);
             } else {
@@ -775,12 +760,24 @@
         }
 
         function useParentRef() {
-            it("should construct firebaseArray from parentRef", function() {
+            it("should construct firebase from parentRef", function() {
                 logContains("Using currentParentRef");
             });
         }
 
-        function reUseCurrentRef() {
+        function useNewBase() {
+            it("should construct a new firebase", function() {
+                logContains("Building new firebase");
+            });
+        }
+
+        function useChildRef() {
+            it("should construct firebase from childRef", function() {
+                logContains("Building childRef");
+            });
+        }
+
+        function useCurrentRef() {
             it("should reuse currentRef", function() {
                 logContains("Reusing currentRef");
             });
@@ -798,6 +795,7 @@
 
             }
         }
+
         function subject(x) {
             if (angular.isObject(x)) {
                 it("should be the subject", function() {
