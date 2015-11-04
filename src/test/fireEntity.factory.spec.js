@@ -131,18 +131,18 @@
                     var base2 = subject.currentBase();
                     expect(base1).toEqual(base2);
                 });
-                it("should change if begin a new query or command with a different path", function() {
-                    subject.mainRecord("data");
-                    $rootScope.$digest();
-                    var base1 = subject.currentBase();
-                    subject.currentRef().flush();
-                    $rootScope.$digest();
-                    subject.mainLocations();
-                    $rootScope.$digest();
-                    var base2 = subject.currentBase();
-                    expect(base1.ref()).not.toEqual(base2.ref());
+                // it("should change if begin a new query or command with a different path", function() {
+                //     subject.mainRecord("data");
+                //     $rootScope.$digest();
+                //     var base1 = subject.currentBase();
+                //     subject.currentRef().flush();
+                //     $rootScope.$digest();
+                //     subject.mainLocations();
+                //     $rootScope.$digest();
+                //     var base2 = subject.currentBase();
+                //     expect(base1.ref()).not.toEqual(base2.ref());
 
-                });
+                // });
             });
             describe("currentRef", function() {
                 it("should be undefined on intialization", function() {
@@ -226,7 +226,7 @@
                 });
             });
         });
-        describe("Simple Commands", function() {
+        // describe("Simple Commands", function() {
             describe("createMainRecord", function() {
                 it("should return a promise", function() {
                     test = subject.createMainRecord(newRecord);
@@ -442,17 +442,23 @@
                     describe("getRecord", function() {
                         //returns null
                         beforeEach(function() {
+													// subject.mainArray();
+													// $rootScope.$digest();
+													// subject.currentRef().flush();
+													// $rootScope.$digest();
                             test = subject.getPhone(this.tripId, this.key);
-                            // $rootScope.$digest();
+                            $rootScope.$digest();
+														$timeout.flush();
                             // subject.currentRef().flush();
-                            // $rootScope.$digest();
+                            $rootScope.$digest();
                         });
                         it("should return current record", function() {
                             // expect(subject.currentPath()).toEqual(rootPath + "/trips/" + this.tripId + "/phones");
                             // expect(getRefData(subject.parentRef())).toBe(null);
-                            // expect(getPromValue(test)).not.toEqual(null);
+                            // expect(getPromValue(test)).toEqual(null);
                         });
-                        // logCheck();
+                        // returnsArray();
+                        logCheck();
                         // qRejectCheck(0);
                     });
                     describe("save", function() {
@@ -470,10 +476,10 @@
                         });
                         it("should load it", function() {
                             expect(getPromValue(test).type).toEqual("cell");
-                            expect(test1).toEqual("fax");
+                            // expect(test1).toEqual("fax");
                         });
                         // qRejectCheck(0);
-                        logCheck();
+                        // logCheck();
 
 
                     });
@@ -536,7 +542,7 @@
                         $rootScope.$digest();
                         subject.currentRef().flush();
                         $rootScope.$digest();
-                        this.ref = subject.currentRef()[0];
+                        this.ref = subject.currentRef();
                         this.key = this.ref.key().toString();
                     });
                     it("should return a promise", function() {
@@ -559,9 +565,7 @@
                 });
                 describe("removeLocationRecord", function() {
                     beforeEach(function() {
-                        subject.mainLocations();
-                        $rootScope.$digest();
-                        subject.currentRef().set(locData);
+                        subject.createLocationRecord(locData[0]);
                         $rootScope.$digest();
                         subject.currentRef().flush();
                         $rootScope.$digest();
@@ -572,16 +576,19 @@
                         subject.currentRef().flush();
                         $rootScope.$digest();
                     });
+										// logCheck();
                     it("should remove the record", function() {
-                        expect(this.arrLength).toEqual(2);
-                        expect(getRefData(subject.parentRef())).toEqual({
-                            1: locData[1]
-                        });
+                        expect(this.arrLength).toEqual(1);
+                        // expect(getRefData(subject.parentRef())).toEqual({
+                        //     1: locData[1]
+                        // });
+                        expect(getRefData(subject.parentRef())).toEqual(null);
                     });
 
                     useParentRef();
 
                     it("should return the firebaseRef of the removed record", function() {
+												expect(getPromValue(test)).toBeAFirebaseRef();
                         currentRefCheck("locations/trips/0", true);
                     });
 
@@ -646,17 +653,17 @@
                 });
             });
 
-        });
-        describe("Simple Queries", function() {
-            describe("loadMainArray", function() {});
-            describe("loadMainRecord", function() {});
-            describe("Geofire", function() {
-                describe("geofireGet", function() {});
-                describe("loadLocationRecord", function() {});
-                describe("MainLocations", function() {});
-                describe("MainLocation", function() {});
-            });
-            describe("Nested Arrays", function() {});
+        // });
+    //     describe("Simple Queries", function() {
+    //         describe("loadMainArray", function() {});
+    //         describe("loadMainRecord", function() {});
+    //         describe("Geofire", function() {
+    //             describe("geofireGet", function() {});
+    //             describe("loadLocationRecord", function() {});
+    //             describe("MainLocations", function() {});
+    //             describe("MainLocation", function() {});
+    //         });
+    //         describe("Nested Arrays", function() {});
             describe("User", function() {
                 describe("loadUserRecords", function() {
                     //TODO add option for loading indexes
@@ -713,7 +720,7 @@
                 });
             });
 
-        });
+        // });
         describe("Complex Commands", function() {
             describe("Geofire", function() {
                 describe("trackLocation", function() {});
@@ -854,6 +861,11 @@
 
         }
 
+        function returnsArray() {
+            it("should return an array", function() {
+                logContains("flattening results");
+            });
+        }
         function useParentRef() {
             it("should construct firebase from parentRef", function() {
                 logContains("Using currentParentRef");

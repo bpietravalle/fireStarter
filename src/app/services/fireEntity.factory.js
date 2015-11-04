@@ -27,7 +27,7 @@
         this._path = path;
         this._options = options;
         this._nestedArrays = [];
-        this._pathMaster = this._firePath(this._path, this._pathOptions);
+        this._pathOptions = {};
         if (this._options) {
             this._geofire = false || this._options.geofire;
             if (this._options.nestedArrays) {
@@ -43,6 +43,9 @@
                 this._nestedArrays.push(this._locationName);
                 this._locationPath = [this._locationName, this._path];
                 this._geofirePath = [this._geofireName, this._path];
+                this._pathOptions.geofire = true;
+                this._pathOptions.locationName = this._locationName;
+                this._pathOptions.geofireName = this._geofireName;
             }
             this._user = this._options.user || false;
             this._sessionAccess = this._options.sessionAccess || false;
@@ -51,8 +54,12 @@
                 this._sessionAccess = true;
             }
             if (this._sessionAccess === true) {
+                this._pathOptions.sessionAccess = true;
+                this._pathOptions.userName = this._userPath;
                 if (!this._options.sessionLocation) {
-                    this._sessionStorage = this._injector.get("session");
+                    this._sessionName = "session";
+                    this._pathOptions.sessionLocation = this._sessionName;
+                    this._sessionStorage = this._injector.get(this._sessionName);
                 } else {
                     this._sessionStorage = this._injector.get(this._options.sessionLocation);
                 }
@@ -61,8 +68,10 @@
                 } else {
                     this._sessionIdMethod = "getId";
                 }
+                this._pathOptions.sessionIdMethod = this._sessionIdMethod;
             }
         }
+        this._pathMaster = this._firePath(this._path, this._pathOptions);
     };
 
 
@@ -93,8 +102,6 @@
 
             if (self._geofire === true) {
                 //four below should be private
-                entity.mainLocations = mainLocations;
-                entity.mainLocation = mainLocation;
                 entity.createLocationRecord = createLocationRecord;
                 entity.removeLocationRecord = removeLocationRecord;
 
@@ -165,11 +172,11 @@
             }
 
             function setCurrentRef(ref) {
-                if (ref.$ref) {
+                if (ref.ref) {
                     //catch firebaseArray queries
-                    ref = ref.$ref();
-                } else if (ref.ref) {
                     ref = ref.ref();
+                } else if (ref.$ref) {
+                    ref = ref.$ref();
                 } else if (Array.isArray(ref)) {
                     var refs = []
                     self._q.all(ref.map(function(item) {
@@ -242,43 +249,52 @@
             /* @return{Promise(fireStarter)} returns a configured firebaseObj, firebaseArray, or a Geofire object
              */
 
+            function fullQueryPath(args) {
+
+                if (angular.isString(getCurrentPath())) {
+                    if (getCurrentPath() === path) {
+                        return getCurrentPath();
+                    }
+                }
+            }
+
+
             function mainArray() {
-                return checkCurrentRef(mainArrayPath(), "array");
+                return checkCurrentRef(self._pathMaster.mainArray(), "array");
             }
 
             function mainRecord(id) {
-                return checkCurrentRef(mainRecordPath(id), "object");
+                return checkCurrentRef(self._pathMaster.mainRecord(id), "object");
             }
 
             function nestedArray(id, name) {
-                return checkCurrentRef(nestedArrayPath(id, name), "array");
+                return checkCurrentRef(self._pathMaster.nestedArray(id, name), "array");
             }
 
             function nestedRecord(mainId, name, recId) {
-                return checkCurrentRef(nestedRecordPath(mainId, name, recId), "object");
+                return checkCurrentRef(self._pathMaster.nestedRecord(mainId, name, recId), "object");
             }
 
             /* Geofire Interface */
             function mainLocations() {
-                return checkCurrentRef(mainLocationsPath().mainArray(), "array");
+                return checkCurrentRef(self._pathMaster.mainLocationsArray(), "array");
             }
 
             function mainLocation(id) {
-                return checkCurrentRef(mainLocationsPath().mainRecord(id), "object");
+                return checkCurrentRef(self._pathMaster.mainLocationsRecord(id), "object");
             }
 
-            function geoService() {
-                return checkCurrentRef(self._firePath(self._geofirePath)
-                    .mainArray(), "geo");
+            function geofireArray() {
+                return checkCurrentRef(self._pathMaster.geofireArray(), "geo");
             }
 
             /* User Object Interface */
             function userNestedArray() {
-                return checkCurrentRef(userNestedPath().mainArray(), "array");
+                return checkCurrentRef(self._pathMaster.userNestedArray(), "array");
             }
 
             function userNestedRecord(id) {
-                return checkCurrentRef(userNestedPath().mainRecord(id), "object");
+                return checkCurrentRef(self._pathMaster.userNestedRecord(id), "object");
             }
 
 
@@ -335,7 +351,7 @@
 
 
             function geofireSet(k, c) {
-                return qAll(geoService(), [k, c])
+                return qAll(geofireArray(), [k, c])
                     .then(completeAction)
                     .catch(standardError);
 
@@ -345,7 +361,7 @@
             }
 
             function geofireGet(k) {
-                return qAll(geoService(), k)
+                return qAll(geofireArray(), k)
                     .then(getIn)
                     .then(querySuccess)
                     .catch(standardError);
@@ -356,7 +372,7 @@
             }
 
             function geofireRemove(k) {
-                return qAll(geoService(), k)
+                return qAll(geofireArray(), k)
                     .then(removeFrom)
                     .then(commandSuccess)
                     .catch(standardError);
@@ -658,28 +674,28 @@
                     return currentRefExists(path, type);
                 } else {
                     self._log.info("Building new firebase");
-                    return buildFire(type, path);
+                    //can reset counters and logger messages here
+                    return buildFire(type, path, true);
                 }
             }
 
 
 
             function currentRefExists(path, type) {
-                path = standardizePath(path);
-                if (pathEquality(path)) {
+                var str;
+                str = path.toString();
+                if (pathEquality(str)) {
                     self._log.info("Reusing currentRef");
                     return buildFire(type, getCurrentRef(), true);
-                } else if (parentEquality(path)) {
+                } else if (parentEquality(str)) {
                     self._log.info("Using currentParentRef");
                     return timeWrapRef(type, getCurrentParentRef());
-                } else if (isCurrentChild(path)) {
+                } else if (isCurrentChild(str)) {
                     self._log.info("Building childRef");
-                    return buildFire(type, buildChildRef(path), true);
+                    return buildFire(type, buildChildRef(str), true);
                 } else {
-                    self._log.info("building new firebase");
-                    var ref = getCurrentRef().root().child(stripRoot(path));
-                    self._log.info(ref.path);
-                    return buildFire(type, ref, true);
+                    self._log.info("setting new firebase node");
+                    return buildFire(type, path, true);
                 }
             }
 
@@ -714,12 +730,6 @@
 
             }
 
-            function standardizePath(path) {
-                path = stringifyPath(path);
-                path = removeSlash(path);
-                return extendRoot(path);
-            }
-
 
             function buildChildRef(path) {
                 var newStr = removeSlash(path.slice(getCurrentPath().length));
@@ -732,34 +742,10 @@
 
 
             /** For constructing paths*/
-            function userNestedPath() {
-                return self._firePath([self._userPath, sessionId(), self._path]);
-            }
-
-            function mainLocationsPath() {
-                return self._firePath(self._locationPath);
-            }
-
-            function mainArrayPath() {
-                return self._pathMaster.mainArray();
-            }
-
-            function mainRecordPath(id) {
-                return self._pathMaster.mainRecord(id);
-            }
-
-            function nestedArrayPath(id, name) {
-                return self._pathMaster.nestedArray(id, name);
-            }
-
-            function nestedRecordPath(mainId, name, recId) {
-                return self._pathMaster.nestedRecord(mainId, name, recId);
-            }
 
             //unused/untested
             function setCurrentRecord(x) {
                 return getCurrentPath().substring(standardizePath(mainArrayPath()).length);
-
             }
 
 
@@ -786,9 +772,8 @@
 
 
             function getRecord(res) {
-                // self._log.info(res[0].ref()['data']);
-                // self._log.info(res[0].ref().parent().parent()['data']);
-                // self._log.info(res[0].ref().parent().parent().path);
+							self._log.info(res[0].ref()['data']);
+							self._log.info(res[1]);
                 return res[0].getRecord(res[1]);
             }
 
@@ -814,20 +799,21 @@
                 return res.save();
             }
 
-
-
             /*******************************/
-
 
             function commandSuccess(res) {
                 self._log.info('command success');
-                setCurrentRef(res);
+                if (Array.isArray(res) && res[0].ref) {
+                    setCurrentRef(res[0]);
+                } else {
+                    setCurrentRef(res);
+                }
                 return res;
             }
 
             function querySuccess(res) {
                 self._log.info('query success');
-                // self._log.info(res);
+                self._log.info(res);
                 setCurrentRef(res);
                 return res;
             }
@@ -891,15 +877,6 @@
                     path = path.join('/');
                 }
                 return path;
-            }
-
-            function extendRoot(path) {
-                //should check if already fullPath
-                return getCurrentRef().root().path.concat(path);
-            }
-
-            function stripRoot(path) {
-                return path.substring(getCurrentRef().root().path.length);
             }
 
 
