@@ -326,6 +326,7 @@
                 }
 
                 function ref() {
+									self._log.info(self._firebase);
                     return self._firebase.$ref();
                 }
 

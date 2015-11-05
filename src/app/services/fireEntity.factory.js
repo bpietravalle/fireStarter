@@ -7,16 +7,17 @@
         .factory("fireEntity", FireEntityFactory);
 
     /** @ngInject */
-    function FireEntityFactory(fireStarter, firePath, $q, $log, inflector, $injector) {
+    function FireEntityFactory($timeout, fireStarter, firePath, $q, $log, inflector, $injector) {
 
         return function(path, options) {
-            var fb = new FireEntity(fireStarter, firePath, $q, $log, inflector, $injector, path, options);
+            var fb = new FireEntity($timeout, fireStarter, firePath, $q, $log, inflector, $injector, path, options);
             return fb.construct();
         };
 
     }
 
-    FireEntity = function(fireStarter, firePath, $q, $log, inflector, $injector, path, options) {
+    FireEntity = function($timeout, fireStarter, firePath, $q, $log, inflector, $injector, path, options) {
+        this._timeout = $timeout;
         this._fireStarter = fireStarter;
         this._firePath = firePath;
         this._q = $q;
@@ -28,15 +29,6 @@
         this._nestedArrays = [];
         this._pathMaster = this._firePath(this._path, this._pathOptions);
         if (this._options) {
-            this._pathFlag = false || this._options.pathFlag;
-            if (this._pathFlag === true) {
-                if (this._options.mockPath) {
-                    this._firePath = this._options.mockPath;
-                }
-                if (this._options.mockRef) {
-                    this._mockRef = this._options.mockRef;
-                }
-            }
             this._geofire = false || this._options.geofire;
             if (this._options.nestedArrays) {
                 if (!Array.isArray(this._options.nestedArrays)) {
@@ -79,14 +71,8 @@
             var self = this;
             var entity = {};
 
-            /*low-level methods (may make private)*/
-            entity.buildObject = buildObject;
-            entity.buildArray = buildArray;
-
             entity.mainArray = mainArray;
             entity.mainRecord = mainRecord;
-            // entity.nestedArray = nestedArray;
-            // entity.nestedRecord = nestedRecord;
 
             /*fireBaseRef Mngt */
             entity.currentBase = getCurrentFirebase;
@@ -95,10 +81,8 @@
             entity._pathHistory = [];
             entity.pathHistory = getPathHistory;
             entity.currentPath = getCurrentPath;
-            entity.record = setCurrentRecord;
 
             /*Queries*/
-            entity.getIndex = getIndex;
             entity.loadMainArray = loadMainArray;
             entity.loadMainRecord = loadMainRecord;
 
@@ -155,7 +139,6 @@
              * fireBaseRef Mngt
              * *******************/
 
-            /* Current */
             function getCurrentPath() {
                 return entity._currentPath;
             }
@@ -177,15 +160,17 @@
                 if (base.ref) {
                     setCurrentRef(entity._currentBase.ref());
                 }
-                if (base.$ref) {
-                    setCurrentRef(entity._currentBase.$ref());
-                }
                 self._log.info("setting currentBase");
                 return entity._currentBase;
             }
 
             function setCurrentRef(ref) {
-                if (Array.isArray(ref)) {
+                if (ref.$ref) {
+                    //catch firebaseArray queries
+                    ref = ref.$ref();
+                } else if (ref.ref) {
+                    ref = ref.ref();
+                } else if (Array.isArray(ref)) {
                     var refs = []
                     self._q.all(ref.map(function(item) {
                             if (item.ref) {
@@ -203,13 +188,16 @@
                 return entity._currentRef;
             }
 
-            function setCurrentPath(path) {
+            function setCurrentPath(ref) {
+                var path;
                 if (angular.isString(entity._currentPath)) {
                     setPathHistory(entity._currentPath);
                 }
-                if (Array.isArray(path)) {
+                if (ref.path) {
+                    path = ref.path;
+                } else if (Array.isArray(ref)) {
                     var paths = []
-                    self._q.all(path.map(function(item) {
+                    self._q.all(ref.map(function(item) {
                             if (item.path) {
                                 paths.push(item.path);
                             } else {
@@ -218,8 +206,6 @@
                         }))
                         .catch(standardError);
                     path = paths;
-                } else {
-                    path = path.path;
                 }
 
                 entity._currentPath = path;
@@ -234,6 +220,8 @@
                 return entity._pathHistory;
             }
 
+            /******************************/
+
 
             /*******************
              * Access to firebase
@@ -242,42 +230,17 @@
             function buildFire(type, path, flag) {
 
                 return self._q.when(self._fireStarter(type, path, flag))
-                    .then(setPreActionRefAndReturn)
+                    .then(setCurrentRefAndReturn)
                     .catch(standardError)
 
-                function setPreActionRefAndReturn(res) {
+                function setCurrentRefAndReturn(res) {
                     setCurrentFirebase(res);
                     return res;
                 }
             }
 
-            function buildObject(path, flag) {
-                self._log.info("building a firebaseObject");
-                return buildFire("object", path, flag)
-                    .catch(standardError);
-            }
-
-            function buildArray(path, flag) {
-                // self._log.info("building a firebaseArray");
-                return buildFire("array", path, flag)
-                    .catch(standardError);
-            }
-
-            function buildGeo(path, flag) {
-                self._log.info("building a Geofire object");
-                return buildFire("geo", path, flag)
-                    .catch(standardError);
-            }
-
-
-            /*********************
-             * Registered firebaseRef Constructors
-             * ********************/
-
-            /* 
-             * @return{Promise(fireStarter)} returns a configured firebaseObj, firebaseArray, or a Geofire object
+            /* @return{Promise(fireStarter)} returns a configured firebaseObj, firebaseArray, or a Geofire object
              */
-
 
             function mainArray() {
                 return checkCurrentRef(mainArrayPath(), "array");
@@ -304,8 +267,6 @@
                 return checkCurrentRef(mainLocationsPath().mainRecord(id), "object");
             }
 
-            //not sure if should use checkRef here
-
             function geoService() {
                 return checkCurrentRef(self._firePath(self._geofirePath)
                     .mainArray(), "geo");
@@ -322,7 +283,7 @@
 
 
             /*****************
-             * General Methods
+             * Simple Methods
              * ***************/
 
             /*Queries*/
@@ -340,21 +301,8 @@
                     .catch(standardError);
             }
 
-            function loadNestedArray(id, name) {
-                return nestedArray(id, name)
-                    .then(loadResult)
-                    .then(querySuccess)
-                    .catch(standardError);
-            }
-
-            function loadNestedRecord(arr, id) {
-                return nestedRecord(arr, id)
-                    .then(loadResult)
-                    .then(querySuccess)
-                    .catch(standardError);
-            }
-
             /*Commands*/
+
             function createMainRecord(data, geoFlag, userFlag) {
                 if (geoFlag === true && data.geo) {
                     delete data["geo"]
@@ -369,14 +317,6 @@
                     .catch(standardError);
             }
 
-            function createNestedRecord(recId, name, data) {
-                return qAll(nestedArray(recId, name), data)
-                    .then(addTo)
-                    .then(commandSuccess)
-                    .catch(standardError);
-
-            }
-
             function removeMainRecord(key) {
                 return mainRecord(key)
                     .then(removeResult)
@@ -384,26 +324,15 @@
                     .catch(standardError);
             }
 
-            function removeNestedRecord(recId, name, idxOrRec) {
-                return qAll(nestedArray(recId, name), idxOrRec)
-                    .then(removeFrom)
-                    .then(commandSuccess)
-                    .catch(standardError);
-            }
 
-
-            /******************
-             * Geofire Interface
-             * *****************/
+            /* Geofire Interface */
 
             /**
              * Two Parts:
              * 1.) provides access to store and retrieve coordinates in GeoFire
-             * 2.) Any other location data(ie google place_id, etc, can be stored in a separate
+             * 2.) Any addition location data(ie google place_id, reviews, etc. can be stored in a separate
              * firebase node (currently called "locations" and refered to as the mainLocations array) **/
 
-
-            /* public */
 
             function geofireSet(k, c) {
                 return qAll(geoService(), [k, c])
@@ -418,7 +347,12 @@
             function geofireGet(k) {
                 return qAll(geoService(), k)
                     .then(getIn)
+                    .then(querySuccess)
                     .catch(standardError);
+
+                function getIn(res) {
+                    return res[0].get(res[1]);
+                }
             }
 
             function geofireRemove(k) {
@@ -453,10 +387,9 @@
             }
 
 
-            /* save to a record's nested location array
-             * TODO add option so just saving an index
+            /* remove mainLocation record
              * @param{string} id of mainArray record
-             * @param{Object}
+             * @return{fireBaseRef}
              */
 
             function removeLocationRecord(key) {
@@ -466,23 +399,108 @@
                     .then(commandSuccess)
                     .catch(standardError);
 
-
             }
 
-            function createNestedLocationRecord(recId, data) {
-                return createNestedRecord(recId, self._locationName, data)
+
+            /* User Object Interface*/
+
+            //TODO this needs to have option for saving as index
+            //rather than firebaseArray.add()
+
+            function loadUserRecords() {
+                return userNestedArray()
+                    .then(loadResult)
                     .catch(standardError);
             }
 
+            function loadUserRecord(id) {
+                return userNestedRecord(id)
+                    .then(loadResult)
+                    .catch(standardError);
+            }
 
-            /*@param{Array} location objects to save.  each must have a lat and a lon property
-             *@return{Array} [[null,fireBaseRef(main Location)]]
+            function loadMainFromUser(rec) {
+                return mainArray()
+                    .then(completeAction)
+                    .catch(standardError);
+
+                function completeAction(res) {
+                    return res.getRecord(rec.mainArrayKey);
+                }
+            }
+
+            function session() {
+                return self._sessionStorage;
+            }
+
+            function sessionId() {
+                return self._sessionStorage[self._sessionIdMethod]();
+            }
+
+            /* save to user nested array 
+             * @param{Object} data to save to user array - just saving key for now
+             *@return{Promise(fireBaseRef)}
              */
 
-            function removeNestedLocationRecord(recId, nestedIdxOrRec) {
-                return removeNestedRecord(recId, self._locationName, nestedIdxOrRec)
+            function createUserRecord(d) {
+                return qAll(userNestedArray(), {
+                        mainArrayKey: d.key()
+                    })
+                    .then(addTo)
+                    .then(commandSuccess)
+                    .catch(standardError);
+            }
+
+
+            function removeUserRecord(key) {
+
+                return userNestedRecord(key)
+                    .then(removeResult)
+                    .then(commandSuccess)
+                    .catch(standardError);
+            }
+
+
+            /*********************************/
+
+            /*
+             * Complex Methods */
+
+
+            //still needs more tests
+            function createWithUserAndGeo(data, loc) {
+
+                /* 1.) adds main array record
+                 * 2.) adds user nested record,
+                 * 3.) adds records to main location array for each location
+                 * 4.) adds coordinates to geofire(key used is mainLocation key)
+                 * 5.) updates main array record by adding nested locations array with mainLocation keys
+                 */
+
+                return qAll(createMainRecord(data, true, true), loc)
+                    .then(trackLocationAndAddUserRec)
+                    .then(addNestedLocations)
                     .catch(standardError);
 
+                function trackLocationAndAddUserRec(res) {
+                    return self._q.all([trackLocations(res[1], res[0].key()),
+                        createUserRecord(res[0]), qWrap(res[0])
+                    ]);
+                }
+
+                function addNestedLocations(res) {
+                    return self._q.all(res[0].map(function(loc) {
+                        return createNestedLocationRecord(res[2].key(), loc[1].key());
+                    }));
+
+                }
+
+            }
+
+            function createUserAndMain(data, geoFlag) {
+                return createMainRecord(data, geoFlag, true)
+                    .then(createUserRecord)
+                    .catch(standardError);
             }
 
             function trackLocations(data, key) {
@@ -548,114 +566,8 @@
                 // }
             }
 
-            function getIndex(arr, key) {
-                return qAll(arr, key)
-                    .then(completeAction)
-                    .catch(standardError);
 
-                function completeAction(res) {
-                    return res[0].indexFor(res[1]);
-                }
-            }
-
-
-            /******************
-             * User Record Interface
-             * *****************/
-
-            //TODO this needs to have option for saving as index
-
-            function loadUserRecords() {
-                return userNestedArray()
-                    .then(loadResult)
-                    .catch(standardError);
-            }
-
-            function loadUserRecord(id) {
-                return userNestedRecord(id)
-                    .then(loadResult)
-                    .catch(standardError);
-            }
-
-            function loadMainFromUser(rec) {
-                return mainArray()
-                    .then(completeAction)
-                    .catch(standardError);
-
-                function completeAction(res) {
-                    return res.getRecord(rec.mainArrayKey);
-                }
-            }
-
-            function session() {
-                return self._sessionStorage;
-            }
-
-            function sessionId() {
-                return self._sessionStorage[self._sessionIdMethod]();
-            }
-
-            /* save to user nested array 
-             * TODO add option so just saving an index
-             * @param{Object} data to save to user array - just saving key for now
-             *@return{Promise(fireBaseRef)}
-             */
-
-            function createUserRecord(d) {
-                return qAll(userNestedArray(), {
-                        mainArrayKey: d.key()
-                    })
-                    .then(addTo)
-                    .then(commandSuccess)
-                    .catch(standardError);
-            }
-
-            function createUserAndMain(data, geoFlag) {
-                return createMainRecord(data, geoFlag, true)
-                    .then(createUserRecord)
-                    .catch(standardError);
-            }
-
-            function removeUserRecord(key) {
-
-                return userNestedRecord(key)
-                    .then(removeResult)
-                    .then(commandSuccess)
-                    .catch(standardError);
-            }
-
-            /*Combo Methods*/
-
-            /* 1.) adds main array record
-             * 2.) adds user nested record,
-             * 3.) adds records to main location array for each location
-             * 4.) adds coordinates to geofire(key used is mainLocation key)
-             * 5.) updates main array record by adding nested locations array with mainLocation keys
-             */
-
-            //still needs more tests
-            function createWithUserAndGeo(data, loc) {
-
-                return qAll(createMainRecord(data, true, true), loc)
-                    .then(trackLocationAndAddUserRec)
-                    .then(addNestedLocations)
-                    .catch(standardError);
-
-                function trackLocationAndAddUserRec(res) {
-                    return self._q.all([trackLocations(res[1], res[0].key()),
-                        createUserRecord(res[0]), qWrap(res[0])
-                    ]);
-                }
-
-                function addNestedLocations(res) {
-                    return self._q.all(res[0].map(function(loc) {
-                        return createNestedLocationRecord(res[2].key(), loc[1].key());
-                    }));
-
-                }
-
-            }
-
+            /*********************************/
 
             /* Nested Arrays constructor
              */
@@ -671,13 +583,15 @@
             }
 
             function addNestedArray(obj, arr) {
-                var arrName, recName, addRec, removeRec, loadRec, loadRecs, newProp;
+                var arrName, recName, addRec, getRec, removeRec, loadRec, loadRecs, saveRec, saveRecs, newProp;
                 arrName = self._inflector.pluralize(arr);
                 recName = self._inflector.singularize(arr);
                 addRec = "add" + self._inflector.camelize(recName, true);
+                getRec = "get" + self._inflector.camelize(recName, true);
                 removeRec = "remove" + self._inflector.camelize(recName, true);
                 loadRec = "load" + self._inflector.camelize(recName, true);
                 loadRecs = "load" + self._inflector.camelize(arrName, true);
+                saveRec = "save" + self._inflector.camelize(recName, true);
                 newProp = {};
 
 
@@ -695,6 +609,14 @@
                         .then(commandSuccess)
                         .catch(standardError);
                 }
+
+                newProp[getRec] = function(mainRecId, key) {
+                    return qAll(newProp[arrName](mainRecId), key)
+                        .then(getRecord)
+                        .then(querySuccess)
+                        .catch(standardError);
+                }
+
                 newProp[removeRec] = function(mainRecId, key) {
                     return newProp[recName](mainRecId, key)
                         .then(removeResult)
@@ -715,43 +637,20 @@
                         .catch(standardError);
                 }
 
+                newProp[saveRec] = function(id, idxOrRec) {
+                    return qAll(newProp[arrName](id), idxOrRec)
+                        .then(saveTo)
+                        .then(commandSuccess)
+                        .catch(standardError);
+                }
+
                 return newProp;
             }
 
+            /*******************************/
 
-            /****************
-             **** Helpers ****/
-
-
-            /** For constructing paths*/
-            function userNestedPath() {
-                return self._firePath([self._userPath, sessionId(), self._path]);
-            }
-
-            function mainLocationsPath() {
-                return self._firePath(self._locationPath);
-            }
-
-            function mainArrayPath() {
-                return self._pathMaster.mainArray();
-            }
-
-            function mainRecordPath(id) {
-                return self._pathMaster.mainRecord(id);
-            }
-
-            function nestedArrayPath(id, name) {
-                return self._pathMaster.nestedArray(id, name);
-            }
-
-            function nestedRecordPath(mainId, name, recId) {
-                return self._pathMaster.nestedRecord(mainId, name, recId);
-            }
-
-            function setCurrentRecord(x) {
-                return getCurrentPath().substring(standardizePath(mainArrayPath()).length);
-
-            }
+            /* FirebaseRef Mngt
+             */
 
             function checkCurrentRef(path, type) {
                 if (angular.isObject(getCurrentRef())) {
@@ -766,16 +665,13 @@
 
 
             function currentRefExists(path, type) {
-                //pathcheck can be path
                 path = standardizePath(path);
                 if (pathEquality(path)) {
                     self._log.info("Reusing currentRef");
-                    //this should still use buildFire
                     return buildFire(type, getCurrentRef(), true);
-                    // return qWrap(getCurrentFirebase());
                 } else if (parentEquality(path)) {
                     self._log.info("Using currentParentRef");
-                    return buildFire(type, getCurrentParentRef(), true);
+                    return timeWrapRef(type, getCurrentParentRef());
                 } else if (isCurrentChild(path)) {
                     self._log.info("Building childRef");
                     return buildFire(type, buildChildRef(path), true);
@@ -818,34 +714,11 @@
 
             }
 
-            function removeSlash(path) {
-                if (path[-1] === "/") {
-                    path = path.substring(0, -1);
-                }
-                if (path[0] === "/") {
-                    path = path.substring(1);
-                }
-                return path;
-            }
-
-            function stringifyPath(path) {
-                if (Array.isArray(path)) {
-                    path = path.join('/');
-                }
-                return path;
-            }
-
             function standardizePath(path) {
                 path = stringifyPath(path);
                 path = removeSlash(path);
                 return extendRoot(path);
             }
-
-            function stripRoot(path) {
-                return path.substring(getCurrentRef().root().path.length);
-
-            }
-
 
 
             function buildChildRef(path) {
@@ -853,39 +726,97 @@
                 return getCurrentRef().child(newStr);
             }
 
-            function extendRoot(path) {
-                //should check if already fullPath
-                return getCurrentRef().root().path.concat(path);
+
+            /****************
+             **** Helpers ****/
+
+
+            /** For constructing paths*/
+            function userNestedPath() {
+                return self._firePath([self._userPath, sessionId(), self._path]);
             }
 
-            /** upon loading a firebase **/
-
-            function loadResult(res) {
-                return res.loaded();
+            function mainLocationsPath() {
+                return self._firePath(self._locationPath);
             }
 
-            //assume using qAll method below
+            function mainArrayPath() {
+                return self._pathMaster.mainArray();
+            }
+
+            function mainRecordPath(id) {
+                return self._pathMaster.mainRecord(id);
+            }
+
+            function nestedArrayPath(id, name) {
+                return self._pathMaster.nestedArray(id, name);
+            }
+
+            function nestedRecordPath(mainId, name, recId) {
+                return self._pathMaster.nestedRecord(mainId, name, recId);
+            }
+
+            //unused/untested
+            function setCurrentRecord(x) {
+                return getCurrentPath().substring(standardizePath(mainArrayPath()).length);
+
+            }
+
+
+            /* 
+             * For processing request once
+             * firebaseArray|Object is accessible*/
+
+
+            /* @param{Array}[firebaseArray,data object or query params]
+             *@return{Promise(firebaseRef)}
+             */
 
             function addTo(res) {
                 return res[0].add(res[1]);
             }
 
             function removeFrom(res) {
-                self._log.info(res[0].ref());
                 return res[0].remove(res[1]);
             }
 
-            function getIn(res) {
-                return res[0].get(res[1]);
+            function saveTo(res) {
+                return res[0].save(res[1]);
             }
 
 
-						//same methods as above for firebaseObjects
+            function getRecord(res) {
+                // self._log.info(res[0].ref()['data']);
+                // self._log.info(res[0].ref().parent().parent()['data']);
+                // self._log.info(res[0].ref().parent().parent().path);
+                return res[0].getRecord(res[1]);
+            }
+
+            /* @param{fireBaseObject|firebaseArray}
+             * @return{Promise(firebaseRef)}
+             */
+
+
+            function loadResult(res) {
+                return res.loaded();
+            }
+
+
+            /* @param{fireBaseObject}
+             * @return{Promise(firebaseRef)}
+             */
 
             function removeResult(res) {
-                // self._log.info(res);
                 return res.remove();
             }
+
+            function saveResult(res) {
+                return res.save();
+            }
+
+
+
+            /*******************************/
 
 
             function commandSuccess(res) {
@@ -896,8 +827,25 @@
 
             function querySuccess(res) {
                 self._log.info('query success');
-                setCurrentRef(res.$ref());
+                // self._log.info(res);
+                setCurrentRef(res);
                 return res;
+            }
+
+
+            /**misc*/
+
+            function timeWrapRef(type, obj) {
+                return self._timeout(function() {
+                        return obj;
+                    })
+                    .then(sendRefAndBuild)
+                    .catch(standardError);
+
+                function sendRefAndBuild(res) {
+                    self._log.info("notifying angular");
+                    return buildFire(type, res, true);
+                }
             }
 
             function qWrap(obj) {
@@ -926,6 +874,32 @@
 
             function standardError(err) {
                 return self._q.reject(err);
+            }
+
+            function removeSlash(path) {
+                if (path[-1] === "/") {
+                    path = path.substring(0, -1);
+                }
+                if (path[0] === "/") {
+                    path = path.substring(1);
+                }
+                return path;
+            }
+
+            function stringifyPath(path) {
+                if (Array.isArray(path)) {
+                    path = path.join('/');
+                }
+                return path;
+            }
+
+            function extendRoot(path) {
+                //should check if already fullPath
+                return getCurrentRef().root().path.concat(path);
+            }
+
+            function stripRoot(path) {
+                return path.substring(getCurrentRef().root().path.length);
             }
 
 
