@@ -2,7 +2,7 @@
     "use strict";
 
     describe("FirePath factory", function() {
-        var path, session, options, userId, spy, options, firePath, $rootScope, rootPath, $q, $log, $injector;
+        var path, fuel, utils, fireEntity, session, test, options, userId, spy, options, firePath, $rootScope, rootPath, $q, $log, $injector;
 
         beforeEach(function() {
             angular.module("fireStarter.services")
@@ -15,7 +15,9 @@
                     }
                 });
             module("fireStarter.services");
-            inject(function(_firePath_, _$rootScope_, _$q_, _$log_, _$injector_) {
+            inject(function(_fireEntity_, _utils_, _firePath_, _$rootScope_, _$q_, _$log_, _$injector_) {
+                utils = _utils_;
+                fireEntity = _fireEntity_;
                 $rootScope = _$rootScope_;
                 $injector = _$injector_;
                 firePath = _firePath_;
@@ -23,15 +25,16 @@
                 $log = _$log_;
             });
             rootPath = "https://your-firebase.firebaseio.com/";
-						options = {
-							sessionAccess: true,
-							geofire: true,
-							sessionLocation: "session",
-							sessionIdMethod: "getId",
-							locationName: "locations",
-							geofireName: "geofire"
-						};
+            options = {
+                sessionAccess: true,
+                geofire: true,
+                sessionLocation: "session",
+                sessionIdMethod: "getId",
+                locationName: "locations",
+                geofireName: "geofire"
+            };
             path = firePath("trips", options);
+            fuel = fireEntity("trips");
         });
         afterEach(function() {
             path = null;
@@ -63,11 +66,11 @@
             ["makeNestedRef", "trips/1/hotels/5/rooms/100", "1/hotels/5/rooms", "100"],
             ["makeNestedRef", "trips/1/hotels/5/rooms/100", [1, 'hotels', 5, 'rooms'], "100"],
             ["userNestedArray", "users/1/trips"],
-            ["userNestedRecord","users/1/trips/5","5"],
+            ["userNestedRecord", "users/1/trips/5", "5"],
             ["geofireArray", "geofire/trips"],
-            ["geofireRecord","geofire/trips/5","5"],
+            ["geofireRecord", "geofire/trips/5", "5"],
             ["mainLocationsArray", "locations/trips"],
-            ["mainLocationsRecord","locations/trips/5","5"]
+            ["mainLocationsRecord", "locations/trips/5", "5"]
         ];
 
         function testPaths(y) {
@@ -95,8 +98,8 @@
             });
         });
 
-        describe("session", function() {
-            describe("Invalid options", function() {
+        describe("Invalid options", function() {
+            describe("session", function() {
                 it("should throw error if no sessionLocation is present", function() {
                     expect(function() {
                         options = {
@@ -121,6 +124,41 @@
             });
 
         });
+
+        var currentPaths = [
+            ["currentRecord", "100"],
+            ["currentParentNode", "rooms"],
+            ["currentNode", "1000"],
+            ["currentNestedArray", "hotels"],
+            ["currentNestedRecord", "5"],
+            ["currentDepth", 6],
+            ["nodeIdx", 4, "rooms"],
+        ];
+
+        function testCurrentPath(y) {
+            describe(y[0], function() {
+                beforeEach(function() {
+                    this.relativePath = "trips/100/hotels/5/rooms/1000";
+                    this.fullPath = rootPath + this.relativePath;
+                });
+
+                it("should not work if pass a relative string ", function() {
+                    expect(function() {
+                        path[y[0]](this.relativePath);
+                    }).toThrow();
+                });
+                it("should not work if pass array", function() {
+                    expect(function() {
+                        path[y[0]](this.relativePath.split('/'));
+                    }).toThrow();
+                });
+                it("should return correct value", function() {
+                    expect(path[y[0]](this.fullPath, y[2])).toEqual(y[1]);
+                });
+            });
+        }
+        currentPaths.forEach(testCurrentPath);
+
     });
 
 

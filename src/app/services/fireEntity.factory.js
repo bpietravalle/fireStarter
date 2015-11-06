@@ -71,7 +71,7 @@
                 this._pathOptions.sessionIdMethod = this._sessionIdMethod;
             }
         }
-        this._pathMaster = this._firePath(this._path, this._pathOptions);
+        this._pathMaster = this._firePath(this._path, this._pathOptions, this._entity);
     };
 
 
@@ -627,6 +627,7 @@
                 }
 
                 newProp[getRec] = function(mainRecId, key) {
+	 
                     return qAll(newProp[arrName](mainRecId), key)
                         .then(getRecord)
                         .then(querySuccess)
@@ -680,7 +681,6 @@
             }
 
 
-
             function currentRefExists(path, type) {
                 var str;
                 str = path.toString();
@@ -698,7 +698,6 @@
                     return buildFire(type, path, true);
                 }
             }
-
 
             //if new path === currentPath
             function pathEquality(path) {
@@ -720,8 +719,6 @@
             function isCurrentChild(path) {
                 var pathSub;
                 pathSub = path.substring(0, getCurrentPath().length);
-                self._log.info('pathSub');
-                self._log.info(pathSub);
                 if (path.length > getCurrentPath().length) {
                     return pathSub === getCurrentPath();
                 } else {
@@ -729,7 +726,6 @@
                 }
 
             }
-
 
             function buildChildRef(path) {
                 var newStr = removeSlash(path.slice(getCurrentPath().length));
@@ -772,8 +768,8 @@
 
 
             function getRecord(res) {
-							self._log.info(res[0].ref()['data']);
-							self._log.info(res[1]);
+                // self._log.info(res[0].ref()['data']);
+                // self._log.info(res[1]);
                 return res[0].getRecord(res[1]);
             }
 
@@ -813,7 +809,7 @@
 
             function querySuccess(res) {
                 self._log.info('query success');
-                self._log.info(res);
+                // self._log.info(res);
                 setCurrentRef(res);
                 return res;
             }

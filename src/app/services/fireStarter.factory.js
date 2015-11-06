@@ -67,6 +67,9 @@
                 case "array":
                     return FirebaseArray(fire);
                     break;
+                case "ARRAY":
+                    return returnBaseArray(fire);
+                    break;
                 case "auth":
                     return FirebaseAuth(fire);
                     break;
@@ -74,6 +77,7 @@
                     return Geofire(fire);
                     break;
             }
+
 
             function FirebaseAuth(auth) {
 
@@ -312,7 +316,7 @@
                     return self._firebase.$indexFor(val);
                 }
 
-								//untested
+                //untested
                 function length() {
                     return self._firebase.length;
                 }
@@ -326,7 +330,7 @@
                 }
 
                 function ref() {
-									self._log.info(self._firebase);
+                    self._log.info(self._firebase);
                     return self._firebase.$ref();
                 }
 
@@ -415,6 +419,11 @@
                 function watch(cb, context) {
                     return self._firebase.$watch(cb, context);
                 }
+            }
+
+						//untested/unused
+            function returnBaseArray(arr) {
+                return angular.extend(arr, self._fireBase);
             }
 
             function qWrap(obj) {

@@ -77,6 +77,8 @@
                 return $firebaseObject(entity);
             } else if (type === 'array') {
                 return $firebaseArray(entity);
+            } else if (type === 'ARRAY') {
+                return $firebaseArray(entity);
             } else if (type === 'auth') {
                 return $firebaseAuth(entity);
             } else if (type === 'geo') {
