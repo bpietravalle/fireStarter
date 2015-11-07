@@ -2,7 +2,7 @@
     "use strict";
 
     describe("FirePath factory", function() {
-        var path, fuel, ref, utils, fireEntity, session, test, options, userId, spy, options, firePath, $rootScope, rootPath, $q, $log, $injector;
+        var path, $window, fuel, ref, utils, fireEntity, session, test, options, userId, spy, options, firePath, $rootScope, rootPath, $q, $log, $injector;
 
         beforeEach(function() {
             angular.module("fireStarter.services")
@@ -15,8 +15,9 @@
                     }
                 });
             module("fireStarter.services");
-            inject(function(_fireEntity_, _utils_, _firePath_, _$rootScope_, _$q_, _$log_, _$injector_) {
+            inject(function(_fireEntity_, _$window_, _utils_, _firePath_, _$rootScope_, _$q_, _$log_, _$injector_) {
                 utils = _utils_;
+                $window = _$window_;
                 fireEntity = _fireEntity_;
                 $rootScope = _$rootScope_;
                 $injector = _$injector_;
@@ -25,6 +26,7 @@
                 $log = _$log_;
             });
             rootPath = "https://your-firebase.firebaseio.com/";
+            ref = new MockFirebase(rootPath);
             options = {
                 sessionAccess: true,
                 geofire: true,
@@ -33,6 +35,7 @@
                 locationName: "locations",
                 geofireName: "geofire"
             };
+            spyOn($log, "info");
             path = firePath("trips", options);
             fuel = fireEntity("trips");
         });
@@ -107,25 +110,69 @@
                 $rootScope.$digest();
                 $rootScope.$digest();
                 // expect(path.gsetCurrentPath).toHaveBeenCalledWith("data/child");
-                expect(path.getCurrentRef()).toEqual(ref);
+                expect(path.currentRef()).toEqual(ref);
             });
 
         });
         describe("checkPathParams", function() {
-            beforeEach(function() {
-                ref = new MockFirebase(rootPath);;
-                spyOn(path, "setCurrentRef");
-            });
-            describe("without currentRef", function() {
-                it("should create a new ref with correct path", function() {
-                    test = ["trips", "1"];
-                    spyOn(path, "getCurrentRef").and.returnValue(undefined);
-                    path.checkPathParams(test);
-                    expect(path.getCurrentPath()).toEqual(rootPath + "trips/1");
-                    expect(path.getCurrentPath()).toEqual(rootPath + "trips/1");
-                });
 
-            });
+
+            var params = [
+                // current, args, expected path, log call
+                [
+                    null, ["trips", "1"], "trips/1", "setting new firebase node"
+                ],
+
+                [
+                    "trips/1", ["trips"], "trips", "Using currentParentRef"
+                ],
+                [
+                    "trips/1", ["trips", "1", "hotels", "5", "rooms"], "trips/1/hotels/5/rooms", "Building childRef"
+                ],
+                [
+                    "trips/1", ["geofire", "trips", "1"], "geofire/trips/1", "Setting new firebase node"
+                ],
+                [
+                    "trips/1", ["trips", "1"], "trips/1", "Reusing currentRef"
+                ],
+            ];
+
+            function checkPathTests(y) {
+                describe("when currentPath is: " + y[0], function() {
+                    beforeEach(function() {
+                        if (angular.isString(y[0])) {
+                            ref = ref.child(y[0]);
+                            path.setCurrentRef(ref);
+                            $rootScope.$digest();
+                        }
+                    });
+                    if (y[0] === null) {
+                        it("should have undefined currentRef beforehand", function() {
+                            expect(path.currentRef()).not.toBeDefined();
+                        });
+                    } else {
+                        it("should have a defined currentRef() beforehand", function() {
+                            expect(path.currentRef()).toBeDefined();
+                            expect(path.currentPath()).toEqual(rootPath + y[0]);
+                        });
+
+                    }
+
+                    it("should set currentPath to: " + y[2], function() {
+                        path.checkPathParams(y[1]);
+                        $rootScope.$digest();
+                        expect(path.currentPath()).toEqual(rootPath + y[2]);
+                    });
+
+                    it("call $log info with: " + y[3], function() {
+                        path.checkPathParams(y[1]);
+                        $rootScope.$digest();
+                        // logCheck(null,true);
+                        logContains(y[3], true);
+                    });
+                });
+            }
+            params.forEach(checkPathTests);
         });
         describe("Invalid options", function() {
             describe("session", function() {
@@ -161,7 +208,7 @@
             ["currentNestedArray", "hotels"],
             ["currentNestedRecord", "5"],
             ["currentDepth", 6],
-            ["nodeIdx", 4, "rooms"],
+            ["currentNodeIdx", 4, "rooms"],
         ];
 
         function testCurrentPath(y) {
@@ -169,25 +216,44 @@
                 beforeEach(function() {
                     this.relativePath = "trips/100/hotels/5/rooms/1000";
                     this.fullPath = rootPath + this.relativePath;
+                    ref = ref.child(this.relativePath);
+                    path.setCurrentRef(ref);
+                    $rootScope.$digest();
                 });
 
-                it("should not work if pass a relative string ", function() {
-                    expect(function() {
-                        path[y[0]](this.relativePath);
-                    }).toThrow();
-                });
-                it("should not work if pass array", function() {
-                    expect(function() {
-                        path[y[0]](this.relativePath.split('/'));
-                    }).toThrow();
-                });
                 it("should return correct value", function() {
-                    expect(path[y[0]](this.fullPath, y[2])).toEqual(y[1]);
+                    expect(path[y[0]](y[2])).toEqual(y[1]);
                 });
+
+
+
             });
         }
         currentPaths.forEach(testCurrentPath);
 
+        function logCheck(x, flag) {
+            if (flag === true) {
+                return expect($log.info.calls.allArgs()).toEqual(x);
+            } else {
+                it("should log:" + x, function() {
+                    expect($log.info.calls.allArgs()).toEqual(x);
+                });
+            }
+        }
+
+        function logContains(message, flag) {
+            var logArray = $log.info.calls.allArgs();
+            var flatLog = logArray.reduce(function(x, y) {
+                return x.concat(y);
+            }, []);
+            if (flag === true) {
+                return expect(flatLog.indexOf(message)).toBeGreaterThan(-1);
+            } else {
+                it("should call $log.info with " + message, function() {
+                    expect(flatLog.indexOf(message)).toBeGreaterThan(-1);
+                });
+            }
+        }
     });
 
 

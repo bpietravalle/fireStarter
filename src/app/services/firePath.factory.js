@@ -81,7 +81,7 @@
             fire.currentRecord = currentRecord;
             fire.currentNestedArray = currentNestedArray;
             fire.currentNestedRecord = currentNestedRecord;
-            fire.nodeIdx = nodeIdx;
+            fire.currentNodeIdx = currentNodeIdx;
             fire.checkPathParams = checkPathParams;
             fire._pathHistory = [];
             fire.currentRef = getCurrentRef;
@@ -91,8 +91,7 @@
             fire.pathHistory = getPathHistory;
             fire.currentDepth = currentDepth;
             fire.setChild = setChild;
-            fire.setCurrentRef = setCurrentRef;
-            fire.getCurrentRef = getCurrentRef;
+            fire.setCurrentRef = setCurrentRef; //make private
             fire.inspect = inspect;
 
             if (self._sessionAccess === true) {
@@ -164,7 +163,7 @@
                 return setChild(mainLocationRecordPath(id));
             }
 
-            /******* Paths **************/
+            /******* Paths ******************************/
 
             function rootPath() {
                 return removeSlash(self._rootPath);
@@ -218,37 +217,60 @@
                 return self._sessionStorage[self._sessionIdMethod]();
             }
 
-            function currentParentNode(path) {
+
+
+            function currentNode() {
+                currentPathCheck();
+                var path = getCurrentPath();
+                return relativePathArray(path)[relativePathArray(path).length - 1];
+            }
+
+            function currentRecord() {
+                currentPathCheck();
+                var path = getCurrentPath();
+                return relativePathArray(path)[1];
+            }
+
+            function currentParentNode() {
+                currentPathCheck();
+                var path = getCurrentPath();
                 return relativePathArray(path)[relativePathArray(path).length - 2];
             }
 
-            function currentDepth(path) {
+            function currentDepth() {
+                currentPathCheck();
+                var path = getCurrentPath();
                 return relativePathArray(path).length;
             }
 
-            function currentNestedArray(path) {
+            function currentNestedArray() {
+                currentPathCheck();
+                var path = getCurrentPath();
                 return relativePathArray(path)[2];
             }
 
-            function currentNestedRecord(path) {
+            function currentNestedRecord() {
+                currentPathCheck();
+                var path = getCurrentPath();
                 return relativePathArray(path)[3];
             }
 
-            function currentNode(path) {
-                return relativePathArray(path)[relativePathArray(path).length - 1];
-            }
+						function currentNodeIdx(str){
+                currentPathCheck();
+                var path = getCurrentPath();
+                return nodeIdx(path, str);
+						}
 
             function pathLength(path) {
                 return fullPath(path).length;
             }
 
-            function currentRecord(path) {
-                return relativePathArray(path)[1];
+            function currentPathCheck() {
+                if (!getCurrentPath()) {
+                    throw new Error("You must define a current firebaseRef and path first");
+                }
             }
 
-            function relativePath(path) {
-                return fullPath(path).slice(pathLength(rootPath()));
-            }
 
             function relativePathArray(str) {
                 if (str.search(rootPath()) < 0) {
@@ -263,29 +285,29 @@
 
             function checkPathParams(path) {
                 var ref, str = fullPath(path);
-                switch (fire.getCurrentRef()) {
+                switch (getCurrentRef()) {
                     case undefined:
                         self._log.info("setting new firebase node");
-                        ref = setChild(relativePath(path));
+                        ref = fire.setChild(relativePath(path));
                         break;
                     default:
                         switch (str) {
-                            case pathEquality(str):
+                            case getCurrentPath():
                                 self._log.info("Reusing currentRef");
                                 ref = getCurrentRef();
                                 break;
-                            case parentEquality(str):
+                            case getCurrentParentPath():
                                 self._log.info("Using currentParentRef");
                                 ref = getCurrentParentRef();
                                 break;
-                            case isCurrentChild(str):
-                                self._log.info("Building childRef");
-                                ref = buildChildRef(str);
-                                break;
                             default:
-                                self._log.info("setting new firebase node");
-                                ref = setChild(relativePath(path));
-                                break;
+                                if (isCurrentChild(str)) {
+                                    self._log.info("Building childRef");
+                                    ref = buildChildRef(str);
+                                } else {
+                                    self._log.info("Setting new firebase node");
+                                    ref = setChild(relativePath(path));
+                                }
                         }
                 }
 
@@ -300,24 +322,6 @@
                 return relativePathArray(path).indexOf(str);
             }
 
-            //if new path === currentPath
-
-            function pathEquality(path) {
-                self._log.info('path arg');
-                self._log.info(path);
-                self._log.info('current path');
-                self._log.info(getCurrentPath());
-                return path === getCurrentPath();
-            }
-
-
-            //if new path === parent of currentRef
-            function parentEquality(path) {
-                self._log.info('current parent path');
-                self._log.info(getCurrentParentRef().path);
-                return path === getCurrentParentRef().path;
-            }
-
             function isCurrentChild(path) {
                 var pathSub;
                 pathSub = path.substring(0, getCurrentPath().length);
@@ -329,11 +333,13 @@
             }
 
             function buildChildRef(path) {
-                return getCurrentRef().child(path.slice(getCurrentPath()));
+                return getCurrentRef().child(path.slice(getCurrentPath().length));
             }
 
             function getCurrentPath() {
-                return getCurrentRef().path;
+                if (getCurrentRef()) {
+                    return getCurrentRef().toString();
+                }
             }
 
             function getCurrentRef() {
@@ -345,9 +351,10 @@
             }
 
             function getCurrentParentPath() {
-                return getCurrentParentRef().path;
+                if (getCurrentParentRef()) {
+                    return getCurrentParentRef().toString();
+                }
             }
-
 
             function setCurrentRef(ref) {
                 var path;
@@ -357,7 +364,7 @@
 
                 function checkArray(ref) {
                     if (Array.isArray(ref)) {
-                        return self._q.wrap(ref[0])
+                        return self._q.when(ref[0])
                             .catch(function() {
                                 self._q.reject(("firebaseRef must be first item in the array"));
                             });
@@ -367,7 +374,6 @@
                 }
 
                 function checkRefAndSet(res) {
-                    self._log.info(res);
                     return self._q.when(res.path)
                         .then(setPathAndRef)
                         .catch(function() {
@@ -415,8 +421,12 @@
                 return self._utils.stringify(arr);
             }
 
+            function relativePath(path) {
+                return stringify(arrayify(removeSlash(path)))
+            }
+
             function fullPath(path) {
-                return rootPath() + stringify(arrayify(removeSlash(path)));
+                return rootPath() + relativePath(path);
             }
 
             function removeSlash(path) {
