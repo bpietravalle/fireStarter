@@ -2,7 +2,7 @@
     "use strict";
 
     describe("FirePath factory", function() {
-        var path, fuel, utils, fireEntity, session, test, options, userId, spy, options, firePath, $rootScope, rootPath, $q, $log, $injector;
+        var path, fuel, ref, utils, fireEntity, session, test, options, userId, spy, options, firePath, $rootScope, rootPath, $q, $log, $injector;
 
         beforeEach(function() {
             angular.module("fireStarter.services")
@@ -98,6 +98,35 @@
             });
         });
 
+        describe("setCurrentRef", function() {
+            beforeEach(function() {
+                ref = new MockFirebase("data").child("child");
+            });
+            it("should set ref if passed a firebaseRef", function() {
+                path.setCurrentRef(ref);
+                $rootScope.$digest();
+                $rootScope.$digest();
+                // expect(path.gsetCurrentPath).toHaveBeenCalledWith("data/child");
+                expect(path.getCurrentRef()).toEqual(ref);
+            });
+
+        });
+        describe("checkPathParams", function() {
+            beforeEach(function() {
+                ref = new MockFirebase(rootPath);;
+                spyOn(path, "setCurrentRef");
+            });
+            describe("without currentRef", function() {
+                it("should create a new ref with correct path", function() {
+                    test = ["trips", "1"];
+                    spyOn(path, "getCurrentRef").and.returnValue(undefined);
+                    path.checkPathParams(test);
+                    expect(path.getCurrentPath()).toEqual(rootPath + "trips/1");
+                    expect(path.getCurrentPath()).toEqual(rootPath + "trips/1");
+                });
+
+            });
+        });
         describe("Invalid options", function() {
             describe("session", function() {
                 it("should throw error if no sessionLocation is present", function() {

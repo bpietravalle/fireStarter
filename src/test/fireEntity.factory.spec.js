@@ -87,7 +87,6 @@
             describe("currentFirebase", function() {
                 it("should be undefined on intialization", function() {
                     expect(subject.currentBase()).toBeUndefined();
-                    // expect(subject.inspect()).toBeUndefined();
                 });
                 it("should be defined after executing a method and digest cycle rotates", function() {
                     expect(subject.currentBase()).toBeUndefined();

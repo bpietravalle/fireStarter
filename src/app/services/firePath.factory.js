@@ -82,7 +82,6 @@
             fire.currentNestedArray = currentNestedArray;
             fire.currentNestedRecord = currentNestedRecord;
             fire.nodeIdx = nodeIdx;
-            fire.inspect = inspect;
             fire.checkPathParams = checkPathParams;
             fire._pathHistory = [];
             fire.currentRef = getCurrentRef;
@@ -91,6 +90,10 @@
             fire.currentParentPath = getCurrentParentPath;
             fire.pathHistory = getPathHistory;
             fire.currentDepth = currentDepth;
+            fire.setChild = setChild;
+            fire.setCurrentRef = setCurrentRef;
+            fire.getCurrentRef = getCurrentRef;
+            fire.inspect = inspect;
 
             if (self._sessionAccess === true) {
                 fire.userNestedArray = userNestedArray;
@@ -161,7 +164,7 @@
                 return setChild(mainLocationRecordPath(id));
             }
 
-            /******* Paths ******************/
+            /******* Paths **************/
 
             function rootPath() {
                 return removeSlash(self._rootPath);
@@ -259,34 +262,34 @@
              */
 
             function checkPathParams(path) {
-                var str = fullPath(path);
-                switch (getCurrentRef()) {
-                    case false:
+                var ref, str = fullPath(path);
+                switch (fire.getCurrentRef()) {
+                    case undefined:
                         self._log.info("setting new firebase node");
-                        setCurrentRef(relativePath(path));
+                        ref = setChild(relativePath(path));
                         break;
-                    case true:
+                    default:
                         switch (str) {
                             case pathEquality(str):
                                 self._log.info("Reusing currentRef");
-                                getCurrentRef();
+                                ref = getCurrentRef();
                                 break;
                             case parentEquality(str):
                                 self._log.info("Using currentParentRef");
-                                getCurrentParentRef();
+                                ref = getCurrentParentRef();
                                 break;
                             case isCurrentChild(str):
                                 self._log.info("Building childRef");
-                                setCurrentRef(buildChildRef(str));
+                                ref = buildChildRef(str);
                                 break;
                             default:
                                 self._log.info("setting new firebase node");
-                                setCurrentRef(relativePath(path));
+                                ref = setChild(relativePath(path));
                                 break;
                         }
                 }
 
-                return setChild(getCurrentRef());
+                return setCurrentRef(ref);
             }
 
             /**current path
@@ -330,7 +333,7 @@
             }
 
             function getCurrentPath() {
-                return fire._currentRef.path;
+                return getCurrentRef().path;
             }
 
             function getCurrentRef() {
@@ -348,15 +351,13 @@
 
             function setCurrentRef(ref) {
                 var path;
-
-                return checkArray()
+                return checkArray(ref)
                     .then(checkRefAndSet)
                     .catch(standardError);
 
                 function checkArray(ref) {
-
                     if (Array.isArray(ref)) {
-                        return self._q.wrap(ref[0].ref())
+                        return self._q.wrap(ref[0])
                             .catch(function() {
                                 self._q.reject(("firebaseRef must be first item in the array"));
                             });
@@ -366,6 +367,7 @@
                 }
 
                 function checkRefAndSet(res) {
+                    self._log.info(res);
                     return self._q.when(res.path)
                         .then(setPathAndRef)
                         .catch(function() {
@@ -391,6 +393,10 @@
 
             function setPathHistory(path) {
                 fire._pathHistory.push(path);
+            }
+
+            function standardError(err) {
+                return self._utils.standardError(err);
             }
 
             function getPathHistory() {

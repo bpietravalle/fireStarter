@@ -11,13 +11,39 @@
             flatten: flatten,
             extendPath: extendPath,
             arrayify: arrayify,
-            stringify: stringify
+            stringify: stringify,
+            qWrap: qWrap,
+            qAll: qAll,
+            standardError: standardError,
+            qAllResult: qAllResult,
 
 
 
         };
 
         return utils;
+
+        function qWrap(obj) {
+            return $q.when(obj);
+        }
+
+        function qAll(x, y) {
+            return $q.all([x, qWrap(y)]);
+        }
+
+        function qAllResult(res) {
+            if (res.length) {
+                $log.info("flattening results");
+                return flatten(res);
+            } else {
+                return res;
+            }
+        }
+
+
+        function standardError(err) {
+            return $q.reject(err);
+        }
 
         function removeSlash(path) {
             if (path[-1] === "/") {
@@ -56,12 +82,6 @@
             //should be able to get rid of flatten
             return flatten(arr);
         }
-
-
-
-
-
-
 
     }
 

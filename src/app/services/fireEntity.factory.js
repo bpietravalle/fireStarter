@@ -7,16 +7,17 @@
         .factory("fireEntity", FireEntityFactory);
 
     /** @ngInject */
-    function FireEntityFactory($timeout, fireStarter, firePath, $q, $log, inflector, $injector) {
+    function FireEntityFactory(utils, $timeout, fireStarter, firePath, $q, $log, inflector, $injector) {
 
         return function(path, options) {
-            var fb = new FireEntity($timeout, fireStarter, firePath, $q, $log, inflector, $injector, path, options);
+            var fb = new FireEntity(utils, $timeout, fireStarter, firePath, $q, $log, inflector, $injector, path, options);
             return fb.construct();
         };
 
     }
 
-    FireEntity = function($timeout, fireStarter, firePath, $q, $log, inflector, $injector, path, options) {
+    FireEntity = function(utils, $timeout, fireStarter, firePath, $q, $log, inflector, $injector, path, options) {
+        this._utils = utils;
         this._timeout = $timeout;
         this._fireStarter = fireStarter;
         this._firePath = firePath;
@@ -627,7 +628,7 @@
                 }
 
                 newProp[getRec] = function(mainRecId, key) {
-	 
+
                     return qAll(newProp[arrName](mainRecId), key)
                         .then(getRecord)
                         .then(querySuccess)
@@ -831,48 +832,32 @@
             }
 
             function qWrap(obj) {
-                return self._q.when(obj);
+                return self._utils.qWrap(obj);
             }
 
             function qAll(x, y) {
-                return self._q.all([x, qWrap(y)]);
+                return self._utils.qAll(x,y);
             }
 
             function qAllResult(res) {
-                if (res.length) {
-                    self._log.info("flattening results");
-                    return flatten(res);
-                } else {
-                    return res;
-                }
+							return self._utils.qAllResult(res);
             }
 
             function flatten(arr) {
-                var flatResults = arr.reduce(function(x, y) {
-                    return x.concat(y);
-                }, []);
-                return flatResults;
+							return self._utils.flatten(arr);
             }
 
             function standardError(err) {
-                return self._q.reject(err);
+                return self._utils.standardError(err);
             }
 
             function removeSlash(path) {
-                if (path[-1] === "/") {
-                    path = path.substring(0, -1);
-                }
-                if (path[0] === "/") {
-                    path = path.substring(1);
-                }
-                return path;
+							return self._utils.removeSlash(path);
+
             }
 
             function stringifyPath(path) {
-                if (Array.isArray(path)) {
-                    path = path.join('/');
-                }
-                return path;
+							return self._utils.stringifyPath(path);
             }
 
 
