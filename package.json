@@ -1,9 +1,15 @@
 {
     "name": "fireStarter",
+    "author": {
+        "name": "Brian Pietravalle",
+        "email": "bpietravalle@gmail.com"
+    },
     "version": "0.0.1",
     "license": "MIT",
-    "description": "experimental wrapper for firebase",
+    "description": "experimental wrapper for angularfire and geofire",
+    "keywords": ["firebase", "geofire", "angularfire"],
     "dependencies": {},
+    "files": ["dist/scripts"],
     "repository": {
         "type": "git",
         "url": "https://github.com/bpietravalle/fireStarter.git"
