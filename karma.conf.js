@@ -16,8 +16,8 @@ function listFiles() {
         .concat([
             path.join(conf.paths.src, '/app/**/*.module.js'),
             path.join(conf.paths.src, '/app/**/*.js'),
-            path.join(conf.paths.src, 'index.constants.js'),
             path.join(conf.paths.src, '/test/**/*.js'),
+            path.join(conf.paths.src, '/testutils/*.js'),
             path.join(conf.paths.src, '/**/*.spec.js'),
             path.join(conf.paths.src, '/**/*.mock.js'),
             path.join(conf.paths.src, '/**/*.html')
@@ -36,7 +36,7 @@ module.exports = function(config) {
 
         colors: true,
 
-        frameworks: ['jasmine', 'jasmine-matchers', 'sinon', 'angular-filesort'],
+        frameworks: ['jasmine', 'jasmine-matchers', 'angular-filesort'],
 
         angularFilesort: {
             whitelist: [path.join(conf.paths.src, '/**/!(*.html|*.spec|*.mock).js')]
@@ -61,7 +61,6 @@ module.exports = function(config) {
             'karma-nested-reporter',
             'karma-notify-reporter',
             'karma-jasmine-matchers',
-						'karma-sinon',
             'karma-jasmine',
             'karma-ng-html2js-preprocessor'
         ],

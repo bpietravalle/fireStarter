@@ -1,19 +1,20 @@
 (function() {
     "use strict";
     describe('fireStarter Factory', function() {
-        var fireStarter, ref, test, test1, $log, baseBuilder, $rootScope, deferred, root, path, $q, $timeout;
+        var fireStarter, ref, test, test1, $log, $rootScope, deferred, root, path, $q, $timeout;
 
 
         beforeEach(function() {
             MockFirebase.override();
-            module('fireStarter.services');
-            inject(function(_fireStarter_, _$log_, _baseBuilder_, _$rootScope_, _$q_, _$timeout_) {
+            angular.module("FireStarter")
+                .constant('FBURL', 'https://your-firebase.firebaseio.com/');
+            module('FireStarter');
+            inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_, _$timeout_) {
                 $log = _$log_;
                 fireStarter = _fireStarter_;
                 $timeout = _$timeout_;
                 $rootScope = _$rootScope_;
                 $q = _$q_;
-                baseBuilder = _baseBuilder_;
                 deferred = $q.defer();
             });
             ref = new MockFirebase("data://");
@@ -22,19 +23,11 @@
         });
         describe("constructor", function() {
             beforeEach(function() {
-                spyOn(baseBuilder, 'init').and.callThrough(); //Fake(function(){
-                // return deferred.promise;
-                // });
                 test = fireStarter("object", path);
             });
             it("should be defined", function() {
-                expect(test.inspect()).toEqual("hello");
                 expect(fireStarter).toBeDefined();
             });
-            it("should resolve the promise", function() {
-                expect(baseBuilder.init.calls.count()).toEqual(1);
-            });
-
         });
 
         var types = [

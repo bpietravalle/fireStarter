@@ -2,109 +2,71 @@
     "use strict";
     var FireStarter;
 
-    angular.module("fireStarter.services")
+    angular.module("FireStarter")
         .factory("fireStarter", FireStarterFactory);
 
     /** @ngInject */
-    function FireStarterFactory($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, baseBuilder, $q, $log) {
+    function FireStarterFactory($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
 
-        return function(type, path, flag, root) {
-            var fb = new FireStarter($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, baseBuilder, $q, $log, type, path, flag, root);
+        return function(type, path, flag, constant) {
+            var fb = new FireStarter($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant);
             return fb.construct();
 
         };
 
     }
 
-    /* constructor for path fireects
-     * @param {Array of strings}
-     * @return Promise($firebase)
-     */
 
-    FireStarter = function($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, baseBuilder, $q, $log, type, path, flag, root) {
+    FireStarter = function($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant) {
         this._injector = $injector;
         this._window = $window;
-				this._firebaseAuth = $firebaseAuth;
-				this._firebaseObject = $firebaseObject;
-				this._firebaseArray = $firebaseArray;
-        this._baseBuilder = baseBuilder;
+        this._firebaseAuth = $firebaseAuth;
+        this._firebaseObject = $firebaseObject;
+        this._firebaseArray = $firebaseArray;
         this._q = $q;
         this._log = $log;
         this._path = path;
         this._type = type;
-        this._flag = flag || false;
-        this._root = root || "FBURL"
+        var typeOptions = ["auth", "array", "object", "geo", "ARRAY", "OBJECT", "AUTH"];
+        if (typeOptions.indexOf(this._type) < 0) {
+            throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'AUTH','OBJECT','ARRAY',or 'geo'");
+        }
+        this._flag = flag || null;
+        if (angular.isObject(this._flag) && this._flag !== true) {
+            throw new Error("Invalid flag: " + this._flag + ". Please enter 'true' if you wish to bypass creating a firebase Reference");
+        }
+        if (Array.isArray(this._path) && angular.isObject(this._flag)) {
+            throw new Error("Invalid flag: " + this._flag + " for path: " + this._path + ".  Please leave flag argument undefined if you wish to create a firebase Reference");
+        }
+        this._constant = constant || "FBURL";
         this._rootPath = rootPath;
-        this._setRoot = setRoot;
+        this._root = getRoot;
+        this._build = build;
+        this._wrap = wrap;
+        this._setRef = setRef;
 
         function rootPath() {
-            return this._injector.get(this._root);
+            return this._injector.get(this._constant);
         }
 
-        function setRoot() {
-            return new this._window.Firebase(this._rootPath);
+        function getRoot() {
+            return new this._window.Firebase(this._rootPath());
         }
 
-        function build(type, path, flag) {
-            return set(type, path, flag);
-        }
-
-        //TODO: checkparams as $q.all
-        //for some reason wasn't working for firebaseAuth tests
-        function set(type, path, flag) {
-            checkParams(type, path, flag)
-            return completeBuild([type, path, flag]);
-        }
-
-        function completeBuild(res) {
-            if (res[0] === 'auth' && !res[1] || res[0] === "AUTH" && !res[1]) {
-                return wrap(res[0], setRoot());
-            } else if (res[2] === true) {
-                return wrap(res[0], res[1]);
+        function build(t, p, f) {
+            if (t === 'auth' && !p || t === "AUTH" && !p) {
+                return this._wrap(t, this._root());
+            } else if (f === true) {
+                return this._wrap(t, p);
             } else {
-                return wrap(res[0], setRef(res[1]));
+                return this._wrap(t, this._setRef(p));
             }
         }
-
-        function checkParams(t, p, f) {
-            checkType(t)
-            checkPath(p, f);
-            checkFlag(f);
-        }
-
-        function checkType(t) {
-            var typeOptions = ["auth", "array", "object", "geo", "ARRAY", "OBJECT", "AUTH"];
-            if (typeOptions.indexOf(t) < 0) {
-                throw new Error("Invalid type: " + t + ".  Please enter 'auth','object','array', 'AUTH','OBJECT','ARRAY',or 'geo'");
-            }
-        }
-
-        function checkFlag(f) {
-            if (angular.isObject(f) && f !== true) {
-                throw new Error("Invalid flag: " + f + ". Please enter 'true' if you wish to bypass creating a firebase Reference");
-            }
-
-        }
-
-        function checkPath(p, f) {
-
-            if (Array.isArray(p) && isPath(p) && angular.isObject(f)) {
-                throw new Error("Invalid flag: " + f + " for path: " + p + ".  Please leave flag argument null if you wish to create a firebase Reference");
-            }
-
-            function isPath(p) {
-                //TODO: check that each item is a string
-                return true;
-
-            }
-
-        }
-
 
         function setRef() {
             // from angularfire-seed repo
-            var ref = setRoot();
             var args = Array.prototype.slice.call(arguments);
+            var ref = this._root();
             if (args.length) {
                 ref = ref.child(setPath(args));
             }
@@ -126,18 +88,19 @@
             }
             return args.join('/');
         }
-        function wrap(type, entity) {
-            if (type === 'object' || type === 'OBJECT') {
+
+        function wrap(t, entity) {
+            if (t === 'object' || t === 'OBJECT') {
                 return this._firebaseObject(entity);
-            } else if (type === 'array' || type === 'ARRAY') {
+            } else if (t === 'array' || t === 'ARRAY') {
                 return this._firebaseArray(entity);
-            } else if (type === 'auth' || type === 'AUTH') {
+            } else if (t === 'auth' || t === 'AUTH') {
                 return this._firebaseAuth(entity);
-            } else if (type === 'geo') {
+            } else if (t === 'geo') {
                 return new GeoFire(entity);
             }
         }
-        this._firebase = this._baseBuilder.init(this._type, this._path, this._flag);
+        this._firebase = this._build(this._type, this._path, this._flag);
     };
 
 
@@ -147,9 +110,6 @@
             var fire = {};
 
             fire.timestamp = timestamp;
-            fire.inspect= inspect;
-
-
 
             switch (self._type) {
                 case "object":
@@ -343,7 +303,7 @@
                 }
 
 
-                function returnGeoRef(res) {
+                function returnGeoRef() {
                     return qWrap(geofireRef());
                 }
             }
@@ -440,7 +400,7 @@
                 });
 
                 function bindTo(s, v) {
-                    return self._firebase.$bindTo(s, v)
+                    return self._firebase.$bindTo(s, v);
                 }
 
                 function destroy() {
@@ -471,7 +431,7 @@
 
 
                 function save() {
-                    return self._firebase.$save()
+                    return self._firebase.$save();
                 }
 
                 function value(val) {
@@ -513,7 +473,7 @@
 
             //untested/unused
 
-            function returnBase(entity) {
+            function returnBase() {
                 return self._firebase;
             }
 
@@ -525,10 +485,6 @@
                 return self._q.reject(err);
             }
 
-						function inspect(){
-							return self;
-
-						}
             self._fire = fire;
             return self._fire;
         }
