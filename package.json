@@ -1,8 +1,8 @@
 {
-  "name": "fb",
+  "name": "fireStarter",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "angular services for Firebase",
+  "description": "experimental wrapper for firebase",
   "dependencies": {},
   "scripts": {
     "test": "gulp test"

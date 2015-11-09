@@ -2,7 +2,7 @@
     "use strict";
 
     /** @ngInject */
-    function geoObjMockService(geoMngr, $q, fbRef, $timeout) {
+    function geoObjMockService($q, fbRef, $timeout) {
         var DEFAULT_ID = 'REC1';
         var vm = this;
         vm.gfURL = new Firebase("https://geofire.firebaseio.com");
@@ -46,11 +46,9 @@
                 }
             }
         };
-
-        // vm.geoSpy = $q.when(jasmine.createSpyObj("geo", ["ref", "query", "get", "remove"]));
 				
         vm.geoQuerySpy = jasmine.createSpyObj("geoQuery", ["updateCriteria", "center", "radius", "on", "cancel"]);
-        vm.refSpy = jasmine.createSpyObj("ref", ["orderByChild", "child"]);
+        vm.refSpy = jasmine.createSpyObj("ref", ["orderByChild", "$$hashKey"]);
 				vm.geoSpyObj = {
 					query: function(){
 						return vm.geoQuerySpy;

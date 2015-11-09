@@ -47,7 +47,7 @@ module.exports = function(config) {
 
         ngHtml2JsPreprocessor: {
             stripPrefix: 'src/',
-            moduleName: 'fb'
+            moduleName: 'fireStarter'
         },
 
         browsers: ['PhantomJS'],

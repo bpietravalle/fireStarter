@@ -2,6 +2,6 @@
     'use strict';
 
     angular
-        .module('fb', ['fb.services', 'fb.utils', 'firebase','angularGeoFire']);
+        .module('fireStarter', ['fireStarter.services', 'fireStarter.utils', 'firebase']);
 
 })(angular);

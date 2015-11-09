@@ -2,9 +2,11 @@
 (function(angular) {
     "use strict";
 
+    /** @ngInject */
     function fbRefFactory($window, FBURL) {
         var utils = {
             path: setPath,
+            child: setChild,
             root: setRoot,
             ref: setRef
 
@@ -22,10 +24,9 @@
                 if (angular.isArray(args[i])) {
                     args[i] = setPath(args[i]);
                 } else if (typeof args[i] !== 'string') {
-									//TODO: write test for block below
                     try {
-                         args[i] = args[i].toString();
-                    } catch(err) {
+                        args[i] = args[i].toString();
+                    } catch (err) {
                         throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
                     }
                 }
@@ -42,8 +43,13 @@
             return ref;
         }
 
+        function setChild(path) {
+					if(Array.isArray(path)){
+						path = path.join('/');
+					}
+            return setRoot().child(path);
+        }
     }
-    fbRefFactory.$inject = ['$window', 'FBURL'];
 
     angular.module('utils.jsApi')
         .factory('fbRef', fbRefFactory);

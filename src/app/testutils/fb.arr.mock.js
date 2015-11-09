@@ -1,7 +1,7 @@
 (function(angular) {
     "use strict";
 
-    function fbArrMockService(afEntity, $timeout, $firebaseArray) {
+    function fbArrMockService(baseBuilder, $timeout, $firebaseArray) {
 
         this.stubRef = function() {
             return new MockFirebase('Mock://').child('data/REC1');
@@ -10,7 +10,7 @@
             if (!ref) {
                 ref = this.stubRef();
             }
-            var arr = afEntity.wrap("array", ref);
+            var arr = baseBuilder.wrap("array", ref);
             if (initialData) {
                 ref.set(initialData);
                 ref.flush();
@@ -19,7 +19,7 @@
             return arr;
         };
         this.refWithPath = function(path) {
-            var mockPath = path.join('/'); //afEntity changes array to string
+            var mockPath = path.join('/'); //baseBuilder changes array to string
             return new MockFirebase('Mock://').child(mockPath);
         };
 
@@ -29,7 +29,7 @@
 				};
         this.nestedMock = function(initialData, path) {
             var ref = new MockFirebase('Mock://').child(path);
-            var arr = afEntity.set("array", ref);
+            var arr = baseBuilder.set("array", ref);
             if (initialData) {
                 ref.set(initialData);
                 ref.flush();
@@ -78,7 +78,7 @@
 
     }
 
-    fbArrMockService.$inject = ['afEntity', '$timeout', '$firebaseArray'];
+    fbArrMockService.$inject = ['baseBuilder', '$timeout', '$firebaseArray'];
     angular.module('fbMocks')
         .service('mockArr', fbArrMockService);
 

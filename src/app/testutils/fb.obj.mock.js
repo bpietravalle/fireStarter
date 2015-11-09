@@ -1,23 +1,29 @@
 (function(angular) {
     "use strict";
 
-    function fbObjMockService(afEntity, $timeout) {
+    function fbObjMockService(baseBuilder, $timeout) {
         var DEFAULT_ID = 'REC1';
 
         this.stubRef = function(){
             return new MockFirebase('Mock://').child('data').child(DEFAULT_ID);
         };
 
-        this.refWithPath = function(path) {
-            var mockPath = path.join('/'); //afEntity changes array to string
-            return new MockFirebase('Mock://').child(mockPath);
+        this.refWithPath = function(path, initialData) {
+            var mockPath = path.join('/'); //baseBuilder changes array to string
+            var ref = new MockFirebase('Mock://').child(mockPath);
+            if (angular.isDefined(initialData)) {
+                ref.ref().set(initialData);
+                ref.flush();
+                $timeout.flush();
+            }
+            return ref;
         };
 
         this.makeObject = function(initialData, ref) {
             if (!ref) {
                 ref = this.stubRef();
             }
-            var obj = afEntity.wrap("object", ref);
+            var obj = baseBuilder.wrap("object", ref);
             if (angular.isDefined(initialData)) {
                 ref.ref().set(initialData);
                 ref.flush();
@@ -26,7 +32,7 @@
             return obj;
         };
     }
-    fbObjMockService.$inject = ['afEntity','$timeout'];
+    fbObjMockService.$inject = ['baseBuilder','$timeout'];
     angular.module('fbMocks')
         .service('mockObj', fbObjMockService);
 

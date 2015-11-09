@@ -1,29 +1,64 @@
 (function() {
     "use strict";
-    describe('afUtils Service', function() {
-        var afEntity, root;
+    describe('baseBuilder Service', function() {
+        var baseBuilder, $rootScope, $log, deferred, root, $q, $timeout;
 
 
         beforeEach(function() {
             MockFirebase.override();
             module('fbMocks');
-						module('fb.constant');
+            module('fb.constant');
             module('utils.afApi');
-            inject(function(_afEntity_, _FBURL_) {
+            inject(function(_baseBuilder_, _$log_, _$rootScope_, _$q_, _$timeout_, _FBURL_) {
+                $timeout = _$timeout_;
+                $log = _$log_;
+                $rootScope = _$rootScope_;
+                $q = _$q_;
                 root = _FBURL_;
-                afEntity = _afEntity_;
+                baseBuilder = _baseBuilder_;
+                deferred = $q.defer();
             });
+            spyOn($log, "info").and.callThrough();
+            spyOn($q, "all").and.callThrough();
+            spyOn($q, "when").and.callThrough();
         });
 
+        describe("init", function() {
+            beforeEach(function() {
+                spyOn(deferred, "resolve").and.callThrough();
+                spyOn(deferred, "reject").and.callThrough();
+            });
+            // it("build", function(){
+            // 	this.test = baseBuilder.build("object",["tips"]);
+            // 	$rootScope.$digest();
+            // 	$rootScope.$digest();
+            // 	$timeout.flush();
+            // 	expect(this.test).toBeAPromise();
+            // 	expect(this.test).toEqual(1);
+            // });
+            // it("set", function(){
+            // 	this.test = baseBuilder.set("object",["tips"]);
+            // 	$rootScope.$digest();
+            // 	expect(this.test).toEqual(1);
+            // });
+            // it("should resolve the promise", function(){
+            // 	baseBuilder.build("object",["tips"]);
+            // 	$rootScope.$digest();
+            // 	$timeout.flush();
+            // 	expect(deferred.resolve.calls.count()).toEqual(1);
+            // 	expect(deferred.reject.calls.count()).toEqual(0);
+            // });
+
+        });
 
         describe("objects", function() {
 
             it("should set path when passed an array of strings", function() {
-                var test = afEntity.set("object", ["users", "1"]);
+                var test = baseBuilder.set("object", ["users", "1"]);
                 expect(test.$ref().path).toEqual(root + "users/1");
             });
             it("should set path when passed an array of strings and numbers", function() {
-                var test = afEntity.set("object", ["users", 1, "phones", 304]);
+                var test = baseBuilder.set("object", ["users", 1, "phones", 304]);
                 expect(test.$ref().path).toEqual(root + "users/1/phones/304");
             });
 
@@ -47,7 +82,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = afEntity.set("object", ["users"]);
+                    entity = baseBuilder.set("object", ["users"]);
                     val = y[1];
                     meth = y[0];
                     expect(typeof entity[meth]).toEqual(val);
@@ -72,9 +107,11 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = afEntity.set("array", ["users"]);
+                    entity = baseBuilder.set("array", ["users"]);
                     val = y[1];
                     meth = y[0];
+
+                    $rootScope.$digest();
                     expect(typeof entity[meth]).toEqual(val);
                 });
             }
@@ -101,7 +138,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = afEntity.set();
+                    entity = baseBuilder.set("auth");
                     val = y[1];
                     meth = y[0];
                     expect(typeof entity[meth]).toEqual(val);
