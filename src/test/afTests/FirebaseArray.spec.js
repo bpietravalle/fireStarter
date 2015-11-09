@@ -51,7 +51,9 @@ describe('$firebaseArray', function() {
 
     var arr, $rootScope, $firebaseArray, $utils, $timeout, testutils, fireStarter;
     beforeEach(function() {
-        module('fireStarter.services');
+            angular.module("FireStarter")
+                .constant('FBURL', 'https://your-firebase.firebaseio.com/');
+        module('FireStarter');
         module('firebase');
         module('testutils');
         inject(function(_$firebaseArray_, _$rootScope_, $firebaseUtils, _$timeout_, _testutils_, _fireStarter_) {

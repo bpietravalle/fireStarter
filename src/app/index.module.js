@@ -1,7 +1,7 @@
-(function(angular) {
+(function() {
     'use strict';
 
     angular
-        .module('fireStarter', ['fireStarter.services', 'fireStarter.utils', 'firebase']);
+        .module('FireStarter',["firebase"]);
 
-})(angular);
+})();
