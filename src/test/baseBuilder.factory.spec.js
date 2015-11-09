@@ -1,16 +1,14 @@
 (function() {
     "use strict";
     describe('baseBuilder Service', function() {
-        var baseBuilder, $rootScope, $log, deferred, root, $q, $timeout;
+        var baseBuilder, $rootScope, $window, $log, deferred, root, $q, $timeout;
 
 
         beforeEach(function() {
             MockFirebase.override();
-            module('fbMocks');
-            module('fb.constant');
-            module('utils.afApi');
-            inject(function(_baseBuilder_, _$log_, _$rootScope_, _$q_, _$timeout_, _FBURL_) {
-                $timeout = _$timeout_;
+            module('fireStarter.utils');
+            inject(function(_baseBuilder_, _$window_, _$log_, _$rootScope_, _$q_, _FBURL_) {
+                $window = _$window_;
                 $log = _$log_;
                 $rootScope = _$rootScope_;
                 $q = _$q_;
@@ -54,11 +52,11 @@
         describe("objects", function() {
 
             it("should set path when passed an array of strings", function() {
-                var test = baseBuilder.set("object", ["users", "1"]);
+                var test = baseBuilder.init("object", ["users", "1"]);
                 expect(test.$ref().path).toEqual(root + "users/1");
             });
             it("should set path when passed an array of strings and numbers", function() {
-                var test = baseBuilder.set("object", ["users", 1, "phones", 304]);
+                var test = baseBuilder.init("object", ["users", 1, "phones", 304]);
                 expect(test.$ref().path).toEqual(root + "users/1/phones/304");
             });
 
@@ -82,7 +80,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = baseBuilder.set("object", ["users"]);
+                    entity = baseBuilder.init("object", ["users"]);
                     val = y[1];
                     meth = y[0];
                     expect(typeof entity[meth]).toEqual(val);
@@ -107,7 +105,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = baseBuilder.set("array", ["users"]);
+                    entity = baseBuilder.init("array", ["users"]);
                     val = y[1];
                     meth = y[0];
 
@@ -138,7 +136,7 @@
 
             function test_entity_methods(y) {
                 it(y[0] + " should be a " + y[1], function() {
-                    entity = baseBuilder.set("auth");
+                    entity = baseBuilder.init("auth");
                     val = y[1];
                     meth = y[0];
                     expect(typeof entity[meth]).toEqual(val);

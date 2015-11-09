@@ -1,7 +1,7 @@
 (function(angular) {
     'use strict';
     angular
-        .module('fb.constant', [])
+        .module('index.constants', [])
         .constant('FBURL', 'https://your-firebase.firebaseio.com/');
 
 				//TODO: need to import the url - 

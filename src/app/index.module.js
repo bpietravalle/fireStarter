@@ -2,6 +2,6 @@
     'use strict';
 
     angular
-        .module('fireStarter', ['fireStarter.services', 'fireStarter.utils', 'firebase']);
+        .module('fireStarter', ['fireStarter.services', 'fireStarter.utils']);
 
 })(angular);

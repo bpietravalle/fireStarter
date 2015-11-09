@@ -3,7 +3,7 @@
 //need to change value/priority so can set; not sure its working
 describe('$firebaseObject', function() {
     'use strict';
-    var fireStarter, $firebaseObject, $utils, fbRef, $rootScope, $timeout, obj, testutils, $interval, log;
+    var fireStarter, $firebaseObject, $utils, $rootScope, $timeout, obj, testutils, $interval, log;
 
     var DEFAULT_ID = 'REC1';
     var FIXTURE_DATA = {
@@ -29,8 +29,7 @@ describe('$firebaseObject', function() {
                 }
             })
         });
-        inject(function(_$interval_, _fireStarter_, _fbRef_, _$firebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
-            fbRef = _fbRef_;
+        inject(function(_$interval_, _fireStarter_, _$firebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
             fireStarter = _fireStarter_;
             $firebaseObject = _$firebaseObject_;
             $timeout = _$timeout_;
@@ -38,7 +37,7 @@ describe('$firebaseObject', function() {
             $utils = $firebaseUtils;
             $rootScope = _$rootScope_;
             testutils = _testutils_;
-            spyOn(fbRef, "ref").and.returnValue(stubRef());
+            // spyOn(fbRef, "ref").and.returnValue(stubRef());
 
             // start using the direct methods here until we can refactor `obj`
             obj = makeObject(FIXTURE_DATA);

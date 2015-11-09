@@ -1,17 +1,14 @@
 (function() {
     "use strict";
     describe('fireStarter Factory', function() {
-        var fireStarter, $firebaseObject, ref, test, test1, $log, baseBuilder, $rootScope, deferred, root, path, $q, $timeout;
+        var fireStarter, ref, test, test1, $log, baseBuilder, $rootScope, deferred, root, path, $q, $timeout;
 
 
         beforeEach(function() {
             MockFirebase.override();
-            module('fbMocks');
-            module('fb.constant');
             module('fireStarter.services');
-            inject(function(_fireStarter_, _$firebaseObject_, _$log_, _baseBuilder_, _$rootScope_, _$q_, _$timeout_, _FBURL_) {
+            inject(function(_fireStarter_, _$log_, _baseBuilder_, _$rootScope_, _$q_, _$timeout_) {
                 $log = _$log_;
-                $firebaseObject = _$firebaseObject_;
                 fireStarter = _fireStarter_;
                 $timeout = _$timeout_;
                 $rootScope = _$rootScope_;
@@ -31,6 +28,7 @@
                 test = fireStarter("object", path);
             });
             it("should be defined", function() {
+                expect(test.inspect()).toEqual("hello");
                 expect(fireStarter).toBeDefined();
             });
             it("should resolve the promise", function() {

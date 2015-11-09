@@ -17,11 +17,11 @@
             beforeEach(function() {
                 deps = module.value('fireStarter.utils').requires;
             });
-            it("should depend on utils.jsApi", function() {
-                expect(hasModule('utils.jsApi')).toBeTruthy();
+            it("should depend on index.constants", function() {
+                expect(hasModule('index.constants')).toBeTruthy();
             });
-            it("should depend on utils.afApi", function() {
-                expect(hasModule('utils.afApi')).toBeTruthy();
+            it("should depend on firebase", function() {
+                expect(hasModule('firebase')).toBeTruthy();
             });
         });
     });

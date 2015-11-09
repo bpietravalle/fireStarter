@@ -20,9 +20,6 @@
             it("should depend on fireStarter.services", function() {
                 expect(hasModule('fireStarter.services')).toBeTruthy();
             });
-            it("should depend on firebase", function() {
-                expect(hasModule("firebase")).toBeTruthy();
-            });
             it("should depend on fireStarter.utils", function() {
                 expect(hasModule('fireStarter.utils')).toBeTruthy();
             });

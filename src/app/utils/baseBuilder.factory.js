@@ -2,15 +2,11 @@
     "use strict";
 
     /** @ngInject */
-    function baseBuilderFactory($timeout, $log, $q, $firebaseObject, $firebaseArray, $firebaseAuth, fbRef) {
+    function baseBuilderFactory($window, $log, $q, $firebaseObject, $firebaseArray, $firebaseAuth, FBURL) {
         var utils = {
-            set: set,
-            wrap: wrap,
             init: build
         };
         return utils;
-
-
 
         function build(type, path, flag) {
             return set(type, path, flag);
@@ -25,7 +21,7 @@
 
         function completeBuild(res) {
             if (res[0] === 'auth' && !res[1] || res[0] === "AUTH" && !res[1]) {
-                return wrap(res[0], fbRef.root());
+                return wrap(res[0], setRoot());
             } else if (res[2] === true) {
                 return wrap(res[0], res[1]);
             } else {
@@ -60,8 +56,7 @@
             }
 
             function isPath(p) {
-                //check that each item is a string
-                //or lookup in pathmngr to see if can exist
+                //TODO: check that each item is a string
                 return true;
 
             }
@@ -69,10 +64,35 @@
         }
 
 
-        function setRef(path) {
-            var b = fbRef.ref(path);
-						$log.info(b);
-						return b;
+        function setRoot() {
+            return new $window.Firebase(FBURL);
+        }
+
+
+        function setPath(args) {
+            // from angularfire-seed repo
+            for (var i = 0; i < args.length; i++) {
+                if (angular.isArray(args[i])) {
+                    args[i] = setPath(args[i]);
+                } else if (typeof args[i] !== 'string') {
+                    try {
+                        args[i] = args[i].toString();
+                    } catch (err) {
+                        throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
+                    }
+                }
+            }
+            return args.join('/');
+        }
+
+        function setRef() {
+            // from angularfire-seed repo
+            var ref = setRoot();
+            var args = Array.prototype.slice.call(arguments);
+            if (args.length) {
+                ref = ref.child(setPath(args));
+            }
+            return ref;
         }
 
         function wrap(type, entity) {
@@ -92,6 +112,6 @@
         }
     }
 
-    angular.module('utils.afApi')
+    angular.module('fireStarter.utils')
         .factory('baseBuilder', baseBuilderFactory);
 })(angular);
