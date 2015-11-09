@@ -24,7 +24,6 @@
                 if (angular.isArray(args[i])) {
                     args[i] = setPath(args[i]);
                 } else if (typeof args[i] !== 'string') {
-                    //TODO: write test for block below
                     try {
                         args[i] = args[i].toString();
                     } catch (err) {

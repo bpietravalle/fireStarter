@@ -37,7 +37,7 @@
             };
             spyOn($log, "info");
             path = firePath("trips", options);
-            fuel = fireEntity("trips");
+            // fuel = fireEntity("trips");
         });
         afterEach(function() {
             path = null;
@@ -68,29 +68,45 @@
             ["nestedRecord", "trips/1/hotels/5", "1", "hotels", "5"],
             ["makeNestedRef", "trips/1/hotels/5/rooms/100", "1/hotels/5/rooms", "100"],
             ["makeNestedRef", "trips/1/hotels/5/rooms/100", [1, 'hotels', 5, 'rooms'], "100"],
-            ["userNestedArray", "users/1/trips"],
-            ["userNestedRecord", "users/1/trips/5", "5"],
+            // ["userNestedArray", "users/1/trips"],
+            // ["userNestedRecord", "users/1/trips/5", "5"],
             ["geofireArray", "geofire/trips"],
             ["geofireRecord", "geofire/trips/5", "5"],
-            ["mainLocationsArray", "locations/trips"],
-            ["mainLocationsRecord", "locations/trips/5", "5"]
+            // ["mainLocationsArray", "locations/trips"],
+            // ["mainLocationsRecord", "locations/trips/5", "5"]
         ];
 
         function testPaths(y) {
             describe(y[0] + "()", function() {
+                beforeEach(function() {
+                    path.setCurrentRef(ref);
+                    $rootScope.$digest();
+                    test = path[y[0]](y[2], y[3], y[4]);
+                    $rootScope.$digest();
+                });
 
-                it("should be a firebaseRef", function() {
-                    expect(path[y[0]](y[2], y[3], y[4])).toBeAFirebaseRef();
+                it("should be a promise", function() {
+                    expect(test).toBeAPromise();
+                });
+                it("should be an angularfire object/array", function() {
+                    expect(getPromValue(test).ref()).toBeAFirebaseRef();
                 });
 
                 it("should create the correct path", function() {
-                    expect(path[y[0]](y[2], y[3], y[4]).path).toEqual(rootPath + y[1]);
+                    expect(path.currentPath()).toEqual(rootPath + y[1]);
                 });
             });
         }
 
         paths.forEach(testPaths);
 
+				describe("currentRef",function(){
+					it("shouoldn't be defined",function(){
+						expect(path.currentRef()).not.toBeDefined();
+
+					});
+
+				});
 
         describe("rootRef", function() {
             it("is a firebaseRef", function() {
@@ -184,7 +200,7 @@
                         };
                         firePath("trips", options);
 
-                    }).toThrow();
+                    }).toThrow(),"object";
                 });
                 it("should throw error if no sessionIdMethod is present", function() {
                     expect(function() {
@@ -241,6 +257,13 @@
             }
         }
 
+        function getPromValue(obj, flag) {
+            if (flag === true) {
+                return obj.$$state.value['data'];
+            } else {
+                return obj.$$state.value;
+            }
+        }
         function logContains(message, flag) {
             var logArray = $log.info.calls.allArgs();
             var flatLog = logArray.reduce(function(x, y) {

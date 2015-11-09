@@ -38,50 +38,32 @@
             var self = this;
             var fire = {};
 
-            fire.base = base;
-            fire.path = path;
             fire.timestamp = timestamp;
 
-            function base() {
-                //I'm lazy and until I find a better way to return the firebase when needed
-                return self._firebase;
-            }
-
-            function path() {
-                if (self._flag === true) {
-                    return self._path.path;
-                } else {
-                    return self._path;
-                }
-
-            }
-
-            function timestamp() {
-                return Firebase.ServerValue.TIMESTAMP;
-            }
 
             switch (self._type) {
                 case "object":
                     return FirebaseObject(fire);
-                    break;
                 case "array":
                     return FirebaseArray(fire);
-                    break;
-                case "ARRAY":
-                    return returnBaseArray(fire);
-                    break;
                 case "auth":
                     return FirebaseAuth(fire);
-                    break;
                 case "geo":
                     return Geofire(fire);
-                    break;
+                case "ARRAY":
+                    return returnBase(fire);
+                case "OBJECT":
+                    return returnBase(fire);
+                case "AUTH":
+                    return returnBase(fire);
             }
 
 
             function FirebaseAuth(auth) {
 
                 return angular.extend(auth, {
+                    base: base,
+                    path: path,
                     authAnonymously: authAnonymously,
                     authWithCustomToken: authWithCustomToken,
                     authWithPassword: authWithPassword,
@@ -169,12 +151,14 @@
             }
 
             function Geofire(geo) {
-                /* from angularGeoFire - trying q.when instead of 
+                /* from angularGeoFire - using q.when instead of 
                  * deferred obj/$timeout
                  */
 
                 return angular.extend(geo, {
 
+                    base: base,
+                    path: path,
                     distance: geofireDistance,
                     get: geofireGet,
                     query: geofireQuery,
@@ -191,15 +175,6 @@
                     return qWrap(self._firebase.get(key))
                         .catch(standardError);
 
-                    // var deferred = self._q.defer();
-                    // self._timeout(function() {
-                    //     self._firebase.get(key).then(function(location) {
-                    //         deferred.resolve(location);
-                    //     }).catch(function(error) {
-                    //         deferred.reject(error);
-                    //     });
-                    // });
-                    // return deferred.promise;
                 }
 
 
@@ -244,37 +219,17 @@
 
 
                 function geofireRemove(key) {
-                    // var deferred = self._q.defer();
                     return qWrap(self._firebase.remove(key))
                         .then(returnGeoRef)
                         .catch(standardError);
-                    // self._timeout(function() {
-                    //     self._firebase.remove(key).then(function() {
-                    //         deferred.resolve(null);
-                    //     }).catch(function(error) {
-                    //         deferred.reject(error);
-                    //     });
-                    // });
-                    // return deferred.promise;
                 }
 
 
                 function geofireSet(key, coords) {
-                    // var deferred = self._q.defer();
-                    // return self._timeout(function() {
                     return qWrap(self._firebase.set(key, coords))
                         .then(returnGeoRef)
                         .catch(standardError);
 
-                    // function() {
-                    // deferred.resolve(function() {
-                    // return geofireRef();
-                    // });
-                    // }).catch(function(error) {
-                    // deferred.reject(error);
-                    // });
-                    // });
-                    // return deferred.promise;
                 }
 
 
@@ -286,11 +241,14 @@
             function FirebaseArray(arr) {
 
                 return angular.extend(arr, {
+                    base: base,
+                    path: path,
                     add: add,
                     destroy: destroy,
                     getRecord: getRecord,
                     keyAt: keyAt,
                     indexFor: indexFor,
+                    idx: idx,
                     length: length,
                     loaded: loaded,
                     ref: ref,
@@ -316,7 +274,10 @@
                     return self._firebase.$indexFor(val);
                 }
 
-                //untested
+                function idx(x) {
+                    return self._firebase[x];
+                }
+
                 function length() {
                     return self._firebase.length;
                 }
@@ -354,6 +315,8 @@
             function FirebaseObject(obj) {
 
                 return angular.extend(obj, {
+                    base: base,
+                    path: path,
                     bindTo: bindTo,
                     destroy: destroy,
                     id: id,
@@ -421,9 +384,27 @@
                 }
             }
 
-						//untested/unused
-            function returnBaseArray(arr) {
-                return angular.extend(arr, self._fireBase);
+            function base() {
+                return self._firebase;
+            }
+
+            function path() {
+                if (self._flag === true) {
+                    return self._path.path;
+                } else {
+                    return self._path;
+                }
+
+            }
+
+            function timestamp() {
+                return Firebase.ServerValue.TIMESTAMP;
+            }
+
+            //untested/unused
+
+            function returnBase(entity) {
+                return self._firebase;
             }
 
             function qWrap(obj) {

@@ -24,7 +24,7 @@
         }
 
         function completeBuild(res) {
-            if (res[0] === 'auth' && !res[1]) {
+            if (res[0] === 'auth' && !res[1] || res[0] === "AUTH" && !res[1]) {
                 return wrap(res[0], fbRef.root());
             } else if (res[2] === true) {
                 return wrap(res[0], res[1]);
@@ -40,8 +40,9 @@
         }
 
         function checkType(t) {
-            if (t !== "auth" && t !== "array" && t !== "object" && t !== "geo") {
-                throw new Error("Invalid type: " + t + ".  Please enter 'auth','object','array', or 'geo'");
+            var typeOptions = ["auth", "array", "object", "geo", "ARRAY", "OBJECT", "AUTH"];
+            if (typeOptions.indexOf(t) < 0) {
+                throw new Error("Invalid type: " + t + ".  Please enter 'auth','object','array', 'AUTH','OBJECT','ARRAY',or 'geo'");
             }
         }
 
@@ -69,17 +70,17 @@
 
 
         function setRef(path) {
-            return fbRef.ref(path);
+            var b = fbRef.ref(path);
+						$log.info(b);
+						return b;
         }
 
         function wrap(type, entity) {
-            if (type === 'object') {
+            if (type === 'object' || type === 'OBJECT') {
                 return $firebaseObject(entity);
-            } else if (type === 'array') {
+            } else if (type === 'array' || type === 'ARRAY') {
                 return $firebaseArray(entity);
-            } else if (type === 'ARRAY') {
-                return $firebaseArray(entity);
-            } else if (type === 'auth') {
+            } else if (type === 'auth' || type === 'AUTH') {
                 return $firebaseAuth(entity);
             } else if (type === 'geo') {
                 return new GeoFire(entity);

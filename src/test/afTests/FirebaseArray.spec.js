@@ -236,7 +236,7 @@ describe('$firebaseArray', function() {
             var query = ref.limit(2);
             var arr = stubArray(null, query, true);
             addAndProcess(arr, testutils.snap('one', 'b', 1), null);
-            expect(arr.base().length).toBe(1);
+            expect(arr.length()).toBe(1);
         });
     });
 
@@ -244,18 +244,18 @@ describe('$firebaseArray', function() {
         it('should accept an array index', function() {
             var key = arr.keyAt(2);
             var spy = spyOn(arr.ref().child(key), 'set');
-            arr.base()[2].number = 99;
+            arr.idx(2).number = 99;
             arr.save(2);
-            var expResult = $utils.toJSON(arr.base()[2]);
+            var expResult = $utils.toJSON(arr.idx(2));
             expect(spy).toHaveBeenCalledWith(expResult, jasmine.any(Function));
         });
 
         it('should accept an item from the array', function() {
             var key = arr.keyAt(2);
             var spy = spyOn(arr.ref().child(key), 'set');
-            arr.base()[2].number = 99;
-            arr.save(arr.base()[2]);
-            var expResult = $utils.toJSON(arr.base()[2]);
+            arr.idx(2).number = 99;
+            arr.save(arr.idx(2));
+            var expResult = $utils.toJSON(arr.idx(2));
             expect(spy).toHaveBeenCalledWith(expResult, jasmine.any(Function));
         });
 
@@ -326,7 +326,7 @@ describe('$firebaseArray', function() {
             var spy = jasmine.createSpy('watch');
             arr.watch(spy);
             var key = arr.keyAt(1);
-            arr.base()[1].foo = 'watchtest';
+            arr.idx(1).foo = 'watchtest';
             arr.save(1);
             flushAll(arr.ref());
             expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({
@@ -347,7 +347,7 @@ describe('$firebaseArray', function() {
             var arr = stubArray(null, query, true);
             flushAll(arr.ref());
             var key = arr.keyAt(1);
-            arr.base()[1].foo = 'watchtest';
+            arr.idx(1).foo = 'watchtest';
             arr.save(1).then(whiteSpy, blackSpy);
             flushAll(arr.ref());
             expect(whiteSpy).toHaveBeenCalled();
@@ -357,7 +357,7 @@ describe('$firebaseArray', function() {
 
     describe('remove', function() {
         it("should work", function() {
-            expect(arr.base().length).toEqual(5);
+            expect(arr.length()).toEqual(5);
             var whiteSpy = jasmine.createSpy('resolve');
             var blackSpy = jasmine.createSpy('reject');
             var expName = arr.keyAt(1);
@@ -450,12 +450,12 @@ describe('$firebaseArray', function() {
     describe('keyAt', function() {
         it("should work with new data", function() {
             arr = stubArray(NEW_DATA);
-            expect(arr.base().length).toEqual(5);
+            expect(arr.length()).toEqual(5);
             arr.remove(0);
             $rootScope.$digest();
             flushAll(arr.ref());
             $rootScope.$digest();
-            expect(arr.base().length).toEqual(4);
+            expect(arr.length()).toEqual(4);
         });
 
 
@@ -464,7 +464,7 @@ describe('$firebaseArray', function() {
         });
 
         it('should return key for an object', function() {
-            expect(arr.keyAt(arr.base()[2])).toBe('c');
+            expect(arr.keyAt(arr.idx(2))).toBe('c');
         });
 
         it('should return null if invalid object', function() {
@@ -612,9 +612,9 @@ describe('$firebaseArray', function() {
         });
 
         it('should empty the array', function() {
-            expect(arr.base().length).toBeGreaterThan(0);
+            expect(arr.length()).toBeGreaterThan(0);
             arr.destroy();
-            expect(arr.base().length).toBe(0);
+            expect(arr.length()).toBe(0);
         });
 
         it('should reject loaded() if not completed yet', function() {
@@ -679,19 +679,19 @@ describe('$firebaseArray', function() {
             var i = arr.indexFor('b');
             expect(i).toBeGreaterThan(-1);
             arr.base().$$updated(testutils.snap('foo', 'b'));
-            expect(arr.base()[i]).toEqual(jasmine.objectContaining({
+            expect(arr.idx(i)).toEqual(jasmine.objectContaining({
                 '$value': 'foo'
             }));
         });
 
         it('should ignore if not found', function() {
-            var len = arr.base().length;
+            var len = arr.length();
             expect(len).toBeGreaterThan(0);
             var copy = testutils.deepCopyObject(arr.base());
             arr.base().$$updated(testutils.snap('foo', 'notarealkey'));
             expect(len).toEqual(copy.length);
             for (var i = 0; i < len; i++) {
-                expect(arr.base()[i]).toEqual(copy[i]);
+                expect(arr.idx(i)).toEqual(copy[i]);
             }
         });
 
@@ -701,7 +701,7 @@ describe('$firebaseArray', function() {
             arr.base().$$updated(testutils.snap({
                 foo: 'bar'
             }, 'b'));
-            expect(arr.base()[pos].$id).toBe('b');
+            expect(arr.idx(pos).$id).toBe('b');
         });
 
         it('should set priorities', function() {
@@ -710,7 +710,7 @@ describe('$firebaseArray', function() {
             arr.base().$$updated(testutils.snap({
                 foo: 'bar'
             }, 'b', 250));
-            expect(arr.base()[pos].$priority).toBe(250);
+            expect(arr.idx(pos).$priority).toBe(250);
         });
 
         //     it('should apply $$defaults if they exist', function() {
@@ -823,7 +823,7 @@ describe('$firebaseArray', function() {
         });
 
         it('should position last if prevChild not found', function() {
-            var len = arr.base().length;
+            var len = arr.length();
             var rec = arr.base().$$added(testutils.snap({
                 hello: 'world'
             }, 'addLast'), 'notarealkeyinarray');
@@ -881,7 +881,7 @@ describe('$firebaseArray', function() {
 
         it('should position at end if prevChild not found', function() {
             var b = arr.indexFor('b');
-            expect(b).toBeLessThan(arr.base().length - 1);
+            expect(b).toBeLessThan(arr.length() - 1);
             arr.base().$$moved(testutils.refSnap(testutils.ref('b')), 'notarealkey');
             arr.base().$$process('child_moved', arr.getRecord('b'), 'notarealkey');
             expect(arr.indexFor('b')).toBe(arr.base().length - 1);
@@ -908,11 +908,11 @@ describe('$firebaseArray', function() {
 
         //     ///////////////// REMOVE
         it('should remove from local array', function() {
-            var len = arr.base().length;
+            var len = arr.length();
             expect(arr.indexFor('b')).toBe(1);
             arr.base().$$removed(testutils.refSnap(testutils.ref('b')));
             arr.base().$$process('child_removed', arr.getRecord('b'));
-            expect(arr.base().length).toBe(len - 1);
+            expect(arr.length()).toBe(len - 1);
             expect(arr.indexFor('b')).toBe(-1);
         });
 

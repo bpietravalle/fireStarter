@@ -3,25 +3,38 @@
 
 
     /** @ngInject */
-    function utilsFactory($log, $q) {
+    function utilsFactory($log, $q, inflector) {
 
         var utils = {
 
-            removeSlash: removeSlash,
-            flatten: flatten,
-            extendPath: extendPath,
             arrayify: arrayify,
+            camelize: camelize,
+            extendPath: extendPath,
+            flatten: flatten,
+            removeSlash: removeSlash,
             stringify: stringify,
+            pluralize: pluralize,
             qWrap: qWrap,
             qAll: qAll,
-            standardError: standardError,
             qAllResult: qAllResult,
-
-
+            singularize: singularize,
+            standardError: standardError,
 
         };
 
         return utils;
+
+        function camelize(str, flag) {
+            return inflector.camelize(str, flag);
+        }
+
+        function singularize(str) {
+            return inflector.singularize(str);
+        }
+
+        function pluralize(str) {
+            return inflector.pluralize(str);
+        }
 
         function qWrap(obj) {
             return $q.when(obj);
