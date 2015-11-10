@@ -2,7 +2,7 @@
     "use strict";
     var FireStarter;
 
-    angular.module("firebase-starter")
+    angular.module("firebase-starter",["firebase"])
         .factory("fireStarter", FireStarterFactory);
 
     /** @ngInject */
