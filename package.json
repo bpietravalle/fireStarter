@@ -25,9 +25,7 @@
     "src/test",
     "src/testutils"
   ],
-  "main": [
-    "src/app/fireStarter.factory.js"
-  ],
+  "main": "src/app/fireStarter.factory.js",
   "files": [
     "src/app/"
   ],
