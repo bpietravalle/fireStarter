@@ -4,7 +4,7 @@
         "name": "Brian Pietravalle",
         "email": "bpietravalle@gmail.com"
     }],
-    "version": "0.0.0",
+    "version": "0.0.1",
     "license": "MIT",
     "description": "experimental wrapper for angularfire and geofire",
     "dependencies": {
@@ -21,7 +21,7 @@
         "angular": "~1.4.4",
         "rsvp": "3.1.x"
     },
-    "main": ["dist/scripts/app.js"],
+    "main": ["src/app/fireStarter.factory.js"],
     "ignore": [
         "**/.*",
         "coverage",
