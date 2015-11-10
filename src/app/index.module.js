@@ -2,6 +2,6 @@
     'use strict';
 
     angular
-        .module('FireStarter',["firebase"]);
+        .module('firebase-starter',["firebase"]);
 
 })();

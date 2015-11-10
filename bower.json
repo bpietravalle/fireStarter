@@ -1,24 +1,37 @@
 {
-  "name": "fireStarter",
-  "version": "0.0.1",
-  "license": "MIT",
-  "description": "Experimental wrapper for firebase",
-  "dependencies": {
-    "angular": "~1.4.4",
-    "angularfire": "~1.1.2",
-    "firebase": "~2.2.9",
-    "geofire": "~3.2.3"
-  },
-  "devDependencies": {
-    "mockfirebase": "~0.11.0",
-    "angular-mocks": "~1.4.0"
-  },
-  "resolutions": {
-    "angular": "~1.4.4",
-    "rsvp": "3.1.x"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bpietravalle/fireStarter.git"
-  }
+    "name": "firebase-starter",
+    "authors": [{
+        "name": "Brian Pietravalle",
+        "email": "bpietravalle@gmail.com"
+    }],
+    "version": "0.0.0",
+    "license": "MIT",
+    "description": "experimental wrapper for angularfire and geofire",
+    "dependencies": {
+        "angular": "~1.4.4",
+        "angularfire": "~1.1.2",
+        "firebase": "~2.2.9",
+        "geofire": "~3.2.3"
+    },
+    "devDependencies": {
+        "mockfirebase": "~0.11.0",
+        "angular-mocks": "~1.4.0"
+    },
+    "resolutions": {
+        "angular": "~1.4.4",
+        "rsvp": "3.1.x"
+    },
+    "main": ["dist/scripts/app.js"],
+    "ignore": [
+        "**/.*",
+        "coverage",
+        "node_modules",
+        "bower_components",
+        "src/test",
+        "src/testutils"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/bpietravalle/fireStarter.git"
+    }
 }
