@@ -4,11 +4,23 @@
         "name": "Brian Pietravalle",
         "email": "bpietravalle@gmail.com"
     },
-    "version": "0.0.1",
+    "version": "0.0.0",
     "license": "MIT",
     "description": "experimental wrapper for angularfire and geofire",
     "keywords": ["firebase", "geofire", "angularfire"],
-    "dependencies": {},
+    "dependencies": {
+        "angular": "~1.4.4",
+        "angularfire": "~1.1.2",
+        "firebase": "~2.2.9",
+        "geofire": "~3.2.3"
+    },
+    "ignore": [
+        "coverage",
+        "node_modules",
+        "bower_components",
+        "src/test",
+        "src/testutils"
+    ],
     "files": ["dist/scripts"],
     "repository": {
         "type": "git",
@@ -48,7 +60,6 @@
         "gulp-util": "~3.0.5",
         "http-proxy-middleware": "~0.0.5",
         "jasmine-expect": "^1.22.3",
-        "jasmine-sinon": "^0.4.0",
         "jshint-stylish": "~2.0.0",
         "karma": "~0.12.36",
         "karma-angular-filesort": "~0.1.0",
@@ -59,14 +70,11 @@
         "karma-ng-html2js-preprocessor": "~0.1.2",
         "karma-notify-reporter": "^0.1.1",
         "karma-phantomjs-launcher": "~0.2.0",
-        "karma-sinon": "^1.0.4",
         "karma-spec-reporter": "0.0.20",
-        "karma-verbose-reporter": "0.0.3",
         "lodash": "~3.9.3",
         "main-bower-files": "~2.8.0",
         "merge-stream": "~0.1.7",
         "require-dir": "~0.3.0",
-        "sinon": "^1.15.4",
         "uglify-save-license": "~0.4.1",
         "wiredep": "~2.2.2",
         "wrench": "~1.5.8"
