@@ -40,7 +40,7 @@
             ["auth", ["unauth", "getAuth"],
                 ["authWithPassword", "authWithOAuthPopup", "changePassword", "changeEmail", "createUser", "removeUser", "requireAuth", "resetPassword"]
             ],
-            ["geo", ["distance", "get", "query", "ref", "remove", "set"],
+            ["geo", ["distance", "get", "query", "ref", "$ref", "remove", "set"],
                 ["set", "get", "remove"]
             ]
         ];
@@ -92,6 +92,23 @@
         }
 
         types.forEach(simpleTests);
+        describe("geofire", function() {
+            beforeEach(function() {
+                path = fireStarter("geo", "trips");
+                path.set("key", [90, 100]);
+                $rootScope.$digest();
+                path.ref().flush();
+                $rootScope.$digest();
+
+            });
+            it("$ref() should === ref()", function() {
+                expect(path.$ref()).toEqual(path.ref());
+            });
+            it("should be firebaseRefs", function() {
+                expect(path.$ref()).toBeAFirebaseRef();
+            });
+
+        });
         describe("array methods", function() {
             beforeEach(function() {
                 test = fireStarter("array", "trips");

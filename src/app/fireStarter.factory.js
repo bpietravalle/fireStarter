@@ -232,6 +232,7 @@
                     distance: geofireDistance,
                     get: geofireGet,
                     query: geofireQuery,
+                    $ref: geofireRef, 
                     ref: geofireRef,
                     remove: geofireRemove,
                     set: geofireSet,
