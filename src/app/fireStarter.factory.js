@@ -2,7 +2,7 @@
     "use strict";
     var FireStarter;
 
-    angular.module("FireStarter")
+    angular.module("firebase-starter")
         .factory("fireStarter", FireStarterFactory);
 
     /** @ngInject */
@@ -15,7 +15,6 @@
         };
 
     }
-
 
     FireStarter = function($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant) {
         this._injector = $injector;

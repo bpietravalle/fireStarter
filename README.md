@@ -1,22 +1,22 @@
-# FireStarter
+# fireStarter
 
-FireStarter is a very simple wrapper for angularFire and Geofire.
+fireStarter is a very simple wrapper for angularFire and Geofire.
 
 
 ## Installation & Setup
 
 ```bash
-$ npm install fireStarter --save
+$ npm install firebase-starter --save
 ```
 
 ```bash
-$ bower install fireStarter --save
+$ bower install firebase-starter --save
 ```
 
-1.) Include FireStarter in your app dependencies.
+1.) Include fireStarter in your app dependencies.
 
 ```javascript
-angular.module("yourApp",['FireStarter']);
+angular.module("yourApp",['firebase-starter']);
 ```
 2.) Inject fireStarter service into your angular service.
 

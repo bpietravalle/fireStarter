@@ -1,5 +1,5 @@
 {
-    "name": "fireStarter",
+    "name": "firebase-starter",
     "author": {
         "name": "Brian Pietravalle",
         "email": "bpietravalle@gmail.com"
@@ -21,10 +21,11 @@
         "src/test",
         "src/testutils"
     ],
+    "main": ["dist/scripts/app.js"],
     "files": ["dist/scripts"],
     "repository": {
         "type": "git",
-        "url": "https://github.com/bpietravalle/fireStarter.git"
+        "url": "git://github.com/bpietravalle/fireStarter.git"
     },
     "scripts": {
         "test": "gulp test"

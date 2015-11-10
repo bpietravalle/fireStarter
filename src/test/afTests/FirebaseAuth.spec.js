@@ -17,9 +17,9 @@ describe('FirebaseAuth', function() {
             })
         });
         module('testutils');
-            angular.module("FireStarter")
+            angular.module("firebase-starter")
                 .constant('FBURL', 'https://your-firebase.firebaseio.com/');
-        module('FireStarter');
+        module('firebase-starter');
 
         result = undefined;
         failure = undefined;

@@ -6,9 +6,9 @@
 
         beforeEach(function() {
             MockFirebase.override();
-            angular.module("FireStarter")
+            angular.module("firebase-starter")
                 .constant('FBURL', 'https://your-firebase.firebaseio.com/');
-            module('FireStarter');
+            module('firebase-starter');
             inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_, _$timeout_) {
                 $log = _$log_;
                 fireStarter = _fireStarter_;

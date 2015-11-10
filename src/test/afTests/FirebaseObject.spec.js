@@ -21,9 +21,9 @@ describe('$firebaseObject', function() {
         };
 
         module('firebase');
-        angular.module("FireStarter")
+        angular.module("firebase-starter")
             .constant('FBURL', 'https://your-firebase.firebaseio.com/');
-        module('FireStarter');
+        module('firebase-starter');
         module('testutils', function($provide) {
             $provide.value('$log', {
                 error: function() {
