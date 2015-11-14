@@ -6,7 +6,6 @@
       "email": "bpietravalle@gmail.com"
     }
   ],
-  "version": "0.1.1",
   "license": "MIT",
   "description": "experimental wrapper for angularfire and geofire",
   "dependencies": {
