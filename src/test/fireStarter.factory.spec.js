@@ -6,9 +6,9 @@
 
         beforeEach(function() {
             MockFirebase.override();
-            angular.module("firebase-starter")
+            angular.module("firebase.starter")
                 .constant('FBURL', 'https://your-firebase.firebaseio.com/');
-            module('firebase-starter');
+            module('firebase.starter');
             inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_, _$timeout_) {
                 $log = _$log_;
                 fireStarter = _fireStarter_;
@@ -137,6 +137,7 @@
                     expect(getPromValue(test).toString()).toEqual(rootPath + "/trips");
                 });
             });
+
             describe("get()", function() {
                 beforeEach(function() {
                     test = path.get("key");
@@ -149,6 +150,7 @@
                     expect(test).toBeAPromise();
                 });
             });
+
             describe("remove()", function() {
                 beforeEach(function() {
                     test = path.remove("key");
