@@ -20,9 +20,10 @@
             rootPath = "https://your-firebase.firebaseio.com";
             ref = new MockFirebase("data://");
             path = ["path"]
-            spyOn($log, "info");
-						success = jasmine.createSpy("success");
-						failure = jasmine.createSpy("failure");
+            spyOn($log, "info").and.callThrough();
+            spyOn($q, "reject").and.callThrough();
+            success = jasmine.createSpy("success");
+            failure = jasmine.createSpy("failure");
         });
         describe("constructor", function() {
             beforeEach(function() {
@@ -124,11 +125,11 @@
                     expect(path.ref().toString()).toEqual(rootPath + "/trips");
                     expect(path.ref().getData()["key"]).toEqual({
                         g: jasmine.any(String),
-												l: [90,100]
+                        l: [90, 100]
                     });
                     expect(path.ref().getData()["key2"]).toEqual({
                         g: jasmine.any(String),
-												l: [50,75]
+                        l: [50, 75]
                     });
                 });
                 it("should return the firebase ref of the array", function() {
@@ -139,39 +140,40 @@
             describe("get()", function() {
                 beforeEach(function() {
                     test = path.get("key");
-                    $rootScope.$digest();
                     $timeout.flush();
                     $rootScope.$digest();
                     path.ref().flush();
                     $rootScope.$digest();
                 });
-                it("should return the correct record", function() {
-                   wrapPromise(test)
-									 expect(test).toEqual("as");
-										
-									 expect($log.info.calls.allArgs()).toEqual("as");
-										
-										// .toEqual({
-                        // g: jasmine.any(String),
-                        // l: [90,100]
-                    // });
+                it("should be a promise", function() {
+                    expect(test).toBeAPromise();
+                });
+            });
+            describe("remove()", function() {
+                beforeEach(function() {
+                    test = path.remove("key");
+                    $timeout.flush();
+                    $rootScope.$digest();
+                    path.ref().flush();
+                    $rootScope.$digest();
+                });
+                it("should be a promise", function() {
+                    expect(test).toBeAPromise();
+                });
+                it("should remove the correct record", function() {
+                    expect(path.ref().getData()).toEqual({
+                        key2: {
+                            g: jasmine.any(String),
+                            l: [50, 75]
+                        }
+                    });
 
-										// path.get("key2");
-                    // $rootScope.$digest();
-                    // $timeout.flush();
-                    // path.ref().flush();
-                    // $rootScope.$digest();
-                    // expect(path.ref().getData()['key2']).toEqual({
-                    //     g: jasmine.any(String),
-                    //     l: [50,75]
-                    // });
                 });
             });
         });
         describe("array methods", function() {
             beforeEach(function() {
                 test = fireStarter("array", "trips");
-
             });
             describe("length", function() {
 
@@ -296,6 +298,7 @@
         function wrapPromise(p) {
             return p.then(success, failure);
         }
+
         function getPromValue(obj) {
             return obj.$$state.value;
         }

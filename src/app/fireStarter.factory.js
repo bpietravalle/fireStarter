@@ -110,6 +110,7 @@
             var fire = {};
 
             fire.timestamp = timestamp;
+            fire.inspect = inspect;
 
             switch (self._type) {
                 case "object":
@@ -226,7 +227,6 @@
 
                 return angular.extend(geo, {
 
-                    base: base,
                     path: path,
                     distance: geofireDistance,
                     get: geofireGet,
@@ -244,23 +244,13 @@
                 function geofireGet(key) {
                     var deferred = self._q.defer();
                     self._timeout(function() {
-                        self._firebase.get(key).then(function(location) {
-													self._log.info(location);
-                            deferred.resolve(location);
+                        self._firebase.get(key).then(function(result) {
+                            deferred.resolve(result);
                         }).catch(function(error) {
                             deferred.reject(error);
                         });
                     });
                     return deferred.promise;
-                    // return self._timeout(function() {
-                    //         self._firebase.get(key)
-                    //             .then(function(loc) {
-                    //                 return self._q.when(loc);
-                    //             }, function(err) {
-                    //                 return self._q.reject(err);
-                    //             })
-                    //     })
-                    //     .catch(standardError);
                 }
 
 
@@ -326,7 +316,6 @@
                         .then(geofireRef)
                         .catch(standardError);
                 }
-
 
             }
 
@@ -501,6 +490,10 @@
 
             function qWrap(obj) {
                 return self._q.when(obj);
+            }
+
+            function inspect() {
+                return self._firebase
             }
 
             function standardError(err) {
