@@ -2,21 +2,22 @@
     "use strict";
     var FireStarter;
 
-    angular.module("firebase-starter",["firebase"])
+    angular.module("firebase-starter", ["firebase"])
         .factory("fireStarter", FireStarterFactory);
 
     /** @ngInject */
-    function FireStarterFactory($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
+    function FireStarterFactory($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
 
         return function(type, path, flag, constant) {
-            var fb = new FireStarter($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant);
+            var fb = new FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant);
             return fb.construct();
 
         };
 
     }
 
-    FireStarter = function($injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant) {
+    FireStarter = function($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant) {
+        this._timeout = $timeout;
         this._injector = $injector;
         this._window = $window;
         this._firebaseAuth = $firebaseAuth;
@@ -220,8 +221,7 @@
             }
 
             function Geofire(geo) {
-                /* from angularGeoFire - using q.when instead of 
-                 * deferred obj/$timeout
+                /*  from angularGeoFire by Mike Pugh
                  */
 
                 return angular.extend(geo, {
@@ -231,7 +231,7 @@
                     distance: geofireDistance,
                     get: geofireGet,
                     query: geofireQuery,
-                    $ref: geofireRef, 
+                    $ref: geofireRef,
                     ref: geofireRef,
                     remove: geofireRemove,
                     set: geofireSet,
@@ -242,9 +242,25 @@
                 }
 
                 function geofireGet(key) {
-                    return qWrap(self._firebase.get(key))
-                        .catch(standardError);
-
+                    var deferred = self._q.defer();
+                    self._timeout(function() {
+                        self._firebase.get(key).then(function(location) {
+													self._log.info(location);
+                            deferred.resolve(location);
+                        }).catch(function(error) {
+                            deferred.reject(error);
+                        });
+                    });
+                    return deferred.promise;
+                    // return self._timeout(function() {
+                    //         self._firebase.get(key)
+                    //             .then(function(loc) {
+                    //                 return self._q.when(loc);
+                    //             }, function(err) {
+                    //                 return self._q.reject(err);
+                    //             })
+                    //     })
+                    //     .catch(standardError);
                 }
 
 
@@ -289,23 +305,29 @@
 
 
                 function geofireRemove(key) {
-                    return qWrap(self._firebase.remove(key))
-                        .then(returnGeoRef)
+                    return self._timeout(function() {
+                            self._firebase.remove(key)
+                                .then(null, function(err) {
+                                    return self._q.reject(err);
+                                })
+                        })
+                        .then(geofireRef)
                         .catch(standardError);
                 }
-
 
                 function geofireSet(key, coords) {
-                    return qWrap(self._firebase.set(key, coords))
-                        .then(returnGeoRef)
+                    return self._timeout(function() {
+                            self._firebase.set(key, coords)
+                                .then(null,
+                                    function(err) {
+                                        return self._q.reject(err);
+                                    })
+                        })
+                        .then(geofireRef)
                         .catch(standardError);
-
                 }
 
 
-                function returnGeoRef() {
-                    return qWrap(geofireRef());
-                }
             }
 
             function FirebaseArray(arr) {

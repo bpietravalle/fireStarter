@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('fireStarter Factory', function() {
-        var fireStarter, ref, test, test1, $log, $rootScope, deferred, root, path, $q, $timeout;
+        var rootPath, success, failure, fireStarter, ref, test, test1, $log, $rootScope, deferred, root, path, $q, $timeout;
 
 
         beforeEach(function() {
@@ -17,9 +17,12 @@
                 $q = _$q_;
                 deferred = $q.defer();
             });
+            rootPath = "https://your-firebase.firebaseio.com";
             ref = new MockFirebase("data://");
             path = ["path"]
             spyOn($log, "info");
+						success = jasmine.createSpy("success");
+						failure = jasmine.createSpy("failure");
         });
         describe("constructor", function() {
             beforeEach(function() {
@@ -95,11 +98,17 @@
         describe("geofire", function() {
             beforeEach(function() {
                 path = fireStarter("geo", "trips");
-                path.set("key", [90, 100]);
+                test = path.set("key", [90, 100]);
+                $rootScope.$digest();
+                $timeout.flush();
+                path.ref().flush();
+                $rootScope.$digest();
+                test1 = path.set("key2", [50, 75]);
+                $rootScope.$digest();
+                $timeout.flush();
                 $rootScope.$digest();
                 path.ref().flush();
                 $rootScope.$digest();
-
             });
             it("$ref() should === ref()", function() {
                 expect(path.$ref()).toEqual(path.ref());
@@ -107,7 +116,57 @@
             it("should be firebaseRefs", function() {
                 expect(path.$ref()).toBeAFirebaseRef();
             });
+            describe("set()", function() {
+                it("should be a promise", function() {
+                    expect(test).toBeAPromise();
+                });
+                it("should add data to correct node", function() {
+                    expect(path.ref().toString()).toEqual(rootPath + "/trips");
+                    expect(path.ref().getData()["key"]).toEqual({
+                        g: jasmine.any(String),
+												l: [90,100]
+                    });
+                    expect(path.ref().getData()["key2"]).toEqual({
+                        g: jasmine.any(String),
+												l: [50,75]
+                    });
+                });
+                it("should return the firebase ref of the array", function() {
+                    expect(getPromValue(test)).toBeAFirebaseRef();
+                    expect(getPromValue(test).toString()).toEqual(rootPath + "/trips");
+                });
+            });
+            describe("get()", function() {
+                beforeEach(function() {
+                    test = path.get("key");
+                    $rootScope.$digest();
+                    $timeout.flush();
+                    $rootScope.$digest();
+                    path.ref().flush();
+                    $rootScope.$digest();
+                });
+                it("should return the correct record", function() {
+                   wrapPromise(test)
+									 expect(test).toEqual("as");
+										
+									 expect($log.info.calls.allArgs()).toEqual("as");
+										
+										// .toEqual({
+                        // g: jasmine.any(String),
+                        // l: [90,100]
+                    // });
 
+										// path.get("key2");
+                    // $rootScope.$digest();
+                    // $timeout.flush();
+                    // path.ref().flush();
+                    // $rootScope.$digest();
+                    // expect(path.ref().getData()['key2']).toEqual({
+                    //     g: jasmine.any(String),
+                    //     l: [50,75]
+                    // });
+                });
+            });
         });
         describe("array methods", function() {
             beforeEach(function() {
@@ -233,5 +292,12 @@
 
         }
         afTypes.forEach(afBaseTest);
+
+        function wrapPromise(p) {
+            return p.then(success, failure);
+        }
+        function getPromValue(obj) {
+            return obj.$$state.value;
+        }
     });
 })(angular);
