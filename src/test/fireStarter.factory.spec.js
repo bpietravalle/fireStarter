@@ -34,68 +34,6 @@
             });
         });
 
-        var types = [
-            ["array", ["getRecord", "keyAt", "indexFor", "ref", "destroy"],
-                ["add", "loaded", "remove", "save"]
-            ],
-            ["object", ["id", "ref", "priority", "value", "destroy"],
-                ["save", "remove", "loaded", "bindTo"]
-            ],
-            ["auth", ["unauth", "getAuth"],
-                ["authWithPassword", "authWithOAuthPopup", "changePassword", "changeEmail", "createUser", "removeUser", "requireAuth", "resetPassword"]
-            ],
-            ["geo", ["distance", "get", "query", "ref", "$ref", "remove", "set"],
-                ["set", "get", "remove"]
-            ]
-        ];
-
-
-        function simpleTests(y) {
-            var defined = [];
-            var promises = [];
-            var defaultMethods = ["timestamp", "path"];
-
-
-            describe(y[0], function() {
-                beforeEach(function() {
-                    test = fireStarter(y[0], path);
-                });
-                it("should be defined", function() {
-                    expect(fireStarter(y[0], path)).toBeDefined();
-                });
-                Array.prototype.push.apply(defined, defaultMethods);
-                Array.prototype.push.apply(defined, y[1]);
-                Array.prototype.push.apply(defined, y[2]);
-                Array.prototype.push.apply(promises, y[2]);
-
-                function defineTests(x) {
-                    it(x + " should be defined", function() {
-                        expect(test[x]).toBeDefined();
-                    });
-                }
-
-                function promiseTests(x) {
-                    it(x + " should be a promise", function() {
-                        switch (x) {
-                            case "set":
-                                return expect(test[x]("key", [90, 100])).toBeAPromise();
-                            case "get":
-                                return expect(test[x]("key")).toBeAPromise();
-                            case "remove":
-                                return expect(test[x]("key")).toBeAPromise();
-                            default:
-                                return expect(test[x]()).toBeAPromise();
-                        }
-
-                    });
-
-                }
-                defined.forEach(defineTests);
-                promises.forEach(promiseTests);
-            });
-        }
-
-        types.forEach(simpleTests);
         describe("geofire", function() {
             beforeEach(function() {
                 path = fireStarter("geo", "trips");
@@ -173,66 +111,14 @@
                 });
             });
         });
-        describe("array methods", function() {
-            beforeEach(function() {
-                test = fireStarter("array", "trips");
-            });
-            describe("length", function() {
-
-                it("should work", function() {
-                    expect(test.length()).toEqual(0);
-                    test.ref().push("one");
-                    test.ref().push("two");
-                    test.ref().push("three");
-                    test.ref().flush();
-                    $rootScope.$digest();
-                    expect(test.length()).toEqual(3);
-                });
-
-            });
-            describe("idx", function() {
-                beforeEach(function() {
-                    test.ref().push("one");
-                    test.ref().push("two");
-                    test.ref().push("three");
-                    test.ref().flush();
-                    $rootScope.$digest();
-
-                });
-
-
-                it("should work for queries", function() {
-                    var items = ["one", "two", "three"];
-                    var i = 0;
-
-                    function checkIdx(y) {
-                        var key = test.keyAt(i);
-                        expect(test.idx(i)).toEqual(jasmine.objectContaining({
-                            $id: key,
-                            $priority: null,
-                            $value: y
-                        }));
-                        i++;
-                    }
-                    items.forEach(checkIdx);
-                });
-
-                it("should work for setting primitive values", function() {
-                    var val = test.idx(0).$value;
-                    expect(val).toEqual("one");
-                    val = "four";
-                    expect(val).toEqual("four");
-                });
-            });
-        });
         var afTypes = [
-            ["ARRAY", ["$getRecord", "$keyAt", "$indexFor", "$ref", "$destroy"],
+            ["array", ["$getRecord", "$keyAt", "$indexFor", "$ref", "$destroy"],
                 ["$add", "$loaded", "$remove", "$save"]
             ],
-            ["OBJECT", ["$id", "$ref", "$priority", "$value", "$destroy"],
+            ["object", ["$id", "$ref", "$priority", "$destroy"],
                 ["$save", "$remove", "$loaded", "$bindTo"]
             ],
-            ["AUTH", ["$unauth", "$getAuth"],
+            ["auth", ["$unauth", "$getAuth"],
                 ["$authWithPassword", "$authWithOAuthPopup", "$changePassword", "$changeEmail", "$createUser", "$removeUser", "$requireAuth", "$resetPassword"]
             ],
         ];
@@ -263,7 +149,7 @@
                 describe("constructing firebaseRef", function() {
                     beforeEach(function() {
                         test = fireStarter(y[0], ["trips"]);
-                        if (y[0] === "OBJECT") {
+                        if (y[0] === "object") {
                             test.$value = "test";
                             test.$ref().flush();
                         }
@@ -280,7 +166,7 @@
                     beforeEach(function() {
                         ref = ref.child("trips");
                         test = fireStarter(y[0], ref, true);
-                        if (y[0] === "OBJECT") {
+                        if (y[0] === "object") {
                             test.$value = "test";
                             test.$ref().flush();
                         }
