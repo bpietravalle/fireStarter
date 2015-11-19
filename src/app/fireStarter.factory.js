@@ -2,8 +2,9 @@
     "use strict";
     var FireStarter;
 
-    angular.module("firebase-starter", ["firebase"])
+    angular.module("firebase.starter", ["firebase"])
         .factory("fireStarter", FireStarterFactory);
+
 
     /** @ngInject */
     function FireStarterFactory($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
@@ -27,9 +28,9 @@
         this._log = $log;
         this._path = path;
         this._type = type;
-        var typeOptions = ["auth", "array", "object", "geo", "ARRAY", "OBJECT", "AUTH"];
+        var typeOptions = ["auth", "array", "object", "geo"];
         if (typeOptions.indexOf(this._type) < 0) {
-            throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'AUTH','OBJECT','ARRAY',or 'geo'");
+            throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'geo'");
         }
         this._flag = flag || null;
         if (angular.isObject(this._flag) && this._flag !== true) {
@@ -54,7 +55,7 @@
         }
 
         function build(t, p, f) {
-            if (t === 'auth' && !p || t === "AUTH" && !p) {
+            if (t === 'auth' && !p) {
                 return this._wrap(t, this._root());
             } else if (f === true) {
                 return this._wrap(t, p);
@@ -90,11 +91,11 @@
         }
 
         function wrap(t, entity) {
-            if (t === 'object' || t === 'OBJECT') {
+            if (t === 'object') {
                 return this._firebaseObject(entity);
-            } else if (t === 'array' || t === 'ARRAY') {
+            } else if (t === 'array') {
                 return this._firebaseArray(entity);
-            } else if (t === 'auth' || t === 'AUTH') {
+            } else if (t === 'auth') {
                 return this._firebaseAuth(entity);
             } else if (t === 'geo') {
                 return new GeoFire(entity);
@@ -113,113 +114,12 @@
             fire.inspect = inspect;
 
             switch (self._type) {
-                case "object":
-                    return FirebaseObject(fire);
-                case "array":
-                    return FirebaseArray(fire);
-                case "auth":
-                    return FirebaseAuth(fire);
                 case "geo":
                     return Geofire(fire);
-                case "ARRAY":
-                    return returnBase(fire);
-                case "OBJECT":
-                    return returnBase(fire);
-                case "AUTH":
+                default:
                     return returnBase(fire);
             }
 
-
-            function FirebaseAuth(auth) {
-
-                return angular.extend(auth, {
-                    base: base,
-                    path: path,
-                    authAnonymously: authAnonymously,
-                    authWithCustomToken: authWithCustomToken,
-                    authWithPassword: authWithPassword,
-                    authWithOAuthPopup: authWithOAuthPopup,
-                    changePassword: changePassword,
-                    changeEmail: changeEmail,
-                    createUser: createUser,
-                    getAuth: getAuth,
-                    onAuth: onAuth,
-                    removeUser: removeUser,
-                    requireAuth: requireAuth,
-                    resetPassword: resetPassword,
-                    unauth: unauth,
-                    waitForAuth: waitForAuth
-                });
-
-
-                function authAnonymously(options) {
-                    return self._firebase.$authAnonymously(options);
-                }
-
-                function authWithCustomToken(token, options) {
-                    return self._firebase.$authWithCustomToken(token, options);
-                }
-
-                function authWithPassword(creds, options) {
-                    return self._firebase.$authWithPassword(creds, options);
-
-                }
-
-
-                function authWithOAuthPopup(provider) {
-                    var options = {
-                        remember: true,
-                        scope: "email"
-                    };
-
-                    return self._firebase.$authWithOAuthPopup(provider, options);
-                }
-
-                function changeEmail(creds) {
-
-                    return self._firebase.$changeEmail(creds);
-                }
-
-                function changePassword(creds) {
-                    return self._firebase.$changePassword(creds);
-                }
-
-                function createUser(creds) {
-                    return self._firebase.$createUser(creds);
-                }
-
-
-                function getAuth() {
-                    return self._firebase.$getAuth();
-                }
-
-                function onAuth(cb, context) {
-                    return self._firebase.$onAuth(cb, context);
-                }
-
-                function removeUser(creds) {
-                    return self._firebase.$removeUser(creds);
-                }
-
-                function requireAuth() {
-                    return self._firebase.$requireAuth();
-                }
-
-                function resetPassword(creds) {
-                    return self._firebase.$resetPassword(creds);
-                }
-
-
-                function unauth() {
-                    return self._firebase.$unauth();
-                }
-
-                function waitForAuth() {
-                    return self._firebase.$waitForAuth();
-                }
-
-
-            }
 
             function Geofire(geo) {
                 /*  from angularGeoFire by Mike Pugh
@@ -227,7 +127,6 @@
 
                 return angular.extend(geo, {
 
-                    path: path,
                     distance: geofireDistance,
                     get: geofireGet,
                     query: geofireQuery,
@@ -319,170 +218,10 @@
 
             }
 
-            function FirebaseArray(arr) {
-
-                return angular.extend(arr, {
-                    base: base,
-                    path: path,
-                    add: add,
-                    destroy: destroy,
-                    getRecord: getRecord,
-                    keyAt: keyAt,
-                    indexFor: indexFor,
-                    idx: idx,
-                    length: length,
-                    loaded: loaded,
-                    ref: ref,
-                    remove: remove,
-                    save: save,
-                    watch: watch
-                });
-
-
-                function add(rec) {
-                    return self._firebase.$add(rec);
-                }
-
-                function destroy() {
-                    return self._firebase.$destroy();
-                }
-
-                function getRecord(key) {
-                    return self._firebase.$getRecord(key);
-                }
-
-                function indexFor(val) {
-                    return self._firebase.$indexFor(val);
-                }
-
-                function idx(x) {
-                    return self._firebase[x];
-                }
-
-                function length() {
-                    return self._firebase.length;
-                }
-
-                function keyAt(rec) {
-                    return self._firebase.$keyAt(rec);
-                }
-
-                function loaded(s, f) {
-                    return self._firebase.$loaded(s, f);
-                }
-
-                function ref() {
-                    self._log.info(self._firebase);
-                    return self._firebase.$ref();
-                }
-
-                function remove(rec) {
-                    // if (angular.isNumber(rec)) {
-                    //     rec = keyAt(rec);
-                    // }
-                    return self._firebase.$remove(rec);
-                }
-
-                function save(rec) {
-                    return self._firebase.$save(rec);
-                }
-
-                function watch(cb, context) {
-                    return self._firebase.$watch(cb, context);
-                }
-
-            }
-
-            function FirebaseObject(obj) {
-
-                return angular.extend(obj, {
-                    base: base,
-                    path: path,
-                    bindTo: bindTo,
-                    destroy: destroy,
-                    id: id,
-                    loaded: loaded,
-                    ref: ref,
-                    remove: remove,
-                    save: save,
-                    priority: priority,
-                    value: value,
-                    watch: watch
-                });
-
-                function bindTo(s, v) {
-                    return self._firebase.$bindTo(s, v);
-                }
-
-                function destroy() {
-                    return self._firebase.$destroy();
-
-                }
-
-                function id() {
-                    return self._firebase.$id;
-                }
-
-                function loaded(s, f) {
-                    return self._firebase.$loaded(s, f);
-                }
-
-                function priority() {
-                    return self._firebase.$priority;
-
-                }
-
-                function ref() {
-                    return self._firebase.$ref();
-                }
-
-                function remove() {
-                    return self._firebase.$remove();
-                }
-
-
-                function save() {
-                    return self._firebase.$save();
-                }
-
-                function value(val) {
-                    //mmm...not so sure'bout this
-                    if (!val) {
-                        return self._firebase.$value;
-                    } else {
-                        return setValue(val);
-                    }
-
-                }
-
-                function setValue(val) {
-                    self._firebase.$value = val;
-                    return self._firebase.$value;
-                }
-
-                function watch(cb, context) {
-                    return self._firebase.$watch(cb, context);
-                }
-            }
-
-            function base() {
-                return self._firebase;
-            }
-
-            function path() {
-                if (self._flag === true) {
-                    return self._path.path;
-                } else {
-                    return self._path;
-                }
-
-            }
 
             function timestamp() {
                 return Firebase.ServerValue.TIMESTAMP;
             }
-
-            //untested/unused
 
             function returnBase() {
                 return self._firebase;

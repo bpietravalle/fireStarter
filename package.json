@@ -1,10 +1,10 @@
 {
-  "name": "firebase-starter",
+  "name": "firebase.starter",
   "author": {
     "name": "Brian Pietravalle",
     "email": "bpietravalle@gmail.com"
   },
-  "version": "0.1.1",
+  "version": "0.1.3",
   "license": "MIT",
   "description": "experimental wrapper for angularfire and geofire",
   "keywords": [
