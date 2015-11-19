@@ -1,6 +1,6 @@
 # fireStarter
 
-fireStarter is a very simple wrapper for angularFire and Geofire.
+fireStarter is a very simple wrapper for [angularFire](https://github.com/firebase/angularfire) and [Geofire](https://github.com/firebase/geofire-js).
 
 
 ## Installation & Setup
@@ -77,7 +77,7 @@ $ git clone https://github.com/bpietravalle/fireStarter.git
 $ cd fireStarter
 $ npm install               # install dependencies
 ```
-Refer to the gulp-angular generator by Swiip for full list of commands. The commands
+Refer to the [generator-gulp-angular](https://github.com/Swiip/generator-gulp-angular) for full list of commands. The commands
 for unit tests are:
 
 ```bash
