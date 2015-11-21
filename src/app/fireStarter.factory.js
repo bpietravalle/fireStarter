@@ -24,6 +24,7 @@
         this._firebaseAuth = $firebaseAuth;
         this._firebaseObject = $firebaseObject;
         this._firebaseArray = $firebaseArray;
+        this._GeoFire = GeoFire;
         this._q = $q;
         this._log = $log;
         this._path = path;
@@ -98,7 +99,7 @@
             } else if (t === 'auth') {
                 return this._firebaseAuth(entity);
             } else if (t === 'geo') {
-                return new GeoFire(entity);
+                return new this._GeoFire(entity);
             }
         }
         this._firebase = this._build(this._type, this._path, this._flag);
@@ -137,19 +138,35 @@
                 });
 
                 function geofireDistance(loc1, loc2) {
-                    return self._firebase.distance(loc1, loc2);
+                    return self._GeoFire.distance(loc1, loc2);
                 }
 
                 function geofireGet(key) {
-                    var deferred = self._q.defer();
-                    self._timeout(function() {
-                        self._firebase.get(key).then(function(result) {
-                            deferred.resolve(result);
-                        }).catch(function(error) {
-                            deferred.reject(error);
-                        });
-                    });
-                    return deferred.promise;
+									// var deferred = self._q.defer();
+
+                    return self._timeout(function() {
+                                return self._firebase.get(key)
+                                    .then(function(result) {
+                                        return result;
+                                    }, function(err) {
+                                        return err;
+                                    })
+                            })
+                            .then(setReturnValue)
+                            .catch(standardError);
+
+                        function setReturnValue(res) {
+                            return res;
+                        }
+
+                        // return self._firebase.get(key)
+                        //     .then(function(result) {
+                        //         deferred.resolve(result);
+                        //     }).catch(function(error) {
+                        //         deferred.reject(error);
+                        //     });
+                    // });
+                    // return deferred.promise;
                 }
 
 

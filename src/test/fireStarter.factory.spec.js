@@ -78,14 +78,53 @@
 
             describe("get()", function() {
                 beforeEach(function() {
-                    test = path.get("key");
-                    $timeout.flush();
-                    $rootScope.$digest();
-                    path.ref().flush();
-                    $rootScope.$digest();
                 });
                 it("should be a promise", function() {
+                    test = path.get("key");
                     expect(test).toBeAPromise();
+                });
+                it("should return correct firebase ref", function() {
+                    test = path.get("key");
+                    $rootScope.$digest();
+                    $timeout.flush();
+                    $rootScope.$digest();
+                    expect(flushData().key()).toEqual("key");
+                    expect(flushData()).toBeAFirebaseRef();
+                });
+                it("should return correct firebase ref", function() {
+                    test1 = path.get("key2");
+                    $rootScope.$digest();
+                    $timeout.flush();
+                    $rootScope.$digest();
+                    expect(flushData().key()).toEqual("key2");
+                    expect(flushData()).toBeAFirebaseRef();
+                });
+            });
+
+            function flushData(key) {
+                if (key) {
+                    return path.ref().getFlushQueue()[0].context[key];
+                } else {
+                    return path.ref().getFlushQueue()[0].context;
+
+                }
+            }
+
+            function resolve(obj, cb) {
+                return obj.$$state.pending[0][0].resolve(cb);
+            }
+
+            describe("distance()", function() {
+                beforeEach(function() {
+                    var dc = [38.907, -77.037];
+                    var ma = [42.2137, -71.779913];
+                    test = path.distance(dc, ma);
+                });
+                it("should not be a promise", function() {
+                    expect(test).not.toBeAPromise();
+                });
+                it("should be a number", function() {
+                    expect(test).toEqual(jasmine.any(Number));
                 });
             });
 
