@@ -5,9 +5,9 @@
 
 
         beforeEach(function() {
-            MockFirebase.override();
             angular.module("firebase.starter")
-                .constant('FBURL', 'https://your-firebase.firebaseio.com/');
+                .constant('FBURL', 'https://your-firebase.firebaseio.com/')
+                .constant('QUERY', "https://geofire.firebaseio.com");
             module('firebase.starter');
             inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_, _$timeout_) {
                 $log = _$log_;
@@ -18,8 +18,6 @@
                 deferred = $q.defer();
             });
             rootPath = "https://your-firebase.firebaseio.com";
-            ref = new MockFirebase("data://");
-            path = ["path"]
             spyOn($log, "info").and.callThrough();
             spyOn($q, "reject").and.callThrough();
             success = jasmine.createSpy("success");
@@ -27,15 +25,17 @@
         });
         describe("constructor", function() {
             beforeEach(function() {
-                test = fireStarter("object", path);
+                test = fireStarter("object", ["path"]);
             });
             it("should be defined", function() {
                 expect(fireStarter).toBeDefined();
             });
         });
 
+
         describe("geofire", function() {
             beforeEach(function() {
+                MockFirebase.override();
                 path = fireStarter("geo", "trips");
                 test = path.set("key", [90, 100]);
                 $rootScope.$digest();
@@ -77,25 +77,32 @@
             });
 
             describe("get()", function() {
-                beforeEach(function() {
-                });
+                beforeEach(function() {});
                 it("should be a promise", function() {
                     test = path.get("key");
                     expect(test).toBeAPromise();
                 });
-                it("should return correct firebase ref", function() {
+                it("should add correct record to flush queue", function() {
                     test = path.get("key");
                     $rootScope.$digest();
                     $timeout.flush();
                     $rootScope.$digest();
                     expect(flushData().key()).toEqual("key");
+                    expect(flushData().getData()).toEqual({
+                        g: jasmine.any(String),
+                        l: [90, 100]
+                    });
                     expect(flushData()).toBeAFirebaseRef();
                 });
-                it("should return correct firebase ref", function() {
+                it("should return correct record to flush queue", function() {
                     test1 = path.get("key2");
                     $rootScope.$digest();
                     $timeout.flush();
                     $rootScope.$digest();
+                    expect(flushData().getData()).toEqual({
+                        g: jasmine.any(String),
+                        l: [50, 75]
+                    });
                     expect(flushData().key()).toEqual("key2");
                     expect(flushData()).toBeAFirebaseRef();
                 });
@@ -119,11 +126,14 @@
                     var dc = [38.907, -77.037];
                     var ma = [42.2137, -71.779913];
                     test = path.distance(dc, ma);
+                    test1 = path.distance(ma, dc);
                 });
                 it("should not be a promise", function() {
                     expect(test).not.toBeAPromise();
                 });
                 it("should be a number", function() {
+                    expect(test).toEqual(test1);
+                    expect(test).toBeGreaterThan(500);
                     expect(test).toEqual(jasmine.any(Number));
                 });
             });
@@ -164,6 +174,8 @@
 
         function afBaseTest(y) {
             describe(y[0], function() {
+                MockFirebase.override();
+                ref = new MockFirebase("data://");
                 var defined = [];
                 var promises = [];
                 Array.prototype.push.apply(defined, y[1]);

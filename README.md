@@ -48,7 +48,6 @@ Either way make sure the constant is available in your module.
     angular.module("yourApp")
 	 .constant("FBURL", "http://your-firebase.firebaseio.com");
 
-
 })();
 ```
 ## Usage
@@ -70,7 +69,12 @@ the given firebaseRef and set this argument to _true_, otherwise leave this argu
 4. _constant_: if you want the angular $injector to search for a different constant than FBURL, then pass the constant as a string here.
 
 
-## Contributing
+### Thanks!
+The Geofire portion is largely due to [Mike Pugh](https://github.com/mikepugh/)'s awesome [wrapper](https://github.com/mikepugh/AngularGeofire).
+Thanks!
+
+
+### Contributing
 
 Yes, please.  Below should get you setup.
 

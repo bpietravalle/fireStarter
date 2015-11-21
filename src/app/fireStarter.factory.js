@@ -31,7 +31,7 @@
         this._type = type;
         var typeOptions = ["auth", "array", "object", "geo"];
         if (typeOptions.indexOf(this._type) < 0) {
-            throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'geo'");
+            throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', or 'geo'");
         }
         this._flag = flag || null;
         if (angular.isObject(this._flag) && this._flag !== true) {
@@ -123,7 +123,7 @@
 
 
             function Geofire(geo) {
-                /*  from angularGeoFire by Mike Pugh
+                /*  inspired by angularGeoFire by Mike Pugh
                  */
 
                 return angular.extend(geo, {
@@ -142,29 +142,29 @@
                 }
 
                 function geofireGet(key) {
-									// var deferred = self._q.defer();
+                    // var deferred = self._q.defer();
 
                     return self._timeout(function() {
-                                return self._firebase.get(key)
-                                    .then(function(result) {
-                                        return result;
-                                    }, function(err) {
-                                        return err;
-                                    })
-                            })
-                            .then(setReturnValue)
-                            .catch(standardError);
+                            return self._firebase.get(key)
+                                .then(function(result) {
+                                    return result;
+                                }, function(err) {
+                                    return err;
+                                })
+                        })
+                        .then(setReturnValue)
+                        .catch(standardError);
 
-                        function setReturnValue(res) {
-                            return res;
-                        }
+                    function setReturnValue(res) {
+                        return res;
+                    }
 
-                        // return self._firebase.get(key)
-                        //     .then(function(result) {
-                        //         deferred.resolve(result);
-                        //     }).catch(function(error) {
-                        //         deferred.reject(error);
-                        //     });
+                    // return self._firebase.get(key)
+                    //     .then(function(result) {
+                    //         deferred.resolve(result);
+                    //     }).catch(function(error) {
+                    //         deferred.reject(error);
+                    //     });
                     // });
                     // return deferred.promise;
                 }
@@ -195,9 +195,6 @@
                             },
                             cancel: function() {
                                 return geoQuery.cancel();
-                            },
-                            remove: function() {
-                                return geoQuery.remove();
                             }
                         };
                     }
@@ -248,8 +245,13 @@
                 return self._q.when(obj);
             }
 
-            function inspect() {
-                return self._firebase
+            function inspect(item) {
+                if (item) {
+                    item = "_" + item;
+                    return self[item];
+                } else {
+                    return self;
+                }
             }
 
             function standardError(err) {
