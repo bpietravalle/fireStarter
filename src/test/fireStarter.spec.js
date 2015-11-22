@@ -5,7 +5,7 @@
         var invalid = [
             ["object", {}],
             ["number", 123123],
-            ["undefined",undefined],
+            ["undefined", undefined],
             ["null", null]
         ];
 
@@ -29,7 +29,6 @@
             });
         }
         invalid.forEach(notStrTest);
-
 
     });
     describe('fireStarter Factory', function() {
@@ -67,6 +66,23 @@
                 expect(fireStarter).toBeDefined();
             });
         });
+        describe("root", function() {
+            beforeEach(function() {
+                test = fireStarter("root");
+            });
+            it("should be defined", function() {
+                expect(test).toBeDefined();
+            });
+            it("should be a firebaseRef", function() {
+                expect(test).toBeAFirebaseRef();
+            });
+						it("should have correct path",function(){
+							expect(test.toString()).toEqual(rootPath);
+						});
+						it("should not have any parentRef",function(){
+							expect(test.parent()).toEqual(null);
+						});
+        });
         describe("Auth", function() {
             beforeEach(function() {
                 test = fireStarter("auth");
@@ -74,12 +90,12 @@
             it("should be defined", function() {
                 expect(fireStarter).toBeDefined();
             });
-						it("should be a $firebaseAuth object",function(){
-							expect(test.$onAuth).toEqual(jasmine.any(Function));
-							expect(test.$createUser).toEqual(jasmine.any(Function));
-							expect(test.$removeUser).toEqual(jasmine.any(Function));
+            it("should be a $firebaseAuth object", function() {
+                expect(test.$onAuth).toEqual(jasmine.any(Function));
+                expect(test.$createUser).toEqual(jasmine.any(Function));
+                expect(test.$removeUser).toEqual(jasmine.any(Function));
 
-						});
+            });
         });
 
 

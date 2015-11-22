@@ -38,9 +38,9 @@
             this._log = $log;
             this._path = path;
             this._type = type;
-            var typeOptions = ["auth", "array", "object", "geo"];
+            var typeOptions = ["auth", "array", "object", "geo","root"];
             if (typeOptions.indexOf(this._type) < 0) {
-                throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', or 'geo'");
+                throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'root', or 'geo'");
             }
             this._flag = flag || null;
             if (angular.isObject(this._flag) && this._flag !== true) {
@@ -81,7 +81,7 @@
             function setRef() {
                 // from angularfire-seed repo
                 var args = Array.prototype.slice.call(arguments);
-								var ref = this._root;
+                var ref = this._root;
                 if (args.length) {
                     ref = ref.child(setPath(args));
                 }
@@ -89,7 +89,9 @@
             }
 
             function build(t, p, f) {
-                if (t === 'auth' && !p) {
+                if (t === 'root' && !p  && !flag) {
+                    return this._root;
+                } else if (t === 'auth' && !p) {
                     return this._wrap(t, this._root);
                 } else if (f === true) {
                     return this._wrap(t, p);
