@@ -30,6 +30,12 @@ describe('$firebaseArray', function () {
 
   var arr, $firebaseArray, fireStarter, $utils, $timeout, testutils;
   beforeEach(function() {
+            var rootPath = "https://your-firebase.firebaseio.com";
+
+            angular.module("firebase.starter")
+                .config(function(fireStarterProvider) {
+                    fireStarterProvider.setRoot(rootPath);
+                });
     module('firebase.starter');
     module('testutils');
     inject(function (_fireStarter_, _$firebaseArray_, $firebaseUtils, _$timeout_, _testutils_) {

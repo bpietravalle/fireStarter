@@ -7,7 +7,9 @@
         beforeEach(function() {
             rootPath = "https://your-firebase.firebaseio.com";
             angular.module("firebase.starter")
-                .constant('FBURL', rootPath);
+                .config(function(fireStarterProvider) {
+                    fireStarterProvider.setRoot(rootPath);
+                });
             module('firebase.starter');
             inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_, _$timeout_) {
                 $log = _$log_;

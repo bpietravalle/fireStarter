@@ -17,6 +17,12 @@ describe('$firebaseObject', function() {
             error: []
         };
 
+            var rootPath = "https://your-firebase.firebaseio.com";
+
+            angular.module("firebase.starter")
+                .config(function(fireStarterProvider) {
+                    fireStarterProvider.setRoot(rootPath);
+                });
         module('firebase.starter');
         module('testutils', function($provide) {
             $provide.value('$log', {

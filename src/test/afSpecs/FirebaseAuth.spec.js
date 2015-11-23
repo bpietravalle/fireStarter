@@ -9,6 +9,12 @@ describe('FirebaseAuth',function(){
       warn:[]
     };
 
+            var rootPath = "https://your-firebase.firebaseio.com";
+
+            angular.module("firebase.starter")
+                .config(function(fireStarterProvider) {
+                    fireStarterProvider.setRoot(rootPath);
+                });
 		module('firebase.starter');
     module('firebase',function($provide){
       $provide.value('$log',{

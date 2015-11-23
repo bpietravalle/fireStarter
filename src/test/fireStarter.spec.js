@@ -1,15 +1,52 @@
 (function() {
     "use strict";
+    describe('Config', function() {
+        var fireStarter;
+        var invalid = [
+            ["object", {}],
+            ["number", 123123],
+            ["undefined",undefined],
+            ["null", null]
+        ];
+
+        function notStrTest(y) {
+            describe("With rootPath that = " + y[0], function() {
+                beforeEach(function() {
+                    angular.module("firebase.starter")
+                        .config(function(fireStarterProvider) {
+                            fireStarterProvider.setRoot(y[1]);
+                        });
+                    module('firebase.starter');
+                    inject(function(_fireStarter_) {
+                        fireStarter = _fireStarter_;
+                    });
+                });
+                it("should throw error", function() {
+                    expect(function() {
+                        fireStarter("geo", ["path"]);
+                    }).toThrow();
+                });
+            });
+        }
+        invalid.forEach(notStrTest);
+
+
+    });
     describe('fireStarter Factory', function() {
-        var rootPath, success, failure, fireStarter, ref, test, test1, $log, $rootScope, deferred, root, path, $q, $timeout;
+        var $window, rootPath, success, failure, fireStarter, ref, test, test1, $log, FBURL, $rootScope, deferred, root, path, $q, $timeout;
 
 
         beforeEach(function() {
+            MockFirebase.override();
+
+            rootPath = "https://your-firebase.firebaseio.com";
             angular.module("firebase.starter")
-                .constant('FBURL', 'https://your-firebase.firebaseio.com/')
-                .constant('QUERY', "https://geofire.firebaseio.com");
+                .config(function(fireStarterProvider) {
+                    fireStarterProvider.setRoot(rootPath);
+                });
             module('firebase.starter');
-            inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_, _$timeout_) {
+            inject(function(_fireStarter_, _$window_, _$log_, _$rootScope_, _$q_, _$timeout_) {
+                $window = _$window_;
                 $log = _$log_;
                 fireStarter = _fireStarter_;
                 $timeout = _$timeout_;
@@ -17,7 +54,6 @@
                 $q = _$q_;
                 deferred = $q.defer();
             });
-            rootPath = "https://your-firebase.firebaseio.com";
             spyOn($log, "info").and.callThrough();
             spyOn($q, "reject").and.callThrough();
             success = jasmine.createSpy("success");
@@ -25,7 +61,7 @@
         });
         describe("constructor", function() {
             beforeEach(function() {
-                test = fireStarter("object", ["path"]);
+                test = fireStarter("geo", ["path"]);
             });
             it("should be defined", function() {
                 expect(fireStarter).toBeDefined();
@@ -35,7 +71,6 @@
 
         describe("geofire", function() {
             beforeEach(function() {
-                MockFirebase.override();
                 path = fireStarter("geo", "trips");
                 test = path.set("key", [90, 100]);
                 $rootScope.$digest();
