@@ -67,6 +67,20 @@
                 expect(fireStarter).toBeDefined();
             });
         });
+        describe("Auth", function() {
+            beforeEach(function() {
+                test = fireStarter("auth");
+            });
+            it("should be defined", function() {
+                expect(fireStarter).toBeDefined();
+            });
+						it("should be a $firebaseAuth object",function(){
+							expect(test.$onAuth).toEqual(jasmine.any(Function));
+							expect(test.$createUser).toEqual(jasmine.any(Function));
+							expect(test.$removeUser).toEqual(jasmine.any(Function));
+
+						});
+        });
 
 
         describe("geofire", function() {

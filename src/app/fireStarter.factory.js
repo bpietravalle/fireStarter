@@ -90,7 +90,7 @@
 
             function build(t, p, f) {
                 if (t === 'auth' && !p) {
-                    return this._wrap(t, this._rootPath);
+                    return this._wrap(t, this._root);
                 } else if (f === true) {
                     return this._wrap(t, p);
                 } else {

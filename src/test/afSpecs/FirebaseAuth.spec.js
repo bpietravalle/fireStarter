@@ -37,9 +37,8 @@ describe('FirebaseAuth',function(){
         'createUser','changePassword','changeEmail','removeUser','resetPassword'
       ]);
 
-    inject(function(_$firebaseAuth_,_$timeout_,_fireStarter_){
+    inject(function(_$timeout_,_fireStarter_){
 			fireStarter = _fireStarter_;
-      $firebaseAuth = _$firebaseAuth_;
       auth = fireStarter("auth",ref, true);
       $timeout = _$timeout_;
     });

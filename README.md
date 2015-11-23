@@ -1,6 +1,6 @@
-# fireStarter
+# FireStarter
 
-fireStarter is a very simple wrapper for [angularFire](https://github.com/firebase/angularfire) and [Geofire](https://github.com/firebase/geofire-js).
+FireStarter is a very simple wrapper for [angularFire](https://github.com/firebase/angularfire) and [Geofire](https://github.com/firebase/geofire-js).
 
 
 ## Installation & Setup
@@ -13,13 +13,27 @@ $ npm install firebase.starter --save
 $ bower install firebase.starter --save
 ```
 
-1.) Include fireStarter in your app dependencies.
+1.) Include FireStarter in your app dependencies.
 
 ```javascript
 angular.module("yourApp",['firebase.starter']);
 ```
+2.) Define your root url in a config block using the `setRoot` method.
 
-2.) Inject fireStarter service into your angular service.
+```javascript
+
+(function(){
+    "use strict";
+
+    angular.module("yourApp")
+			.config(function(fireStarterProvider){
+				 fireStarterProvider.setRoot("http://your-firebase.firebaseio.com");
+			});
+
+})();
+```
+
+3.) Inject fireStarter into your angular service.
 
 ```javascript
 
@@ -36,26 +50,12 @@ angular.module("yourApp",['firebase.starter']);
 
 })();
 ```
-3.) Define a root node constant.  The fireStarter service will look for a constant called 'FBURL'.
-If you'd prefer to have fireStarter look for a different constant, you can do so, as explained below.
-Either way make sure the constant is available in your module.
-
-```javascript
-
-(function(){
-    "use strict";
-
-    angular.module("yourApp")
-	 .constant("FBURL", "http://your-firebase.firebaseio.com");
-
-})();
-```
 ## Usage
 
-The fireStarter service can take up to four arguments
+Firestarter can take up to three arguments
 
 ```javascript
-	 fireStarter(type, path, flag, constant);
+	 fireStarter(type, path, flag);
 ```
 1. _type_: the specific API you want to access. Options include: "object","array","auth", or "geo".
 
@@ -65,8 +65,6 @@ just pass the argument as a string.  Also, you do not need to pass a _path_ argu
 
 3. _flag_: if you already have a firebaseRef and simply want to wrap it in angularFire, then set the _path_ argument to 
 the given firebaseRef and set this argument to _true_, otherwise leave this argument blank.
-
-4. _constant_: if you want the angular $injector to search for a different constant than FBURL, then pass the constant as a string here.
 
 
 ### Thanks!
@@ -83,8 +81,8 @@ $ git clone https://github.com/bpietravalle/fireStarter.git
 $ cd fireStarter
 $ npm install               # install dependencies
 ```
-Refer to the [generator-gulp-angular](https://github.com/Swiip/generator-gulp-angular) for full list of commands. The commands
-for unit tests are:
+Refer to the [generator-gulp-angular](https://github.com/Swiip/generator-gulp-angular) for full list of
+commands. The commands for unit tests are:
 
 ```bash
 * gulp test #run test suite once
