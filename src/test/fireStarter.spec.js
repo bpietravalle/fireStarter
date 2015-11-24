@@ -66,22 +66,19 @@
                 expect(fireStarter).toBeDefined();
             });
         });
-        describe("root", function() {
+        describe("constant", function() {
             beforeEach(function() {
-                test = fireStarter("root");
+                test = fireStarter("array",["main","path"],null,rootPath);
             });
             it("should be defined", function() {
                 expect(test).toBeDefined();
             });
-            it("should be a firebaseRef", function() {
-                expect(test).toBeAFirebaseRef();
+            it("should be a $firebaseArray", function() {
+                expect(test.$ref()).toBeAFirebaseRef();
             });
-						it("should have correct path",function(){
-							expect(test.toString()).toEqual(rootPath);
-						});
-						it("should not have any parentRef",function(){
-							expect(test.parent()).toEqual(null);
-						});
+            it("should have correct root url", function() {
+                expect(test.$ref().root().toString()).toEqual(rootPath);
+            });
         });
         describe("Auth", function() {
             beforeEach(function() {

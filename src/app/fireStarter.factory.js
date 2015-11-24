@@ -8,17 +8,16 @@
 
     function FireStarterProvider() {
         var prov = this;
-        prov.rootRef;
         prov.setRoot = function(val) {
             prov.rootRef = val;
 
         };
         prov.$get = ["$timeout", "$injector", "$window", "$firebaseAuth", "$firebaseObject",
             "$firebaseArray", "$q", "$log",
-            function FireStarterFactory($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
+            function($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
 
-                return function(type, path, flag) {
-                    var fb = new FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag);
+                return function(type, path, flag, constant) {
+                    var fb = new FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant);
                     return fb.construct();
 
                 };
@@ -26,7 +25,7 @@
             }
         ];
 
-        FireStarter = function($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag) {
+        function FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant) {
             this._timeout = $timeout;
             this._injector = $injector;
             this._window = $window;
@@ -38,7 +37,8 @@
             this._log = $log;
             this._path = path;
             this._type = type;
-            var typeOptions = ["auth", "array", "object", "geo","root"];
+            this._constant = constant;
+            var typeOptions = ["auth", "array", "object", "geo", "root"];
             if (typeOptions.indexOf(this._type) < 0) {
                 throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'root', or 'geo'");
             }
@@ -49,7 +49,11 @@
             if (Array.isArray(this._path) && angular.isObject(this._flag)) {
                 throw new Error("Invalid flag: " + this._flag + " for path: " + this._path + ".  Please leave flag argument undefined if you wish to create a firebase Reference");
             }
-            this._rootPath = prov.rootRef
+            if (this._constant) {
+                this._rootPath = this._constant;
+            } else {
+                this._rootPath = prov.rootRef
+            }
             if (!this._rootPath) {
                 throw new Error("You must specify a root firebase node in a config block");
             }
@@ -89,9 +93,7 @@
             }
 
             function build(t, p, f) {
-                if (t === 'root' && !p  && !flag) {
-                    return this._root;
-                } else if (t === 'auth' && !p) {
+                if (t === 'auth' && !p) {
                     return this._wrap(t, this._root);
                 } else if (f === true) {
                     return this._wrap(t, p);
@@ -152,7 +154,6 @@
                     }
 
                     function geofireGet(key) {
-                        // var deferred = self._q.defer();
 
                         return self._timeout(function() {
                                 return self._firebase.get(key)
@@ -169,14 +170,6 @@
                             return res;
                         }
 
-                        // return self._firebase.get(key)
-                        //     .then(function(result) {
-                        //         deferred.resolve(result);
-                        //     }).catch(function(error) {
-                        //         deferred.reject(error);
-                        //     });
-                        // });
-                        // return deferred.promise;
                     }
 
 

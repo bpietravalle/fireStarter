@@ -3,11 +3,6 @@ describe("Inject", function() {
     var testFactory, rootFactory;
     beforeEach(function() {
         angular.module("test", ["firebase.starter"])
-            .factory("rootFactory", ["fireStarter",
-                function(fireStarter) {
-                    return fireStarter("root");
-                }
-            ])
             .factory("testFactory", ["fireStarter",
                 function(fireStarter) {
                     return fireStarter("object", ["main"]);
@@ -18,14 +13,11 @@ describe("Inject", function() {
 						});
 
         module("test");
-        inject(function(_testFactory_, _rootFactory_) {
-            rootFactory = _rootFactory_;
+        inject(function(_testFactory_) {
             testFactory = _testFactory_;
         });
     });
     it("should be defined", function() {
-        expect(rootFactory).toBeAFirebaseRef();
-        expect(rootFactory).toBeDefined();
         expect(testFactory.$id).toEqual("main");
         expect(testFactory).toBeDefined();
     });
