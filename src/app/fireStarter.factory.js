@@ -16,8 +16,8 @@
             "$firebaseArray", "$q", "$log",
             function($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
 
-                return function(type, path, flag, constant) {
-                    var fb = new FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant);
+                return function(type, path, flag) {
+                    var fb = new FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag);
                     return fb.construct();
 
                 };
@@ -25,7 +25,7 @@
             }
         ];
 
-        function FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag, constant) {
+        function FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag) {
             this._timeout = $timeout;
             this._injector = $injector;
             this._window = $window;
@@ -37,7 +37,6 @@
             this._log = $log;
             this._path = path;
             this._type = type;
-            this._constant = constant;
             var typeOptions = ["auth", "array", "object", "geo", "ref"];
             if (typeOptions.indexOf(this._type) < 0) {
                 throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'ref', or 'geo'");
@@ -49,11 +48,7 @@
             if (Array.isArray(this._path) && angular.isObject(this._flag)) {
                 throw new Error("Invalid flag: " + this._flag + " for path: " + this._path + ".  Please leave flag argument undefined if you wish to create a firebase Reference");
             }
-            if (this._constant) {
-                this._rootPath = this._constant;
-            } else {
-                this._rootPath = prov.rootRef
-            }
+            this._rootPath = prov.rootRef
             if (!this._rootPath) {
                 throw new Error("You must specify a root firebase node in a config block");
             }
@@ -127,6 +122,10 @@
 
                 fire.timestamp = timestamp;
                 fire.inspect = inspect;
+
+                function root() {
+                    return self._window.Firebase(self._rootPath);
+                }
 
                 switch (self._type) {
                     case "geo":
