@@ -38,9 +38,9 @@
             this._path = path;
             this._type = type;
             this._constant = constant;
-            var typeOptions = ["auth", "array", "object", "geo", "root"];
+            var typeOptions = ["auth", "array", "object", "geo", "ref"];
             if (typeOptions.indexOf(this._type) < 0) {
-                throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'root', or 'geo'");
+                throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'ref', or 'geo'");
             }
             this._flag = flag || null;
             if (angular.isObject(this._flag) && this._flag !== true) {
@@ -93,7 +93,9 @@
             }
 
             function build(t, p, f) {
-                if (t === 'auth' && !p) {
+                if (t === "ref") {
+                    return this._setRef(p);
+                } else if (t === 'auth' && !p) {
                     return this._wrap(t, this._root);
                 } else if (f === true) {
                     return this._wrap(t, p);
