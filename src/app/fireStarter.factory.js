@@ -88,26 +88,34 @@
             }
 
             function build(t, p, f) {
-                if (t === "ref") {
-                    return this._setRef(p);
-                } else if (t === 'auth' && !p) {
-                    return this._wrap(t, this._root);
-                } else if (f === true) {
-                    return this._wrap(t, p);
-                } else {
-                    return this._wrap(t, this._setRef(p));
+                switch (f) {
+                    case true:
+                        return this._wrap(t, p);
+                    default:
+                        switch (t) {
+                            case "ref":
+                                return this._setRef(p);
+                            case "auth":
+                                return this._wrap(t, this._root);
+                            default:
+                                return this._wrap(t, this._setRef(p));
+                        }
                 }
             }
 
             function wrap(t, entity) {
-                if (t === 'object') {
-                    return this._firebaseObject(entity);
-                } else if (t === 'array') {
-                    return this._firebaseArray(entity);
-                } else if (t === 'auth') {
-                    return this._firebaseAuth(entity);
-                } else if (t === 'geo') {
-                    return new this._GeoFire(entity);
+                switch (t) {
+                    case "object":
+                        return this._firebaseObject(entity);
+                    case "array":
+                        return this._firebaseArray(entity);
+                    case "auth":
+                        return this._firebaseAuth(entity);
+                    case "geo":
+                        return new this._GeoFire(entity);
+										default:
+											throw new Error("Invalid type at: " + t);
+
                 }
             }
 
