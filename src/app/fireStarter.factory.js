@@ -7,25 +7,34 @@
 
 
     function FireStarterProvider() {
-        var prov = this;
+        var rootRef, prov = this;
         prov.setRoot = function(val) {
-            prov.rootRef = val;
-
+            rootRef = val;
         };
+        prov.getRoot = function() {
+            return rootRef;
+        }
         prov.$get = ["$timeout", "$injector", "$window", "$firebaseAuth", "$firebaseObject",
             "$firebaseArray", "$q", "$log",
             function($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
 
                 return function(type, path, flag) {
-                    var fb = new FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag);
-                    return fb.construct();
+                    switch (angular.isString(prov.getRoot())) {
+                        case true:
+                            var fb = new FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag);
+                            fb.constructRoot();
+                            fb.constructBase();
+                            return fb.complete();
 
+                        case false:
+                            throw new Error("You must specify a root firebase node in a config block");
+                    }
                 };
-
             }
         ];
 
         function FireStarter($timeout, $injector, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, type, path, flag) {
+
             this._timeout = $timeout;
             this._injector = $injector;
             this._window = $window;
@@ -35,8 +44,9 @@
             this._GeoFire = GeoFire;
             this._q = $q;
             this._log = $log;
-            this._path = path;
+            this._rootPath = prov.getRoot();
             this._type = type;
+            this._path = path;
             var typeOptions = ["auth", "array", "object", "geo", "ref"];
             if (typeOptions.indexOf(this._type) < 0) {
                 throw new Error("Invalid type: " + this._type + ".  Please enter 'auth','object','array', 'ref', or 'geo'");
@@ -48,92 +58,92 @@
             if (Array.isArray(this._path) && angular.isObject(this._flag)) {
                 throw new Error("Invalid flag: " + this._flag + " for path: " + this._path + ".  Please leave flag argument undefined if you wish to create a firebase Reference");
             }
-            this._rootPath = prov.rootRef
-            if (!this._rootPath) {
-                throw new Error("You must specify a root firebase node in a config block");
-            }
-            if (!angular.isString(this._rootPath)) {
-                throw new Error("Invalid type.  Root firebase node must be a string.  Error at: " + this._rootPath);
-            }
-            this._build = build;
-            this._wrap = wrap;
-            this._setRef = setRef;
-            this._root = new this._window.Firebase(this._rootPath);
 
 
-            function setPath(args) {
-                // from angularfire-seed repo
-                for (var i = 0; i < args.length; i++) {
-                    if (angular.isArray(args[i])) {
-                        args[i] = setPath(args[i]);
-                    } else if (typeof args[i] !== 'string') {
-                        try {
-                            args[i] = args[i].toString();
-                        } catch (err) {
-                            throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
-                        }
-                    }
-                }
-                return args.join('/');
-            }
 
-            function setRef() {
-                // from angularfire-seed repo
-                var args = Array.prototype.slice.call(arguments);
-                var ref = this._root;
-                if (args.length) {
-                    ref = ref.child(setPath(args));
-                }
-                return ref;
-            }
 
-            function build(t, p, f) {
-                switch (f) {
-                    case true:
-                        return this._wrap(t, p);
-                    default:
-                        switch (t) {
-                            case "ref":
-                                return this._setRef(p);
-                            case "auth":
-                                return this._wrap(t, this._root);
-                            default:
-                                return this._wrap(t, this._setRef(p));
-                        }
-                }
-            }
-
-            function wrap(t, entity) {
-                switch (t) {
-                    case "object":
-                        return this._firebaseObject(entity);
-                    case "array":
-                        return this._firebaseArray(entity);
-                    case "auth":
-                        return this._firebaseAuth(entity);
-                    case "geo":
-                        return new this._GeoFire(entity);
-										default:
-											throw new Error("Invalid type at: " + t);
-
-                }
-            }
-
-            this._firebase = this._build(this._type, this._path, this._flag);
         };
 
 
         FireStarter.prototype = {
-            construct: function() {
+            constructRoot: function() {
+                var self = this;
+                var root = new self._window.Firebase(self._rootPath);
+
+                self._root = root;
+                return self._root;
+            },
+            constructBase: function() {
+                var self = this;
+                var base = build(self._type, self._path, self._flag);
+								if(!self._root){
+									throw new Error("You must define your root firebaseRef first");
+								}
+
+                function build(t, p, f) {
+                    switch (f) {
+                        case true:
+                            return wrap(t, p);
+                        default:
+                            switch (t) {
+                                case "ref":
+                                    return setRef(p);
+                                case "auth":
+                                    return wrap(t, self._root);
+                                default:
+                                    return wrap(t, setRef(p));
+                            }
+                    }
+                }
+
+                function setRef() {
+                    // from angularfire-seed repo
+                    var args = Array.prototype.slice.call(arguments);
+                    var ref = self._root;
+                    if (args.length) {
+                        ref = ref.child(setPath(args));
+                    }
+                    return ref;
+                }
+
+                function setPath(args) {
+                    // from angularfire-seed repo
+                    for (var i = 0; i < args.length; i++) {
+                        if (angular.isArray(args[i])) {
+                            args[i] = setPath(args[i]);
+                        } else if (typeof args[i] !== 'string') {
+                            try {
+                                args[i] = args[i].toString();
+                            } catch (err) {
+                                throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
+                            }
+                        }
+                    }
+                    return args.join('/');
+                }
+
+
+                function wrap(t, entity) {
+                    switch (t) {
+                        case "object":
+                            return self._firebaseObject(entity);
+                        case "array":
+                            return self._firebaseArray(entity);
+                        case "auth":
+                            return self._firebaseAuth(entity);
+                        case "geo":
+                            return new self._GeoFire(entity);
+                        default:
+                            throw new Error("Invalid type at: " + t);
+
+                    }
+                }
+                self._firebase = base;
+                return self._firebase;
+            },
+            complete: function() {
                 var self = this;
                 var fire = {};
-
-                fire.timestamp = timestamp;
-                fire.inspect = inspect;
-
-                function root() {
-                    return self._window.Firebase(self._rootPath);
-                }
 
                 switch (self._type) {
                     case "geo":
@@ -151,11 +161,13 @@
 
                         distance: geofireDistance,
                         get: geofireGet,
+												inspect: inspect,
                         query: geofireQuery,
                         $ref: geofireRef,
                         ref: geofireRef,
                         remove: geofireRemove,
                         set: geofireSet,
+												timestamp: timestamp
                     });
 
                     function geofireDistance(loc1, loc2) {

@@ -1,6 +1,6 @@
 'use strict';
 describe("Config", function() {
-    var testFactory, rootFactory, rootPath;
+    var testFactory, geoFactory, rootFactory, rootPath;
     describe("Invalid Config - without setting rootPath", function() {
         it("should throw error", function() {
             expect(function() {
@@ -26,6 +26,11 @@ describe("Config", function() {
                         return fireStarter("ref", ["main"]);
                     }
                 ])
+                .factory("geoFactory", ["fireStarter",
+                    function(fireStarter) {
+                        return fireStarter("geo", ["main"]);
+                    }
+                ])
                 .factory("testFactory", ["fireStarter",
                     function(fireStarter) {
                         return fireStarter("object", ["main"]);
@@ -36,7 +41,8 @@ describe("Config", function() {
                 });
 
             module("test");
-            inject(function(_testFactory_, _rootFactory_) {
+            inject(function(_testFactory_, _rootFactory_,_geoFactory_) {
+                geoFactory = _geoFactory_;
                 rootFactory = _rootFactory_;
                 testFactory = _testFactory_;
             });
