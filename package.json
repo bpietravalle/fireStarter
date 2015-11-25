@@ -4,7 +4,7 @@
     "name": "Brian Pietravalle",
     "email": "bpietravalle@gmail.com"
   },
-  "version": "0.1.5-5",
+  "version": "0.1.5-6",
   "license": "MIT",
   "description": "experimental wrapper for angularfire and geofire",
   "keywords": [
