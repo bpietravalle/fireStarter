@@ -37,7 +37,6 @@
 
         beforeEach(function() {
             MockFirebase.override();
-
             rootPath = "https://your-firebase.firebaseio.com";
             angular.module("firebase.starter")
                 .config(function(fireStarterProvider) {
