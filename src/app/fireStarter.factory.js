@@ -8,8 +8,10 @@
     function FireStarter() {
         var self = this;
         self.setRoot = function(val) {
-            self._rootPath = val;
-            return self._rootPath;
+            return angular.extend(self, {
+                _rootPath: val
+            });
+
         };
         self.getRoot = function() {
             return self._rootPath;
