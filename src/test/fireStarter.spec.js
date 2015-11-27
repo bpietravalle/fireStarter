@@ -29,10 +29,26 @@
             });
         }
         invalid.forEach(notStrTest);
-
+        describe("Valid", function() {
+            var test;
+            beforeEach(function() {
+                angular.module("firebase.starter")
+                    .config(function(fireStarterProvider) {
+                        fireStarterProvider.setRoot("http://root.ref.com");
+                    });
+                module('firebase.starter');
+                inject(function(_fireStarter_) {
+                    fireStarter = _fireStarter_;
+                });
+                test = fireStarter("geo", ["path"]);
+            });
+            it("should de defined", function() {
+                expect(test).toBeDefined();
+            });
+        });
     });
     describe('fireStarter Factory', function() {
-        var $window, rootPath, success, failure, fireStarter, ref, test, test1, $log, FBURL, $rootScope, deferred, root, path, $q, $timeout;
+        var $window, rootPath, success, $timeout, failure, fireStarter, ref, test, test1, $log, FBURL, $rootScope, deferred, root, path, $q, $timeout;
 
 
         beforeEach(function() {
@@ -62,21 +78,7 @@
                 test = fireStarter("geo", ["path"]);
             });
             it("should be defined", function() {
-                expect(fireStarter).toBeDefined();
-            });
-        });
-        describe("constant", function() {
-            beforeEach(function() {
-                test = fireStarter("array",["main","path"],null,rootPath);
-            });
-            it("should be defined", function() {
                 expect(test).toBeDefined();
-            });
-            it("should be a $firebaseArray", function() {
-                expect(test.$ref()).toBeAFirebaseRef();
-            });
-            it("should have correct root url", function() {
-                expect(test.$ref().root().toString()).toEqual(rootPath);
             });
         });
         describe("Auth", function() {

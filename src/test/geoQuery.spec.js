@@ -42,7 +42,6 @@
             angular.extend(ref, extension);
 
             subject = fireStarter("geo", ref, true);
-
         });
 
         beforeEach(function() {
@@ -61,6 +60,7 @@
         it("should resolve to an object", function() {
             expect(getPromValue(test)).toBeAn("object");
         });
+
         var meth = ["radius", "center", "updateCriteria", "on", "cancel"]
 
         function definedTest(y) {
@@ -72,9 +72,6 @@
             });
         }
 				meth.forEach(definedTest);
-
-
-
 
 
         function wrapPromise(p) {
