@@ -26,8 +26,9 @@ angular.module("yourApp",['firebase.starter']);
     "use strict";
 
     angular.module("yourApp")
-			.config(function(fireStarterProvider){
-				 fireStarterProvider.setRoot("http://your-firebase.firebaseio.com");
+			.constant("YOURURL","https://your-firebase.firebaseio.com");
+			.config(function(fireStarterProvider,YOURURL){
+				 fireStarterProvider.setRoot(YOURURL);
 			});
 
 })();
