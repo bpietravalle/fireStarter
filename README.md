@@ -1,5 +1,7 @@
 # FireStarter
 
+[![Build Status](https://travis-ci.org/bpietravalle/fireStarter.svg?branch=master)](https://travis-ci.org/bpietravalle/fireStarter)
+
 FireStarter is a very simple wrapper for [angularFire](https://github.com/firebase/angularfire) and [Geofire](https://github.com/firebase/geofire-js).
 
 
@@ -58,7 +60,7 @@ Firestarter can take up to three arguments
 ```javascript
 	 fireStarter(type, path, flag);
 ```
-1. _type_: the specific API you want to access. Options include: "object","array","auth", or "geo".
+1. _type_: the specific API you want to access. Options include: "array","auth", "geo", "object", or "ref".
 
 2. _path_: the path of the child node you wish to create.  This argument should be passed as an array
 of strings.  However, if there is only a single item in the array, you can also
