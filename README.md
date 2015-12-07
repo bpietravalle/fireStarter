@@ -1,6 +1,7 @@
 # FireStarter
 
 [![Build Status](https://travis-ci.org/bpietravalle/fireStarter.svg?branch=master)](https://travis-ci.org/bpietravalle/fireStarter)
+[![npm version](https://badge.fury.io/js/firebase.starter.svg)](https://badge.fury.io/js/firebase.starter)
 
 FireStarter is a very simple wrapper for [angularFire](https://github.com/firebase/angularfire) and [Geofire](https://github.com/firebase/geofire-js).
 

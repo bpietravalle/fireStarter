@@ -158,15 +158,9 @@
                                     return result;
                                 }, function(err) {
                                     return err;
-                                })
+                                });
                         })
-                        .then(setReturnValue)
                         .catch(standardError);
-
-                    function setReturnValue(res) {
-                        return res;
-                    }
-
                 }
 
 
@@ -187,9 +181,9 @@
                             updateCriteria: function(criteria) {
                                 return geoQuery.updateCriteria(criteria);
                             },
-                            on: function(eventType, cb, context) {
+                            on: function(eventType, cb, ctx) {
                                 return geoQuery.on(eventType, function(key, location, distance) {
-                                    return qWrap(cb.call(context, key, location, distance))
+                                    return qWrap(cb.call(ctx, key, location, distance))
                                         .catch(standardError);
                                 });
                             },
@@ -211,10 +205,16 @@
                             self._firebase.remove(key)
                                 .then(null, function(err) {
                                     return self._q.reject(err);
-                                })
+                                });
                         })
-                        .then(geofireRef)
+                        .then(returnPromRef)
                         .catch(standardError);
+                }
+
+                function returnPromRef() {
+                    return self._timeout(function() {
+                        return geofireRef();
+                    });
                 }
 
                 function geofireSet(key, coords) {
@@ -223,9 +223,9 @@
                                 .then(null,
                                     function(err) {
                                         return self._q.reject(err);
-                                    })
+                                    });
                         })
-                        .then(geofireRef)
+                        .then(returnPromRef)
                         .catch(standardError);
                 }
 
