@@ -1,6 +1,7 @@
 node_modules/
 coverage/
 bower_components/
+.coveralls.yml
 .sass-cache/
 .idea/
 .tmp/
