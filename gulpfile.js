@@ -20,11 +20,8 @@ wrench.readdirSyncRecursive('./gulp').filter(function(file) {
 }).map(function(file) {
   require('./gulp/' + file);
 });
-gulp.task('concat', function() {
-    return gulp.src(["./src/app/**/*.module.js", "./src/app/**/*.js",
-            "!./src/app/**/*.spec.js"
-        ])
-        .pipe(concat("fuelProvider.js"))
+gulp.task('annotate', function() {
+    return gulp.src('./src/app/fireStarter.factory.js')
         .pipe(ngAnnotate())
         .pipe(gulp.dest("./dist/scripts/"));
 });

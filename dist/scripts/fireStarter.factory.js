@@ -2,11 +2,12 @@
     "use strict";
 
     angular.module("firebase.starter", ["firebase"])
-        .config(function($provide) {
+        .config(["$provide", function($provide) {
             $provide.provider("fireStarter", FireStarter);
-        });
+        }]);
 
     function FireStarter() {
+        fireStarterGet.$inject = ["$timeout", "$window", "$firebaseAuth", "$firebaseObject", "$firebaseArray", "$q", "$log"];
         var self = this;
         self.setRoot = setRoot;
         self.getRoot = getRoot;
@@ -180,16 +181,6 @@
                             },
                             updateCriteria: function(criteria) {
                                 return geoQuery.updateCriteria(criteria);
-                            },
-                            broadcast: function(eventType, broadcastName, scope) {
-                                return geoQuery.on(eventType, function(key, location, distance) {
-                                    scope.$broadcast(broadcastName, key, location, distance);
-                                });
-                            },
-                            emit: function(eventType, emitName, scope) {
-                                return geoQuery.on(eventType, function(key, location, distance) {
-                                    scope.$emit(emitName, key, location, distance);
-                                });
                             },
                             on: function(eventType, cb, ctx) {
                                 return geoQuery.on(eventType, function(key, location, distance) {

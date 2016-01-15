@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('GeoQuery', function() {
-        var querySpy, extension, subject, rootPath, success, failure, fireStarter, ref, test, test1, $log, $rootScope, deferred, root, path, $q, $timeout;
+        var querySpy, extension, subject, rootPath, fireStarter, ref, test, $log, $rootScope, $q;
 
 
         beforeEach(function() {
@@ -11,13 +11,11 @@
                     fireStarterProvider.setRoot(rootPath);
                 });
             module('firebase.starter');
-            inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_, _$timeout_) {
+            inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_) {
                 $log = _$log_;
                 fireStarter = _fireStarter_;
-                $timeout = _$timeout_;
                 $rootScope = _$rootScope_;
                 $q = _$q_;
-                deferred = $q.defer();
             });
             spyOn($log, "info").and.callThrough();
             spyOn($q, "reject").and.callThrough();
@@ -34,7 +32,7 @@
 
                         }
                     }
-                },
+                }
             };
             extension = {
                 orderByChild: jasmine.createSpy("child").and.returnValue(querySpy)
@@ -73,10 +71,6 @@
         }
 				meth.forEach(definedTest);
 
-
-        function wrapPromise(p) {
-            return p.then(success, failure);
-        }
 
         function getPromValue(obj) {
             return obj.$$state.value;
