@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     describe('GeoQuery', function() {
-        var querySpy, extension, subject, rootPath, fireStarter, ref, test, $log, $rootScope, $q;
+        var scope, extension, subject, rootPath, fireStarter, ref, test, $log, $rootScope, $q;
 
 
         beforeEach(function() {
@@ -15,6 +15,7 @@
                 $log = _$log_;
                 fireStarter = _fireStarter_;
                 $rootScope = _$rootScope_;
+                scope = $rootScope.$new();
                 $q = _$q_;
             });
             spyOn($log, "info").and.callThrough();
@@ -22,20 +23,22 @@
 
             ref = new MockFirebase(rootPath).child("geofire");
 
-            querySpy = {
-                startAt: function() {
-                    return {
-                        endAt: function() {
-                            return {
-                                on: function() {}
-                            }
+            function querySpy() {
+                return {
+                    startAt: jasmine.createSpy("startedAt").and.callFake(function() {
+                        return {
+                            endAt: jasmine.createSpy("endAt").and.callFake(function() {
+                                return {
+                                    on: jasmine.createSpy("on")
+                                };
 
-                        }
-                    }
+                            })
+                        };
+                    })
                 }
-            };
+            }
             extension = {
-                orderByChild: jasmine.createSpy("child").and.returnValue(querySpy)
+                orderByChild: jasmine.createSpy("child").and.callFake(querySpy)
             };
             angular.extend(ref, extension);
 
@@ -59,7 +62,7 @@
             expect(getPromValue(test)).toBeAn("object");
         });
 
-        var meth = ["radius", "center", "updateCriteria", "on", "cancel"]
+        var meth = ["radius", "broadcast", "emit", "center", "updateCriteria", "on", "cancel"]
 
         function definedTest(y) {
             it(y + " should be defined", function() {
@@ -69,11 +72,40 @@
                 expect(getPromValue(test)[y]).toBeA("function");
             });
         }
-				meth.forEach(definedTest);
+        meth.forEach(definedTest);
 
+
+        var eventMethods = [
+            ["emit", "$emit"],
+            ["broadcast", "$broadcast"]
+        ];
+
+        function testEventMeths(y) {
+            describe(y[0], function() {
+                var query, evt;
+                beforeEach(function() {
+                    spyOn(scope, y[1]).and.callThrough();
+                    test = subject.query({
+                        center: [90, 100],
+                        radius: 1
+                    });
+                    $rootScope.$digest();
+                    query = getPromValue(test);
+                });
+                it("should create a geoQueryRegistration", function() {
+                    evt = query[y[0]]("key_entered", "EVENTNAME", scope);
+                    expect(evt['cancel']).toEqual(jasmine.any(Function));
+                });
+            });
+        }
+        eventMethods.forEach(testEventMeths);
 
         function getPromValue(obj) {
             return obj.$$state.value;
         }
+
+        //from geofire.js
+
+
     });
 })(angular);

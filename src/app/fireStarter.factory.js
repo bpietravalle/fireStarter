@@ -131,8 +131,6 @@
             }
 
             function buildGeofire() {
-                /*  inspired by angularGeoFire by Mike Pugh
-                 */
 
                 return angular.extend({}, {
 
@@ -172,6 +170,9 @@
 
                     function extendQuery(geoQuery) {
                         return {
+                            ref: function() {
+                                return geofireRef();
+                            },
                             center: function() {
                                 return geoQuery.center();
                             },
@@ -179,16 +180,24 @@
                                 return geoQuery.radius();
                             },
                             updateCriteria: function(criteria) {
-                                return geoQuery.updateCriteria(criteria);
-                            },
-                            broadcast: function(eventType, broadcastName, scope) {
-                                return geoQuery.on(eventType, function(key, location, distance) {
-                                    scope.$broadcast(broadcastName, key, location, distance);
+                                return self._timeout(function() {
+                                    geoQuery.updateCriteria(criteria);
                                 });
                             },
-                            emit: function(eventType, emitName, scope) {
+                            broadcast: function(eventType, eventName, scope) {
                                 return geoQuery.on(eventType, function(key, location, distance) {
-                                    scope.$emit(emitName, key, location, distance);
+                                    return self._timeout(function() {
+                                        scope.$broadcast(eventName, key, location, distance);
+                                    });
+                                });
+                            },
+                            emit: function(eventType, eventName, scope) {
+                                self._log.info("in the emit");
+                                return geoQuery.on(eventType, function(key, location, distance) {
+                                    self._log.info("in the emit callback");
+                                    return self._timeout(function() {
+                                        scope.$emit(eventName, key, location, distance);
+                                    });
                                 });
                             },
                             on: function(eventType, cb, ctx) {
@@ -204,6 +213,7 @@
                     }
 
                 }
+
 
                 function geofireRef() {
                     return self._firebase.ref();
