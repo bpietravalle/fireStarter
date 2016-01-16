@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     angular.module("firebase.starter")
-        .service("geofire", geofireFactory);
+        .service("geofireFactory", geofireFactory);
 
     /** @ngInject */
     function geofireFactory($window) {

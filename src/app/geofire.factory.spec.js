@@ -11,8 +11,8 @@
                     fireStarterProvider.setRoot(rootPath);
                 });
             module('firebase.starter');
-            inject(function(_geofire_) {
-                subject = _geofire_;
+            inject(function(_geofireFactory_) {
+                subject = _geofireFactory_;
             });
         });
         it("should return a function", function() {

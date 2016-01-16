@@ -11,11 +11,11 @@
         self.setRoot = setRoot;
         self.getRoot = getRoot;
 
-				/**
-				 * @param{String} str - the root path of your firebase
-				 */
+        /**
+         * @param{String} str - the root path of your firebase
+         */
 
-       function setRoot(str) {
+        function setRoot(str) {
             return angular.extend(self, {
                 _rootPath: str
             });
@@ -28,13 +28,13 @@
         self.$get = fireStarterGet;
 
         /** @ngInject */
-        function fireStarterGet($timeout, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, geofire) {
+        function fireStarterGet($timeout, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, geofireFactory) {
             self._timeout = $timeout;
             self._window = $window;
             self._firebaseAuth = $firebaseAuth;
             self._firebaseObject = $firebaseObject;
             self._firebaseArray = $firebaseArray;
-            self._GeoFire = geofire;
+            self._GeoFire = geofireFactory;
             self._q = $q;
             self._log = $log;
 
@@ -43,12 +43,12 @@
              * @param{String} type - type of object you wish to create - options are "object",
              * "ref","array","geo","auth"
              * @param{Array|Object} path - ["path","to","child","node"] relative to the root path
-						 * set above; if 'flag' param is 'true' this param must be the firebase reference.
-						 * This param should be left undefined if you wish to construct a $firebaseAuth object
+             * set above; if 'flag' param is 'true' this param must be the firebase reference.
+             * This param should be left undefined if you wish to construct a $firebaseAuth object
              * @param{Boolean} flag - to bypass constructing a firebase ref and to simply wrap an
              * existing ref, set this param to 'true', otherwise leave undefined
              * @return{Object} firebase reference, $firebaseObject, $firebaseArray, $firebaseAuth,
-             * or a GeoFire object at the given child node	 
+             * or a GeoFire object at the given child node
              */
 
             return function(type, path, flag) {

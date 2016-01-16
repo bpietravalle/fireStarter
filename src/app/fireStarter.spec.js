@@ -59,9 +59,9 @@
                     fireStarterProvider.setRoot(rootPath);
                 });
             module('firebase.starter');
-            inject(function(_fireStarter_, _geofire_, _$log_, _$rootScope_, _$q_, _$timeout_) {
+            inject(function(_fireStarter_, _geofireFactory_, _$log_, _$rootScope_, _$q_, _$timeout_) {
                 $log = _$log_;
-                geofire = _geofire_;
+                geofire = _geofireFactory_;
                 $timeout = _$timeout_;
                 fireStarter = _fireStarter_;
                 $rootScope = _$rootScope_;
