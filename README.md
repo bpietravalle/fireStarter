@@ -81,18 +81,17 @@ Thanks!
 
 Yes, please.  Below should get you setup.
 
+
 ```bash
 $ git clone https://github.com/bpietravalle/fireStarter.git
 $ cd fireStarter
-$ npm install               # install dependencies
+$ npm i && bower i # install dependencies
+$ gulp test #run test suite once
+$ gulp test:auto #watch files and run tests continually
 ```
-Refer to the [generator-gulp-angular](https://github.com/Swiip/generator-gulp-angular) for full list of
-commands. The commands for unit tests are:
+Any pending tasks associated with this repo are tracked [here](https://www.pivotaltracker.com/n/projects/1512608). 
 
-```bash
-* gulp test #run test suite once
-* gulp test:auto #watch files and run tests continually
-```
+
 
 
 

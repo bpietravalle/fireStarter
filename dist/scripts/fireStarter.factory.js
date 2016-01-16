@@ -1,20 +1,30 @@
 (function() {
     "use strict";
 
-    angular.module("firebase.starter", ["firebase"])
+    angular.module("firebase.starter", ["firebase"]);
+})();
+
+(function() {
+    "use strict";
+
+    angular.module("firebase.starter")
         .config(["$provide", function($provide) {
             $provide.provider("fireStarter", FireStarter);
         }]);
 
     function FireStarter() {
-        fireStarterGet.$inject = ["$timeout", "$window", "$firebaseAuth", "$firebaseObject", "$firebaseArray", "$q", "$log"];
+        fireStarterGet.$inject = ["$timeout", "$window", "$firebaseAuth", "$firebaseObject", "$firebaseArray", "$q", "$log", "geofire"];
         var self = this;
         self.setRoot = setRoot;
         self.getRoot = getRoot;
 
-        function setRoot(val) {
+				/**
+				 * @param{String} str - the root path of your firebase
+				 */
+
+       function setRoot(str) {
             return angular.extend(self, {
-                _rootPath: val
+                _rootPath: str
             });
         }
 
@@ -25,24 +35,35 @@
         self.$get = fireStarterGet;
 
         /** @ngInject */
-        function fireStarterGet($timeout, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log) {
+        function fireStarterGet($timeout, $window, $firebaseAuth, $firebaseObject, $firebaseArray, $q, $log, geofire) {
             self._timeout = $timeout;
             self._window = $window;
             self._firebaseAuth = $firebaseAuth;
             self._firebaseObject = $firebaseObject;
             self._firebaseArray = $firebaseArray;
-            self._GeoFire = GeoFire;
+            self._GeoFire = geofire;
             self._q = $q;
             self._log = $log;
+
+            /**
+             * @constructor
+             * @param{String} type - type of object you wish to create - options are "object",
+             * "ref","array","geo","auth"
+             * @param{Array|Object} path - ["path","to","child","node"] relative to the root path
+						 * set above; if 'flag' param is 'true' this param must be the firebase reference.
+						 * This param should be left undefined if you wish to construct a $firebaseAuth object
+             * @param{Boolean} flag - to bypass constructing a firebase ref and to simply wrap an
+             * existing ref, set this param to 'true', otherwise leave undefined
+             * @return{Object} firebase reference, $firebaseObject, $firebaseArray, $firebaseAuth,
+             * or a GeoFire object at the given child node	 
+             */
 
             return function(type, path, flag) {
                 self._type = type;
                 self._path = path;
                 self._flag = flag;
-
-                if (!angular.isObject(checkParams())) {
-                    self._firebase = build();
-                }
+                checkParams();
+                self._firebase = build();
 
                 switch (self._type) {
                     case "geo":
@@ -64,15 +85,16 @@
                 var typeOptions = ["auth", "array", "object", "geo", "ref"];
                 if (!angular.isString(rootPath())) {
                     throw new Error("You must specify a root firebase node in a config block");
-                } else if (typeOptions.indexOf(self._type) < 0) {
+                }
+                if (typeOptions.indexOf(self._type) < 0) {
                     throw new Error("Invalid type: " + self._type + ".  Please enter 'auth','object','array', 'ref', or 'geo'");
-                } else if (angular.isObject(self._flag) && self._flag !== true) {
+                }
+                if (angular.isDefined(self._flag) && self._flag !== true) {
 
                     throw new Error("Invalid flag: " + self._flag + ". Please enter 'true' if you wish to bypass creating a firebase Reference");
-                } else if (angular.isArray(self._path) && angular.isObject(self._flag)) {
+                }
+                if (angular.isArray(self._path) && angular.isDefined(self._flag) || angular.isString(self._path) && angular.isDefined(self._flag)) {
                     throw new Error("Invalid flag: " + self._flag + " for path: " + self._path + ".  Please leave flag argument undefined if you wish to create a firebase Reference");
-                } else {
-                    return null;
                 }
             }
 
@@ -96,9 +118,7 @@
                 // from angularfire-seed repo
                 var args = Array.prototype.slice.call(arguments);
                 var ref = rootRef();
-                if (args.length) {
-                    ref = ref.child(setPath(args));
-                }
+                ref = ref.child(setPath(args));
                 return ref;
             }
 
@@ -107,12 +127,12 @@
                 for (var i = 0; i < args.length; i++) {
                     if (angular.isArray(args[i])) {
                         args[i] = setPath(args[i]);
-                    } else if (angular.isString(args[i])) {
-                        try {
-                            args[i] = args[i].toString();
-                        } catch (err) {
-                            throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
-                        }
+                    }
+                    if (angular.isNumber(args[i])) {
+                        args[i] = args[i].toString();
+                    }
+                    if (!angular.isString(args[i])) {
+                        throw new Error('Argument ' + i + ' to setPath is not a string: ' + args[i]);
                     }
                 }
                 return args.join('/');
@@ -127,7 +147,7 @@
                     case "auth":
                         return self._firebaseAuth(entity);
                     case "geo":
-                        return new self._GeoFire(entity);
+                        return self._GeoFire.init(entity);
                 }
             }
 
@@ -155,9 +175,7 @@
                             return self._firebase.get(key)
                                 .then(function(result) {
                                     return result;
-                                }, function(err) {
-                                    return err;
-                                });
+                                }, standardError);
                         })
                         .catch(standardError);
                 }
@@ -171,9 +189,6 @@
 
                     function extendQuery(geoQuery) {
                         return {
-                            ref: function() {
-                                return geofireRef();
-                            },
                             center: function() {
                                 return geoQuery.center();
                             },
@@ -182,24 +197,9 @@
                             },
                             updateCriteria: function(criteria) {
                                 return self._timeout(function() {
-                                    geoQuery.updateCriteria(criteria);
-                                });
-                            },
-                            broadcast: function(eventType, eventName, scope) {
-                                return geoQuery.on(eventType, function(key, location, distance) {
-                                    return self._timeout(function() {
-                                        scope.$broadcast(eventName, key, location, distance);
-                                    });
-                                });
-                            },
-                            emit: function(eventType, eventName, scope) {
-                                self._log.info("in the emit");
-                                return geoQuery.on(eventType, function(key, location, distance) {
-                                    self._log.info("in the emit callback");
-                                    return self._timeout(function() {
-                                        scope.$emit(eventName, key, location, distance);
-                                    });
-                                });
+                                        return geoQuery.updateCriteria(criteria);
+                                    })
+                                    .catch(standardError);
                             },
                             on: function(eventType, cb, ctx) {
                                 return geoQuery.on(eventType, function(key, location, distance) {
@@ -224,9 +224,7 @@
                 function geofireRemove(key) {
                     return self._timeout(function() {
                             self._firebase.remove(key)
-                                .then(null, function(err) {
-                                    return self._q.reject(err);
-                                });
+                                .then(null, standardError);
                         })
                         .then(returnPromRef)
                         .catch(standardError);
@@ -241,10 +239,7 @@
                 function geofireSet(key, coords) {
                     return self._timeout(function() {
                             self._firebase.set(key, coords)
-                                .then(null,
-                                    function(err) {
-                                        return self._q.reject(err);
-                                    });
+                                .then(null, standardError);
                         })
                         .then(returnPromRef)
                         .catch(standardError);
@@ -255,13 +250,8 @@
                     return self._q.when(obj);
                 }
 
-                function inspect(item) {
-                    if (item) {
-                        item = "_" + item;
-                        return self[item];
-                    } else {
-                        return self;
-                    }
+                function inspect() {
+                    return self;
                 }
 
                 function standardError(err) {
@@ -272,3 +262,26 @@
     }
 
 }.call(this));
+
+(function() {
+    "use strict";
+    geofireFactory.$inject = ["$window"];
+    angular.module("firebase.starter")
+        .service("geofire", geofireFactory);
+
+    /** @ngInject */
+    function geofireFactory($window) {
+        var root = $window.GeoFire;
+        var geo = {
+            distance: root.distance,
+            init: init
+        };
+        return geo;
+
+        function init(ref) {
+            return new root(ref);
+        }
+
+    }
+
+})();

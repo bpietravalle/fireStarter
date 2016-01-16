@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    describe('Config', function() {
+    describe('Configuration', function() {
         var fireStarter;
         var invalid = [
             ["object", {}],
@@ -48,7 +48,7 @@
         });
     });
     describe('fireStarter Factory', function() {
-        var rootPath, $timeout, fireStarter, ref, test, test1, $log, $rootScope, path, $q;
+        var rootPath, geofire, $timeout, fireStarter, ref, test, test1, $log, $rootScope, path, $q;
 
 
         beforeEach(function() {
@@ -59,9 +59,10 @@
                     fireStarterProvider.setRoot(rootPath);
                 });
             module('firebase.starter');
-            inject(function(_fireStarter_, _$log_, _$rootScope_, _$q_,_$timeout_) {
+            inject(function(_fireStarter_, _geofire_, _$log_, _$rootScope_, _$q_, _$timeout_) {
                 $log = _$log_;
-								$timeout = _$timeout_;
+                geofire = _geofire_;
+                $timeout = _$timeout_;
                 fireStarter = _fireStarter_;
                 $rootScope = _$rootScope_;
                 $q = _$q_;
@@ -76,6 +77,58 @@
             it("should be defined", function() {
                 expect(test).toBeDefined();
             });
+            describe("Creating Path", function() {
+                it("should change numbers to strings for path", function() {
+                    var test = fireStarter("object", ["user", 123, "phones"]);
+                    expect(function() {
+                        test;
+                    }).not.toThrow();
+                    expect(test.$ref().toString()).toEqual(rootPath + "/user/123/phones");
+                });
+                it("should flatten nexted array for path", function() {
+                    var test = fireStarter("ref", ["user", ['123', "phones"]]);
+                    expect(function() {
+                        test;
+                    }).not.toThrow();
+                    expect(test.toString()).toEqual(rootPath + "/user/123/phones");
+                });
+            });
+            describe("Invalid Params", function() {
+                it("should throw exception if flag isn't true or undefined", function() {
+                    var ref = new MockFirebase(rootPath);
+                    expect(function() {
+                        fireStarter("object", ref, {});
+                    }).toThrow();
+                    expect(function() {
+                        fireStarter("object", ref, false);
+                    }).toThrow();
+                });
+                it("should throw exception if path is array and flag is defined", function() {
+                    expect(function() {
+                        fireStarter("object", ["path"], {});
+                    }).toThrow();
+                });
+                it("should throw exception if path is string and flag is defined", function() {
+                    expect(function() {
+                        fireStarter("object", "path", true);
+                    }).toThrow();
+                });
+                it("should throw exception if an item of path array isn't a number or string", function() {
+                    function myName() {
+                        "brian"
+                    }
+                    expect(function() {
+                        fireStarter("ref", ["path", myName]);
+                    }).toThrow();
+                    expect(function() {
+                        fireStarter("ref", ["path", {}]);
+                    }).toThrow();
+                    expect(function() {
+                        fireStarter("ref", ["path", undefined]);
+                    }).toThrow();
+                });
+
+            });
         });
         describe("Auth", function() {
             beforeEach(function() {
@@ -88,7 +141,6 @@
                 expect(test.$onAuth).toEqual(jasmine.any(Function));
                 expect(test.$createUser).toEqual(jasmine.any(Function));
                 expect(test.$removeUser).toEqual(jasmine.any(Function));
-
             });
         });
 
@@ -114,6 +166,109 @@
             it("should be firebaseRefs", function() {
                 expect(path.$ref()).toBeAFirebaseRef();
             });
+            describe("Inspect Method", function() {
+                it("should return 'self' object", function() {
+                    expect(path.inspect()).toEqual(jasmine.objectContaining({
+                        _rootPath: rootPath,
+                        _path: "trips",
+                        _type: "geo",
+                        _timeout: jasmine.any(Function),
+                        _firebaseAuth: jasmine.any(Function),
+                        _firebaseObject: jasmine.any(Function),
+                        _firebaseArray: jasmine.any(Function),
+                        _GeoFire: jasmine.any(Object),
+                        _q: jasmine.any(Function),
+                        _log: jasmine.any(Object),
+                        _firebase: jasmine.any(Object)
+                    }));
+                });
+            });
+            describe("GeoQuery", function() {
+                var subject;
+                beforeEach(function() {
+                    ref = new MockFirebase(rootPath).child("geofire");
+                    extend(ref);
+                    $rootScope.$digest();
+                    subject = fireStarter("geo", ref, true);
+
+                });
+                describe("Constructor", function() {
+                    beforeEach(function() {
+                        test = subject.query({
+                            center: [90, 100],
+                            radius: 15
+                        });
+                        $rootScope.$digest();
+                    });
+                    it("should be a promise", function() {
+                        expect(test).toBeAPromise();
+                    });
+                    it("should resolve to an object", function() {
+                        expect(getPromValue(test)).toBeAn("object");
+                    });
+
+                    var meth = ["radius", "center", "updateCriteria", "on", "cancel"]
+
+                    function definedTest(y) {
+                        it(y + " should be defined", function() {
+                            expect(getPromValue(test)[y]).toBeDefined();
+                        });
+                        it(y + " should be a function", function() {
+                            expect(getPromValue(test)[y]).toBeA("function");
+                        });
+                    }
+                    meth.forEach(definedTest);
+                });
+                describe("Returned Object", function() {
+                    var querySpy;
+                    beforeEach(function() {
+                        spyOn(geofire, "init").and.callFake(function() {
+                            return {
+                                query: function() {
+                                    return querySpy;
+                                }
+                            };
+                        });
+                        subject = fireStarter("geo", ref, true);
+                        querySpy = jasmine.createSpyObj("querySpy", ["radius", "center", "updateCriteria", "on", "cancel"]);
+                        test = subject.query({
+                            center: [90, 100],
+                            radius: 15
+                        });
+                        $rootScope.$digest();
+                        test = getPromValue(test);
+                    });
+                    var meths = ["center", "radius", "on", "updateCriteria", "cancel"];
+
+                    function queryMethodTest(y) {
+                        it("should call " + y + " on query object", function() {
+                            test[y]();
+                            if (y === "updateCriteria") {
+                                $timeout.flush();
+                            }
+                            expect(querySpy[y]).toHaveBeenCalled();
+                        });
+                    }
+                    meths.forEach(queryMethodTest);
+                });
+                describe("on()", function() {
+                    var reg, cb = jasmine.createSpy("cb"),
+                        ctx = jasmine.createSpy("ctx");
+                    beforeEach(function() {
+                        test = subject.query({
+                            center: [90, 100],
+                            radius: 15
+                        });
+                        $rootScope.$digest();
+                        test = getPromValue(test)
+                        reg = test.on("key_entered", cb, ctx);
+                    });
+                    it("should return a geoCallbackRegistration", function() {
+                        expect(reg.cancel).toEqual(jasmine.any(Function));
+                    });
+                });
+            });
+
             describe("set()", function() {
                 it("should be a promise", function() {
                     expect(test).toBeAPromise();
@@ -132,8 +287,8 @@
                 it("should return the firebase ref of the updated array", function() {
                     expect(getPromValue(test)).toBeAFirebaseRef();
                     expect(getPromValue(test).toString()).toEqual(rootPath + "/trips");
-										expect(getPromValue(test).getData().key).toBeDefined();
-										expect(getPromValue(test).getData().key2).toBeDefined();
+                    expect(getPromValue(test).getData().key).toBeDefined();
+                    expect(getPromValue(test).getData().key2).toBeDefined();
                 });
             });
 
@@ -178,10 +333,6 @@
                 }
             }
 
-            // function resolve(obj, cb) {
-            //     return obj.$$state.pending[0][0].resolve(cb);
-            // }
-
             describe("distance()", function() {
                 beforeEach(function() {
                     var dc = [38.907, -77.037];
@@ -222,10 +373,10 @@
                 it("should return the firebase ref of the updated array", function() {
                     expect(getPromValue(test)).toBeAFirebaseRef();
                     expect(getPromValue(test).toString()).toEqual(rootPath + "/trips");
-										expect(getPromValue(test).getData().key2).toBeDefined();
-										expect(getPromValue(test).getData().key).not.toBeDefined();
+                    expect(getPromValue(test).getData().key2).toBeDefined();
+                    expect(getPromValue(test).getData().key).not.toBeDefined();
                 });
-								
+
             });
         });
         var afTypes = [
@@ -301,6 +452,26 @@
 
         }
         afTypes.forEach(afBaseTest);
+
+        function extend(obj) {
+            return angular.extend(obj, {
+                orderByChild: jasmine.createSpy('child').and.callFake(function() {
+                    return {
+                        startAt: function() {
+                            return {
+                                endAt: function() {
+                                    return {
+                                        on: jasmine.createSpy("on")
+                                    };
+
+                                }
+                            };
+                        }
+                    };
+                })
+            });
+
+        }
 
         function getPromValue(obj) {
             return obj.$$state.value;

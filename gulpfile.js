@@ -16,12 +16,15 @@ var ngAnnotate = require('gulp-ng-annotate');
  *  in order to load all gulp tasks
  */
 wrench.readdirSyncRecursive('./gulp').filter(function(file) {
-  return (/\.(js|coffee)$/i).test(file);
+    return (/\.(js|coffee)$/i).test(file);
 }).map(function(file) {
-  require('./gulp/' + file);
+    require('./gulp/' + file);
 });
-gulp.task('annotate', function() {
-    return gulp.src('./src/app/fireStarter.factory.js')
+gulp.task('build', function() {
+    return gulp.src(["./src/app/**/*.module.js", "./src/app/**/*.js",
+            "!./src/app/**/*.spec.js"
+        ])
+        .pipe(concat("fireStarter.factory.js"))
         .pipe(ngAnnotate())
         .pipe(gulp.dest("./dist/scripts/"));
 });
@@ -31,6 +34,6 @@ gulp.task('annotate', function() {
  *  Default task clean temporaries directories and launch the
  *  main optimization build task
  */
-gulp.task('default', ['clean'], function () {
-  gulp.start('build');
+gulp.task('default', ['clean'], function() {
+    gulp.start('build');
 });
