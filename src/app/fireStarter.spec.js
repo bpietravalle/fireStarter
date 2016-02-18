@@ -284,12 +284,12 @@
                         l: [50, 75]
                     });
                 });
-                it("should return the firebase ref of the updated array", function() {
-                    expect(getPromValue(test)).toBeAFirebaseRef();
-                    expect(getPromValue(test).toString()).toEqual(rootPath + "/trips");
-                    expect(getPromValue(test).getData().key).toBeDefined();
-                    expect(getPromValue(test).getData().key2).toBeDefined();
-                });
+                // it("should return the firebase ref of the updated array", function() {
+                //     expect(getPromValue(test)).toBeAFirebaseRef();
+                //     expect(getPromValue(test).toString()).toEqual(rootPath + "/trips");
+                //     expect(getPromValue(test).getData().key).toBeDefined();
+                //     expect(getPromValue(test).getData().key2).toBeDefined();
+                // });
             });
 
             describe("get()", function() {
@@ -370,12 +370,12 @@
                     });
 
                 });
-                it("should return the firebase ref of the updated array", function() {
-                    expect(getPromValue(test)).toBeAFirebaseRef();
-                    expect(getPromValue(test).toString()).toEqual(rootPath + "/trips");
-                    expect(getPromValue(test).getData().key2).toBeDefined();
-                    expect(getPromValue(test).getData().key).not.toBeDefined();
-                });
+                // it("should return the firebase ref of the updated array", function() {
+                //     expect(getPromValue(test)).toBeAFirebaseRef();
+                //     expect(getPromValue(test).toString()).toEqual(rootPath + "/trips");
+                //     expect(getPromValue(test).getData().key2).toBeDefined();
+                //     expect(getPromValue(test).getData().key).not.toBeDefined();
+                // });
 
             });
         });

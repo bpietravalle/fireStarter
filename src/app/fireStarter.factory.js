@@ -219,14 +219,7 @@
                             self._firebase.remove(key)
                                 .then(null, standardError);
                         })
-                        .then(returnPromRef)
                         .catch(standardError);
-                }
-
-                function returnPromRef() {
-                    return self._timeout(function() {
-                        return geofireRef();
-                    });
                 }
 
                 function geofireSet(key, coords) {
@@ -234,7 +227,6 @@
                             self._firebase.set(key, coords)
                                 .then(null, standardError);
                         })
-                        .then(returnPromRef)
                         .catch(standardError);
                 }
 
